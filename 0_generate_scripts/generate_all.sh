@@ -1,0 +1,11 @@
+python 0_generate_scripts/generate_00_bowtie2_align.py
+python 0_generate_scripts/generate_01_filter_nhej.py
+python 0_generate_scripts/generate_02_combine_repeat.py
+python 0_generate_scripts/generate_03_get_window.py
+python 0_generate_scripts/generate_04_graph_data.py
+python 0_generate_scripts/generate_05_histogram_data.py
+python 0_generate_scripts/generate_06_precomputed_layout.py
+python 0_generate_scripts/generate_07_plot_graph.py
+python 0_generate_scripts/generate_08_plot_histogram.py
+python 0_generate_scripts/generate_09_pptx_graph.py
+python 0_generate_scripts/generate_10_pptx_histogram.py
