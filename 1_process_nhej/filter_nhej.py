@@ -4,7 +4,8 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../utils/'))) # allow importing the utils dir
 
-import collections
+import pandas as pd
+
 import file_utils
 import common_utils
 import sam_utils
@@ -163,14 +164,12 @@ def parse_args():
   )
   parser.add_argument(
     '--ref_seq_file',
-    # type = argparse.FileType(mode='r'),
     type = common_utils.check_file,
     help = 'Reference sequence FASTA. Should contain a single nucleotide sequence in FASTA format.',
     required = True,
   )
   parser.add_argument(
     '--sam_file',
-    # type = argparse.FileType(mode='r'),
     type = common_utils.check_file,
     help = (
       'Aligned SAM input file.' +
@@ -227,8 +226,7 @@ def main(
   accepted_insertion_special = 0
 
   # categorize
-  read_counts = collections.defaultdict(int)
-  read_num_subst = {}
+  read_data = {}
   total_lines = file_utils.count_lines(sam_file)
   with open(sam_file, 'r') as sam_file_h:
     for line_num, line in enumerate(sam_file_h):
@@ -252,8 +250,8 @@ def main(
         continue
 
       read_seq = mandatory['SEQ']
-      if read_seq in read_counts:
-        read_counts[read_seq] += 1
+      if read_seq in read_data:
+        read_data[read_seq]['Count'] += 1
         accepted_repeat += 1
         continue
 
@@ -324,25 +322,25 @@ def main(
         rejected_not_consecutive += 1
         continue
 
-      read_counts[read_seq] += 1
-      read_num_subst[read_seq] = num_subst
+      read_data[read_seq] = {
+        'Sequence': read_seq,
+        'Count': 1,
+        'Num_Subst': num_subst,
+        'CIGAR': cigar,
+      }
       accepted_new += 1
 
-  if len(read_counts) == 0:
-    raise Exception('No sequences captured')
+  if len(read_data) == 0:
+    raise Exception('No reads captured')
 
-  common_utils.check_file_output(output)
-  with open(output, 'w') as output_h:
-    read_seq_sorted = sorted(read_counts.keys(), key = lambda x: -read_counts[x])
-    output_h.write('Sequence\tCIGAR\tCount\tNum_Subst\n')
-    for read_seq in read_seq_sorted:
-      count = read_counts[read_seq]
-      num_subst = read_num_subst[read_seq]
-      output_h.write(f'{read_seq}\t{cigar}\t{count}\t{num_subst}\n')
-    log_utils.log('------>')
-    log_utils.log(output)
+  read_data = pd.DataFrame.from_records(list(read_data.values()))
+  print(read_data.columns)
+  read_data = read_data.sort_values('Count', ascending = False)
+  file_utils.write_tsv(read_data, output)
+  log_utils.log('------>')
+  log_utils.log(output)
 
-  total_accepted = sum(read_counts.values())
+  total_accepted = sum(read_data['Count'])
   if total_accepted != (accepted_repeat + accepted_new):
     raise Exception('Accepted reads not summing correctly')
   total_rejected = (
@@ -373,11 +371,4 @@ def main(
   log_utils.new_line()
 
 if __name__ == '__main__':
-  # main(parse_args())
-  main(
-    ref_seq_file = 'data/0_ref_seq/2DSB_R1_branch.fa',
-    sam_file = 'data/0_sam/db1_r1.sam',
-    output = 'data/1_filter_nhej/db1_2DSB_R1_branch.tsv',
-    dsb_pos = 50,
-    quiet = False,
-  )
+  main(**parse_args())

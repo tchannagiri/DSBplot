@@ -9,7 +9,7 @@ import file_utils
 import common_utils
 import log_utils
 
-def main():
+def parse_args():
   parser = argparse.ArgumentParser(
     description = (
       'Combine biological repeats of the same experiment.' +
@@ -18,16 +18,21 @@ def main():
   )
   parser.add_argument(
     '--input',
-    type = argparse.FileType('r'),
+    type = common_utils.check_file,
     help = (
       'TSV files output from script "filter_nhej.py".' +
-      ' Must have columns: Sequence, CIGAR, Count, Num_Subst.' +
-      ' The files names must be of the form "<name>_XXX",' +
-      ' where <name> is the name of the library and will be' +
-      ' used to name the columns of the combined output.'
+      ' Must have columns: Sequence, CIGAR, Count, Num_Subst.'
     ),
     nargs = '+',
     required = True,
+  )
+  parser.add_argument(
+    '--names',
+    nargs = '+',
+    help = (
+      'Names to use as suffixes to the Count columns of the output.' +
+      ' Number of arguments must match the number of INPUT args.'
+    ),
   )
   parser.add_argument(
     '--output',
@@ -40,23 +45,23 @@ def main():
     help = 'Do not output log messages.',
     action = 'store_true',
   )
-  args = parser.parse_args()
+  args = vars(parser.parse_args())
+  if len(args['input']) != len(args['names']):
+    raise Exception(f"Number of names {len(args['names'])} does not match number of inputs {len(args['names'])}.")
+  return args
 
-  num_repeats = len(args.input)
+def main(input, names, output, quiet = True):
+  num_repeats = len(input)
 
-  for input_file in args.input:
-    log_utils.log(input_file.name)
+  for x in input:
+    log_utils.log(x)
 
   data = [
-    pd.read_csv(args.input[i], sep='\t').set_index(['Sequence', 'CIGAR'])
-    for i in range(num_repeats)
-  ]
-  names = [
-    os.path.splitext(os.path.basename(args.input[i].name))[0].split('_')[0]
+    pd.read_csv(input[i], sep='\t').set_index(['Sequence', 'CIGAR'])
     for i in range(num_repeats)
   ]
 
-  if not args.quiet:
+  if not quiet:
     for i in range(num_repeats):
       log_utils.log(f"Num sequences {names[i]}: {data[i].shape[0]}")
 
@@ -76,12 +81,12 @@ def main():
   for i in range(num_repeats):
     data_combined['Count_' + names[i]] = data['Count_' + names[i]].fillna(0).astype(int)
 
-  if not args.quiet:
+  if not quiet:
     log_utils.log(f"Num sequences combined: {data_combined.shape[0]}\n")
-  file_utils.write_tsv(data_combined, args.output)
+  file_utils.write_tsv(data_combined, output)
   log_utils.log('------>')
-  log_utils.log(args.output.name)
+  log_utils.log(output)
   log_utils.new_line()
   
 if __name__ == '__main__':
-  main()
+  main(**parse_args())

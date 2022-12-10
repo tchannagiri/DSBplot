@@ -22,7 +22,7 @@ def parse_args():
   )
   parser.add_argument(
     '--input',
-    type = argparse.FileType(mode='r'),
+    type = common_utils.check_file,
     help = (
       'Table of sequences produced with combine_repeat.py.' +
       ' Column format: Sequence, CIGAR, Count_<X1>, Count_<X2>, ..., etc.' +
@@ -33,7 +33,7 @@ def parse_args():
   )
   parser.add_argument(
     '--ref_seq_file',
-    type = argparse.FileType(mode='r'),
+    type = common_utils.check_file,
     help = 'Reference sequence FASTA. Should contain a single nucleotide sequence in FASTA format.',
     required = True,
   )
@@ -85,7 +85,7 @@ def parse_args():
   parser.add_argument(
     '--subst_type',
     type = str,
-    default = 'without',
+    default = library_constants.SUBST_WITHOUT,
     choices = [
       library_constants.SUBST_WITH,
       library_constants.SUBST_WITHOUT
@@ -94,56 +94,12 @@ def parse_args():
     required = True,
   )
   parser.add_argument(
-    '--construct',
+    '--name',
     type = str,
-    choices = library_constants.CONSTRUCTS_INDIVIDUAL,
-    help = 'Name of construct.',
+    help = 'Name of the library.',
     required = True,
   )
-  parser.add_argument(
-    '--control_type',
-    type = str,
-    choices = library_constants.CONTROLS,
-    help = 'Whether this data is a control experiment and what type.',
-    required = True,
-  )
-  parser.add_argument(
-    '--dsb_type',
-    type = str,
-    choices = library_constants.DSB_TYPES,
-    help = 'Whether this data is 1 DSB, 2 DSB, or 2 DSB antisense.',
-    required = True,
-  )
-  parser.add_argument(
-    '--guide_rna',
-    type = str,
-    choices = library_constants.GUIDE_RNAS,
-    help = 'Type of guide RNA used in this experiment.',
-    required = True,
-  )
-  parser.add_argument(
-    '--strand',
-    type = str,
-    choices = library_constants.STRANDS,
-    help = 'Strand of the reads in this library.',
-    required = True,
-  )
-  parser.add_argument(
-    '--cell_line',
-    type = str,
-    choices = [library_constants.CELL_LINE_WT, library_constants.CELL_LINE_KO],
-    help = 'Cell in this library.',
-    required = True,
-  )
-  parser.add_argument(
-    '--version',
-    type = str,
-    choices = library_constants.VERSIONS,
-    help = 'Version of library.',
-    required = True,
-  )
-  args = parser.parse_args()
-  return args
+  return vars(parser.parse_args())
 
 def write_alignment_window(
   input_file,
@@ -155,32 +111,6 @@ def write_alignment_window(
   anchor_mismatches,
   subst_type,
 ):
-  """
-    Extract DSB-sequence for the NHEJ variation-distance graphs while
-    while discarding sequences that do not have proper anchors flanking the window.
-    The input file must have data with columns: "Sequence", "CIGAR", ...,
-    where the columns after CIGAR are the count columns with prefix "Count_".
-
-    Parameters
-    ----------
-    input_file : path to input file.
-    output_fir : director for output files.
-    ref_seq : reference nucleotide sequence.
-    dsb_pos : position of DSB on reference sequence (1-based).
-    window_size : number of nucleotides upstream and downstream of the DSB to
-      include in the window. The overall window is thus 2*window_size base pairs long.
-    anchor_size : number of nucleotides upstream and downstream of the window to
-      include in the anchor.
-    anchor_mismatch_limit : maximum number of mismatches in each anchor.
-      The mismatches on the upstream and downstream anchors are counted and compared with
-      this limit separately. If either goes over the limit the read is discarded.
-    subst_type : indicates whether to keep or remove substitutions.
-      Must be one of the values "withSubst" or "withoutSubst".
-    freq_min_threshold : minumum frequency under which reads are discarded.
-      If any of the repeat frequencies are under this threshold, the read is
-      discarded.
-  """
-
   data = file_utils.read_tsv(input_file)
   count_columns_old = [x for x in data.columns if x.startswith('Count_')]
   data = data[['Sequence', 'CIGAR'] + count_columns_old]
@@ -254,36 +184,25 @@ def write_alignment_window(
 def write_data_info(
   dir,
   format,
-  cell_line,
-  dsb_type,
-  guide_rna,
-  strand,
-  constructs,
-  control_type,
-  version,
+  names,
   ref_seq,
   ref_seq_window,
 ):
   data_info = {
     'format': format,
-    'cell_line': cell_line,
-    'dsb_type': dsb_type,
-    'guide_rna': guide_rna,
-    'strand': strand,
-    'version': version,
-    'control_type': control_type,
+    'name': names,
     'ref_seq': ref_seq,
     'ref_seq_window': ref_seq_window,
   }
-  if (format == library_constants.DATA_INDIVIDUAL) and (len(constructs) == 1):
-    data_info['construct'] = constructs[0]
-  elif (format == library_constants.DATA_COMPARISON) and (len(constructs) == 2):
-    data_info['construct_1'] = constructs[0]
-    data_info['construct_2'] = constructs[1]
+  if (format == library_constants.DATA_INDIVIDUAL) and (len(names) == 1):
+    data_info['name'] = names[0]
+  elif (format == library_constants.DATA_COMPARISON) and (len(names) == 2):
+    data_info['name_1'] = names[0]
+    data_info['name_2'] = names[1]
   else:
     raise Exception(
       'Wrong combination of data format and constructs: ' +
-      str(format) + ', ' + str(constructs)
+      str(format) + ', ' + str(names)
     )
   data_info = pd.DataFrame(data_info, index = [0])
   file_out = file_names.data_info(dir)
@@ -307,41 +226,55 @@ def get_ref_seq_window(ref_seq, dsb_pos, window_size):
   )
   return ref_seq_window
 
-def main():
-  args = parse_args()
-
-  log_utils.log(args.input.name)
+def main(
+  input,
+  output,
+  ref_seq_file,
+  dsb_pos,
+  window_size,
+  anchor_size,
+  anchor_mismatches,
+  subst_type,
+  name,
+):
+  log_utils.log(input)
   log_utils.log('------>')
 
-  ref_seq = fasta_utils.read_fasta_seq(args.ref_seq_file)
+  ref_seq = fasta_utils.read_fasta_seq(ref_seq_file)
   write_alignment_window(
-    input_file = args.input, 
-    output_dir = args.output,
+    input_file = input, 
+    output_dir = output,
     ref_seq = ref_seq,
-    dsb_pos = args.dsb_pos,
-    window_size = args.window_size,
-    anchor_size = args.anchor_size,
-    anchor_mismatches = args.anchor_mismatches,
-    subst_type = args.subst_type,
+    dsb_pos = dsb_pos,
+    window_size = window_size,
+    anchor_size = anchor_size,
+    anchor_mismatches = anchor_mismatches,
+    subst_type = subst_type,
   )
   write_data_info(
-    dir = args.output,
+    dir = output,
     format = library_constants.DATA_INDIVIDUAL,
-    cell_line = args.cell_line,
-    dsb_type = args.dsb_type,
-    guide_rna = args.guide_rna,
-    strand = args.strand,
-    constructs = [args.construct],
-    control_type = args.control_type,
-    version = args.version,
+    names = [name],
     ref_seq = ref_seq,
     ref_seq_window = get_ref_seq_window(
       ref_seq,
-      args.dsb_pos,
-      args.window_size,
+      dsb_pos,
+      window_size,
     ),
   )
   log_utils.new_line()
 
 if __name__ == '__main__':
-  main()
+  # main(**parse_args())
+  # CONTTINUE FIXING HERE!
+  main(
+    'data/2_combine_repeat/db_r1.tsv',
+    'data/3_window/2DSB_R1_branch',
+    'data/0_ref_seq/2DSB_R1_branch.fa',
+    50,
+    10,
+    20,
+    2,
+    library_constants.SUBST_WITHOUT,
+    '2DSB_R1_branch'
+  )
