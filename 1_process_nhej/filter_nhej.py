@@ -157,19 +157,21 @@ def check_dsb_touches_indel(dsb_pos, ins_pos, del_pos):
     ((dsb_pos + 1) in del_pos) # deletion on right of DSB
   )
 
-def main():
+def parse_args():
   parser = argparse.ArgumentParser(
     description = 'Filter sequences having mutations near DSB site.'
   )
   parser.add_argument(
     '--ref_seq_file',
-    type = argparse.FileType(mode='r'),
+    # type = argparse.FileType(mode='r'),
+    type = common_utils.check_file,
     help = 'Reference sequence FASTA. Should contain a single nucleotide sequence in FASTA format.',
     required = True,
   )
   parser.add_argument(
     '--sam_file',
-    type = argparse.FileType(mode='r'),
+    # type = argparse.FileType(mode='r'),
+    type = common_utils.check_file,
     help = (
       'Aligned SAM input file.' +
       ' Must be created with Bowtie2 (specific flags from Bowtie2 are used).'
@@ -184,20 +186,11 @@ def main():
     help = 'Output file.'
   )
   parser.add_argument(
-    '--min_length',
-    type = int,
-    required = True,
-    help = (
-      'Minimum length of reads.' +
-      ' Reads shorted than this are discarded.'
-    )
-  )
-  parser.add_argument(
     '--dsb_pos',
     type = int,
     required = True,
     help = (
-      'Position on reference sequence immediately upstream of DSB site.' +
+      'Position on reference sequence immediately left of DSB site.' +
       ' Ie. the DSB is between position DSB_POS and DSB_POS + 1.'
     ),
   )
@@ -206,14 +199,20 @@ def main():
     help = 'Do not output log messages.',
     action = 'store_true',
   )
+  return vars(parser.parse_args())
 
+def main(
+  ref_seq_file,
+  sam_file,
+  output,
+  dsb_pos,
+  quiet = True,
+):
   # parse command line arguments
-  args = parser.parse_args()
-
-  log_utils.log(args.sam_file.name)
+  log_utils.log(sam_file)
 
   # read reference sequence from fasta file
-  ref_seq = fasta_utils.read_fasta_seq(args.ref_seq_file)
+  ref_seq = fasta_utils.read_fasta_seq(ref_seq_file)
   
   # For logging
   rejected_header = 0
@@ -222,122 +221,130 @@ def main():
   rejected_not_consecutive = 0
   rejected_too_short = 0
   rejected_dsb_not_touch = 0
+  accepted_new = 0
+  accepted_repeat = 0
   accepted_deletion_special = 0
   accepted_insertion_special = 0
 
   # categorize
   read_counts = collections.defaultdict(int)
   read_num_subst = {}
-  total_lines = file_utils.count_lines(args.sam_file.name)
-  for line_num, line in enumerate(args.sam_file):
-    if (line_num % 100000) == 0:
-      if not args.quiet:
-        log_utils.log(f"Progress: {line_num} / {total_lines}")
+  total_lines = file_utils.count_lines(sam_file)
+  with open(sam_file, 'r') as sam_file_h:
+    for line_num, line in enumerate(sam_file_h):
+      if (line_num % 100000) == 0:
+        if not quiet:
+          log_utils.log(f"Progress: {line_num} / {total_lines}")
 
-    if line.startswith('@'): # header line of SAM
-      rejected_header += 1
-      continue
-
-    fields = line.rstrip().split('\t')
-    mandatory, optional = sam_utils.parse_sam_fields(fields)
-
-    if int(mandatory['FLAG']) & 4: # the read did not align at all
-      rejected_no_alignment += 1
-      continue
-
-    if int(mandatory['POS']) != 1:
-      rejected_pos_not_1 += 1
-      continue
-
-    read_seq = mandatory['SEQ']
-    # XG is the number of gap-extends (aka in/dels). 
-    # XM if number of mismatches.
-    # Both should always be present for aligned reads.
-    num_indel_sam = int(optional['XG']['VALUE'])
-    num_subst_sam = int(optional['XM']['VALUE'])
-
-    if len(read_seq) < args.min_length:
-      rejected_too_short += 1
-      continue
-
-    cigar = mandatory['CIGAR']
-    ref_align, read_align = alignment_utils.get_alignment(ref_seq, read_seq, 1, cigar)
-
-    ins_pos, del_pos, subst_pos = alignment_utils.get_variation_pos(ref_align, read_align)
-    num_ins = len(ins_pos)
-    num_del = len(del_pos)
-    num_subst = len(subst_pos)
-    if num_indel_sam != (num_ins + num_del):
-        raise Exception('Incorrect count of insertions and/or deletions')
-    if num_subst_sam != num_subst:
-        raise Exception('Incorrect count of substitutions')
-
-    if num_ins + num_del > 0:
-      dsb_touches = check_dsb_touches_indel(args.dsb_pos, ins_pos, del_pos)
-      if not dsb_touches:
-        if num_ins > 0:
-          # insertions special case
-          new_ref_align, new_read_align = check_insertion_special_case(
-            ref_align,
-            read_align,
-            args.dsb_pos,
-            num_subst = num_subst,
-          )
-          if new_ref_align is not None:
-            ref_align = new_ref_align
-            read_align = new_read_align
-            cigar = alignment_utils.get_cigar(ref_align, read_align)
-            ins_pos, del_pos, subst_pos = alignment_utils.get_variation_pos(ref_align, read_align)
-            num_ins = len(ins_pos)
-            num_del = len(del_pos)
-            num_subst = len(subst_pos)
-            dsb_touches = True
-            accepted_insertion_special += 1
-        elif num_del > 0:
-          # deletions and no insertions special case
-          new_read_align = check_deletion_special_case(
-            ref_align,
-            read_align,
-            args.dsb_pos,
-            num_del = num_del,
-            num_subst = num_subst,
-          )
-          if new_read_align is not None:
-            read_align = new_read_align
-            cigar = alignment_utils.get_cigar(ref_align, read_align)
-            ins_pos, del_pos, subst_pos = alignment_utils.get_variation_pos(ref_align, read_align)
-            num_ins = len(ins_pos)
-            num_del = len(del_pos)
-            num_subst = len(subst_pos)
-            dsb_touches = True
-            accepted_deletion_special += 1
-
-      # If still DSB does not touch after special case check, reject
-      if not dsb_touches:
-        rejected_dsb_not_touch += 1
+      if line.startswith('@'): # header line of SAM
+        rejected_header += 1
         continue
-    
-    if not is_consecutive(ins_pos, del_pos):
-      rejected_not_consecutive += 1
-      continue
 
-    read_counts[read_seq, cigar] += 1
-    read_num_subst[read_seq, cigar] = num_subst
+      fields = line.rstrip().split('\t')
+      mandatory, optional = sam_utils.parse_sam_fields(fields)
+
+      if int(mandatory['FLAG']) & 4: # the read did not align at all
+        rejected_no_alignment += 1
+        continue
+
+      if int(mandatory['POS']) != 1:
+        rejected_pos_not_1 += 1
+        continue
+
+      read_seq = mandatory['SEQ']
+      if read_seq in read_counts:
+        read_counts[read_seq] += 1
+        accepted_repeat += 1
+        continue
+
+      # XG is the number of gap-extends (aka in/dels). 
+      # XM if number of mismatches.
+      # Both should always be present for aligned reads.
+      num_indel_sam = int(optional['XG']['VALUE'])
+      num_subst_sam = int(optional['XM']['VALUE'])
+
+      cigar = mandatory['CIGAR']
+      ref_align, read_align = alignment_utils.get_alignment(ref_seq, read_seq, 1, cigar)
+
+      ins_pos, del_pos, subst_pos = alignment_utils.get_variation_pos(ref_align, read_align)
+      num_ins = len(ins_pos)
+      num_del = len(del_pos)
+      num_subst = len(subst_pos)
+      if num_indel_sam != (num_ins + num_del):
+          raise Exception('Incorrect count of insertions and/or deletions')
+      if num_subst_sam != num_subst:
+          raise Exception('Incorrect count of substitutions')
+
+      if num_ins + num_del > 0:
+        dsb_touches = check_dsb_touches_indel(dsb_pos, ins_pos, del_pos)
+        if not dsb_touches:
+          if num_ins > 0:
+            # insertions special case
+            new_ref_align, new_read_align = check_insertion_special_case(
+              ref_align,
+              read_align,
+              dsb_pos,
+              num_subst = num_subst,
+            )
+            if new_ref_align is not None:
+              ref_align = new_ref_align
+              read_align = new_read_align
+              cigar = alignment_utils.get_cigar(ref_align, read_align)
+              ins_pos, del_pos, subst_pos = alignment_utils.get_variation_pos(ref_align, read_align)
+              num_ins = len(ins_pos)
+              num_del = len(del_pos)
+              num_subst = len(subst_pos)
+              dsb_touches = True
+              accepted_insertion_special += 1
+          elif num_del > 0:
+            # deletions and no insertions special case
+            new_read_align = check_deletion_special_case(
+              ref_align,
+              read_align,
+              dsb_pos,
+              num_del = num_del,
+              num_subst = num_subst,
+            )
+            if new_read_align is not None:
+              read_align = new_read_align
+              cigar = alignment_utils.get_cigar(ref_align, read_align)
+              ins_pos, del_pos, subst_pos = alignment_utils.get_variation_pos(ref_align, read_align)
+              num_ins = len(ins_pos)
+              num_del = len(del_pos)
+              num_subst = len(subst_pos)
+              dsb_touches = True
+              accepted_deletion_special += 1
+
+        # If still DSB does not touch after special case check, reject
+        if not dsb_touches:
+          rejected_dsb_not_touch += 1
+          continue
+      
+      if not is_consecutive(ins_pos, del_pos):
+        rejected_not_consecutive += 1
+        continue
+
+      read_counts[read_seq] += 1
+      read_num_subst[read_seq] = num_subst
+      accepted_new += 1
 
   if len(read_counts) == 0:
     raise Exception('No sequences captured')
 
-  output_file = args.output
-  read_seq_and_cigars = sorted(read_counts.keys(), key = lambda x: -read_counts[x])
-  output_file.write('Sequence\tCIGAR\tCount\tNum_Subst\n')
-  for read_seq, cigar in read_seq_and_cigars:
-    count = read_counts[read_seq, cigar]
-    num_subst = read_num_subst[read_seq, cigar]
-    output_file.write(f'{read_seq}\t{cigar}\t{count}\t{num_subst}\n')
-  log_utils.log('------>')
-  log_utils.log(args.output.name)
+  common_utils.check_file_output(output)
+  with open(output, 'w') as output_h:
+    read_seq_sorted = sorted(read_counts.keys(), key = lambda x: -read_counts[x])
+    output_h.write('Sequence\tCIGAR\tCount\tNum_Subst\n')
+    for read_seq in read_seq_sorted:
+      count = read_counts[read_seq]
+      num_subst = read_num_subst[read_seq]
+      output_h.write(f'{read_seq}\t{cigar}\t{count}\t{num_subst}\n')
+    log_utils.log('------>')
+    log_utils.log(output)
 
   total_accepted = sum(read_counts.values())
+  if total_accepted != (accepted_repeat + accepted_new):
+    raise Exception('Accepted reads not summing correctly')
   total_rejected = (
     rejected_header +
     rejected_no_alignment + 
@@ -347,21 +354,30 @@ def main():
     rejected_not_consecutive
   )
   if total_rejected != (total_lines - total_accepted):
-    raise Exception("Line counts of accepted + rejected != total lines")
+    raise Exception('Line counts of accepted + rejected != total lines')
 
-  if not args.quiet:
+  if not quiet:
     log_utils.log(f'Total lines: {total_lines}')
     log_utils.log(f'    Accepted: {total_accepted}')
-    log_utils.log(f'        Insertion special case: {accepted_insertion_special}')
-    log_utils.log(f'        Deletion special case: {accepted_deletion_special}')
+    log_utils.log(f'        Accepted new: {accepted_new}')
+    log_utils.log(f'            Insertion special case: {accepted_insertion_special}')
+    log_utils.log(f'            Deletion special case: {accepted_deletion_special}')
+    log_utils.log(f'            Other: {accepted_new - accepted_deletion_special - accepted_insertion_special}')
+    log_utils.log(f'        Accepted repeat: {accepted_repeat}')
     log_utils.log(f'    Rejected: {total_rejected}')
     log_utils.log(f'        Header: {rejected_header}')
     log_utils.log(f'        No alignment: {rejected_no_alignment}')
     log_utils.log(f'        POS != 1: {rejected_pos_not_1}')
-    log_utils.log(f'        Too short: {rejected_too_short}')
     log_utils.log(f'        DSB not touch: {rejected_dsb_not_touch}')
     log_utils.log(f'        Not consecutive: {rejected_not_consecutive}')
   log_utils.new_line()
 
 if __name__ == '__main__':
-  main()
+  # main(parse_args())
+  main(
+    ref_seq_file = 'data/0_ref_seq/2DSB_R1_branch.fa',
+    sam_file = 'data/0_sam/db1_r1.sam',
+    output = 'data/1_filter_nhej/db1_2DSB_R1_branch.tsv',
+    dsb_pos = 50,
+    quiet = False,
+  )

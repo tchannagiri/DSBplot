@@ -126,7 +126,6 @@ def get_graph_stats_ref_component(data_format, graph):
 
   freq_stats = {}
   if graph.number_of_nodes() > 0:
-    all_columns = list(node_view[ref_id])
     for column in library_constants.FREQ_COLUMNS[data_format]:
       ref_freq = node_view[ref_id][column] if num_nodes > 0 else 0
       non_ref_freq = sum(x[1][column] for x in node_view if x[0] != ref_id)
