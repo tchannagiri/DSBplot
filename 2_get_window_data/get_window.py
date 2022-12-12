@@ -265,16 +265,4 @@ def main(
   log_utils.new_line()
 
 if __name__ == '__main__':
-  # main(**parse_args())
-  # CONTTINUE FIXING HERE!
-  main(
-    'data/2_combine_repeat/db_r1.tsv',
-    'data/3_window/2DSB_R1_branch',
-    'data/0_ref_seq/2DSB_R1_branch.fa',
-    50,
-    10,
-    20,
-    2,
-    library_constants.SUBST_WITHOUT,
-    '2DSB_R1_branch'
-  )
+  main(**parse_args())

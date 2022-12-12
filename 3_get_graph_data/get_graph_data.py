@@ -252,4 +252,5 @@ def main():
   log_utils.new_line()
 
 if __name__ == '__main__':
+  # FIXME: MAKE THE PARSE ARGS SEPARATE!
   main()

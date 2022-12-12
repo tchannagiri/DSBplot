@@ -254,18 +254,16 @@ def get_node_color(
   node_color_type,
   node_color_min_freq,
   node_color_max_freq,
+  node_color_1 = None,
+  node_color_2 = None,
 ):
   if node_color_type == 'freq_group':
     if data_info['format'] != library_constants.DATA_COMPARISON:
       raise Exception('Need a comparison data set: ' + data_info['name'])
     node_freq_group = get_node_freq_group(node_data)
     node_color = pd.Series(library_constants.SIMILAR_FREQ_COLOR, index=node_data.index)
-    node_color.loc[node_freq_group == library_constants.FREQ_GROUP_A] = (
-      library_constants.CONSTRUCT_COLOR[data_info['construct_1']]
-    )
-    node_color.loc[node_freq_group == library_constants.FREQ_GROUP_C] = (
-      library_constants.CONSTRUCT_COLOR[data_info['construct_2']]
-    )
+    node_color.loc[node_freq_group == library_constants.FREQ_GROUP_A] = node_color_1
+    node_color.loc[node_freq_group == library_constants.FREQ_GROUP_C] = node_color_2
     return node_color
   elif node_color_type == 'freq':
      scaled_freq = log_transform_scale(
@@ -360,8 +358,8 @@ def make_node_traces(
         freq_group = group_key[1]
         trace_name = library_constants.get_freq_ratio_label(
           freq_group,
-          data_info['construct_1'],
-          data_info['construct_2'],
+          data_info['name_1'],
+          data_info['name_2'],
         )
       else:
         trace_name = library_constants.NON_REFERENCE_DESCRIPTION

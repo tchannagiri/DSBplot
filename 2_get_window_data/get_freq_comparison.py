@@ -95,6 +95,7 @@ def write_comparison_data(
     log_utils.log(output_file)
 
 if __name__ == '__main__':
+  # FIXME: MAKE THIS HAVE SEPARATE PARSE ARGS!
   # Parse args
   args = parse_args()
 
@@ -133,7 +134,7 @@ if __name__ == '__main__':
     dsb_type = data_info_1['dsb_type'],
     guide_rna = data_info_1['guide_rna'],
     strand = data_info_1['strand'],
-    constructs = [data_info_1['construct'], data_info_2['construct']],
+    names = [data_info_1['name'], data_info_2['name']],
     control_type = data_info_1['control_type'],
     version = data_info_1['version'],
     ref_seq_window = data_info_1['ref_seq_window'],

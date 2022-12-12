@@ -94,8 +94,6 @@ VARIATION_TYPES = {
   VARIATION_INSERTION: {
     'label': 'Insertion',
     'short_label': 'I',
-    # 'color': '#FF8080',
-    # 'color_3d': '#FF8080',
     'color': '#FFA500',
     'color_3d': '#FFA500',
   },
@@ -112,45 +110,46 @@ REFERENCE_DESCRIPTION = 'Reference'
 NON_REFERENCE_DESCRIPTION = 'Non-reference'
 
 ### Controls ###
-CONTROL_NOT = 'notControl'
-CONTROL_NODSB = 'noDSB'
-CONTROL_30BPDOWN = '30bpDown'
-CONTROLS = [CONTROL_NOT, CONTROL_NODSB, CONTROL_30BPDOWN]
+# CONTROL_NOT = 'notControl'
+# CONTROL_NODSB = 'noDSB'
+# CONTROL_30BPDOWN = '30bpDown'
+# CONTROLS = [CONTROL_NOT, CONTROL_NODSB, CONTROL_30BPDOWN]
 
-### DSB types ###
-DSB_TYPE_1 = '1DSB'
-DSB_TYPE_2 = '2DSB'
-DSB_TYPE_2anti = '2DSBanti'
-DSB_TYPES = [DSB_TYPE_1, DSB_TYPE_2, DSB_TYPE_2anti]
+# ### DSB types ###
+# DSB_TYPE_1 = '1DSB'
+# DSB_TYPE_2 = '2DSB'
+# DSB_TYPE_2anti = '2DSBanti'
+# DSB_TYPES = [DSB_TYPE_1, DSB_TYPE_2, DSB_TYPE_2anti]
 
-### Hguide types ###
-GUIDE_RNA_A = 'sgA'
-GUIDE_RNA_B = 'sgB'
-GUIDE_RNA_AB = 'sgAB'
-GUIDE_RNA_CD = 'sgCD'
-GUIDE_RNAS = [GUIDE_RNA_A, GUIDE_RNA_B, GUIDE_RNA_AB, GUIDE_RNA_CD]
+# ### Hguide types ###
+# GUIDE_RNA_A = 'sgA'
+# GUIDE_RNA_B = 'sgB'
+# GUIDE_RNA_AB = 'sgAB'
+# GUIDE_RNA_CD = 'sgCD'
+# GUIDE_RNAS = [GUIDE_RNA_A, GUIDE_RNA_B, GUIDE_RNA_AB, GUIDE_RNA_CD]
 
-### Strand type ###
-STRAND_R1 = 'R1'
-STRAND_R2 = 'R2'
-STRANDS = [STRAND_R1, STRAND_R2]
+# ### Strand type ###
+# STRAND_R1 = 'R1'
+# STRAND_R2 = 'R2'
+# STRANDS = [STRAND_R1, STRAND_R2]
 
-### Cell line ###
-CELL_LINE_WT = 'WT'
-CELL_LINE_KO = 'KO'
-CELL_LINES = [CELL_LINE_WT, CELL_LINE_KO]
+# ### Cell line ###
+# CELL_LINE_WT = 'WT'
+# CELL_LINE_KO = 'KO'
+# CELL_LINES = [CELL_LINE_WT, CELL_LINE_KO]
 
-CONSTRUCT_COLOR = {
-  'sense': '#CF191B', 
-  'branch': '#33A02C',
-  'cmv': '#FFE669',
-  'antisense': '#CF191B',
-  'splicing': '#33A02C',
-  'sense_branch': '#ffffff',
-  'sense_cmv': '#ffffff',
-  'antisense_splicing': '#ffffff',
-}
+# CONSTRUCT_COLOR = {
+#   'sense': '#CF191B', 
+#   'branch': '#33A02C',
+#   'cmv': '#FFE669',
+#   'antisense': '#CF191B',
+#   'splicing': '#33A02C',
+#   'sense_branch': '#ffffff',
+#   'sense_cmv': '#ffffff',
+#   'antisense_splicing': '#ffffff',
+# }
 
+DEFAULT_COMPARISON_COLORS = ['#ff0000', '#0000ff']
 SIMILAR_FREQ_COLOR = '#ffffff'
 
 FREQ_GROUP_A = 'A'
@@ -178,17 +177,17 @@ FREQ_RATIO_COLOR_BAR_TICK_TEXT = [
   '3/2',
 ]
 
-def get_freq_ratio_color_scale(construct_1, construct_2):
+def get_freq_ratio_color_scale(color_1, color_2):
   return [
-    [0, CONSTRUCT_COLOR[construct_2]],
-    [0.5, CONSTRUCT_COLOR[construct_1 + '_' + construct_2]],
-    [1, CONSTRUCT_COLOR[construct_1]],
+    [0, color_2],
+    [0.5, SIMILAR_FREQ_COLOR],
+    [1, color_1],
   ]
 
-def get_freq_ratio_label(freq_group, construct_1, construct_2):
+def get_freq_ratio_label(freq_group, label_1, label_2):
   if freq_group == FREQ_GROUP_A:
     return (
-      f'Higher in {LABELS[construct_1]}<br>' +
+      f'Higher in {label_1}<br>' +
       f'(ratio > {FREQ_RATIO_A:0.2f})'
     )
   elif freq_group == FREQ_GROUP_B:
@@ -198,7 +197,7 @@ def get_freq_ratio_label(freq_group, construct_1, construct_2):
     )
   elif freq_group == FREQ_GROUP_C:
     return (
-      f'Higher in {LABELS[construct_2]}<br>' + 
+      f'Higher in {label_2}<br>' + 
       f'(ratio < {FREQ_RATIO_C:0.2f})'
     )
   else:
@@ -221,99 +220,87 @@ FREQ_RANK_COLUMNS = {
 ### Constructs ###
 
 ## Individual ##
-CONSTRUCT_SENSE = 'sense'
-CONSTRUCT_BRANCH = 'branch'
-CONSTRUCT_CMV = 'cmv'
-CONSTRUCT_ANTISENSE = 'antisense'
-CONSTRUCT_SPLICING = 'splicing'
-CONSTRUCTS_INDIVIDUAL = [
-  CONSTRUCT_SENSE,
-  CONSTRUCT_BRANCH,
-  CONSTRUCT_CMV,
-  CONSTRUCT_ANTISENSE,
-  CONSTRUCT_SPLICING,
-]
-CONSTRUCTS_INDIVIDUAL_SENSE = [
-  CONSTRUCT_SENSE,
-  CONSTRUCT_BRANCH,
-  CONSTRUCT_CMV,
-]
-CONSTRUCTS_INDIVIDUAL_ANTISENSE = [
-  CONSTRUCT_ANTISENSE,
-  CONSTRUCT_SPLICING,
-]
+# CONSTRUCT_SENSE = 'sense'
+# CONSTRUCT_BRANCH = 'branch'
+# CONSTRUCT_CMV = 'cmv'
+# CONSTRUCT_ANTISENSE = 'antisense'
+# CONSTRUCT_SPLICING = 'splicing'
+# CONSTRUCTS_INDIVIDUAL = [
+#   CONSTRUCT_SENSE,
+#   CONSTRUCT_BRANCH,
+#   CONSTRUCT_CMV,
+#   CONSTRUCT_ANTISENSE,
+#   CONSTRUCT_SPLICING,
+# ]
+# CONSTRUCTS_INDIVIDUAL_SENSE = [
+#   CONSTRUCT_SENSE,
+#   CONSTRUCT_BRANCH,
+#   CONSTRUCT_CMV,
+# ]
+# CONSTRUCTS_INDIVIDUAL_ANTISENSE = [
+#   CONSTRUCT_ANTISENSE,
+#   CONSTRUCT_SPLICING,
+# ]
 
-## Comparisons ##
-CONSTRUCT_SENSE_BRANCH = CONSTRUCT_SENSE + '_' + CONSTRUCT_BRANCH
-CONSTRUCT_SENSE_CMV = CONSTRUCT_SENSE + '_' + CONSTRUCT_CMV
-CONSTRUCT_ANTISENSE_SPLICING = CONSTRUCT_ANTISENSE + '_' + CONSTRUCT_SPLICING
-CONSTRUCTS_COMPARISON_SENSE = [
-  CONSTRUCT_SENSE_BRANCH,
-  CONSTRUCT_SENSE_CMV,
-]
-CONSTRUCTS_COMPARISON_ANTISENSE = [
-  CONSTRUCT_ANTISENSE_SPLICING
-]
-CONSTRUCTS_COMPARISON = [
-  CONSTRUCT_SENSE_BRANCH,
-  CONSTRUCT_SENSE_CMV,
-  CONSTRUCT_ANTISENSE_SPLICING,
-]
+# ## Comparisons ##
+# CONSTRUCT_SENSE_BRANCH = CONSTRUCT_SENSE + '_' + CONSTRUCT_BRANCH
+# CONSTRUCT_SENSE_CMV = CONSTRUCT_SENSE + '_' + CONSTRUCT_CMV
+# CONSTRUCT_ANTISENSE_SPLICING = CONSTRUCT_ANTISENSE + '_' + CONSTRUCT_SPLICING
+# CONSTRUCTS_COMPARISON_SENSE = [
+#   CONSTRUCT_SENSE_BRANCH,
+#   CONSTRUCT_SENSE_CMV,
+# ]
+# CONSTRUCTS_COMPARISON_ANTISENSE = [
+#   CONSTRUCT_ANTISENSE_SPLICING
+# ]
+# CONSTRUCTS_COMPARISON = [
+#   CONSTRUCT_SENSE_BRANCH,
+#   CONSTRUCT_SENSE_CMV,
+#   CONSTRUCT_ANTISENSE_SPLICING,
+# ]
 
-### Labels ###
-LABELS = {
-  '1DSB': '1 DSB',
-  '2DSB': '2 DSB',
-  '2DSBanti': '2 DSB (antisense)',
-  'sgA': 'sgRNA A',
-  'sgB': 'sgRNA B',
-  'sgC': 'sgRNA C/C\'',
-  'sgD': 'sgRNA D',
-  'sgAB': 'sgRNA A & B',
-  'sgCD': 'sgRNA C/C\' & D',
-  'KO': 'KO',
-  'WT': 'WT',
-  'R1': 'Forward strand',
-  'R2': 'Reverse strand',
-  'NHEJ': 'NHEJ',
-  'MMEJ': 'MMEJ',
-  'sense': 'Sense',
-  'branch': 'Branch∆',
-  'cmv': 'pCMV∆',
-  'splicing': '5\'-Splicing∆',
-  'antisense': 'Antisense',
-  'sense_branch': 'Sense & Branch∆',
-  'sense_cmv': 'Sense & pCMV∆',
-  'antisense_splicing': 'Antisense & 5\'-Splicing∆',
-  'noDSB': 'No DSB',
-  '30bpDown': '30bp Down',
-  'notControl': '',
-  'ref_pos': 'Reference sequence position',
-  'ref_cut_pos_offset': 'Reference sequence position (from cut)',
-  'substitution': 'Substitution',
-  'insertion': 'Insertion',
-  'deletion': 'Deletion',
-}
+# ### Labels ###
+# LABELS = {
+#   '1DSB': '1 DSB',
+#   '2DSB': '2 DSB',
+#   '2DSBanti': '2 DSB (antisense)',
+#   'sgA': 'sgRNA A',
+#   'sgB': 'sgRNA B',
+#   'sgC': 'sgRNA C/C\'',
+#   'sgD': 'sgRNA D',
+#   'sgAB': 'sgRNA A & B',
+#   'sgCD': 'sgRNA C/C\' & D',
+#   'KO': 'KO',
+#   'WT': 'WT',
+#   'R1': 'Forward strand',
+#   'R2': 'Reverse strand',
+#   'NHEJ': 'NHEJ',
+#   'MMEJ': 'MMEJ',
+#   'sense': 'Sense',
+#   'branch': 'Branch∆',
+#   'cmv': 'pCMV∆',
+#   'splicing': '5\'-Splicing∆',
+#   'antisense': 'Antisense',
+#   'sense_branch': 'Sense & Branch∆',
+#   'sense_cmv': 'Sense & pCMV∆',
+#   'antisense_splicing': 'Antisense & 5\'-Splicing∆',
+#   'noDSB': 'No DSB',
+#   '30bpDown': '30bp Down',
+#   'notControl': '',
+#   'ref_pos': 'Reference sequence position',
+#   'ref_cut_pos_offset': 'Reference sequence position (from cut)',
+#   'substitution': 'Substitution',
+#   'insertion': 'Insertion',
+#   'deletion': 'Deletion',
+# }
 
 def get_data_label(data_info):
   if data_info['format'] == DATA_INDIVIDUAL:
-    construct_str = data_info['construct']
+    return data_info['name']
   elif data_info['format'] == DATA_COMPARISON:
-    construct_str = '_'.join([data_info['construct_1'], data_info['construct_2']])
+    return '_'.join([data_info['name_1'], data_info['name_2']])
   else:
     raise Exception('Unknown format: ' + str(data_info['format']))
-  control_str = None if (data_info['control_type'] == CONTROL_NOT) else data_info['control_type']
-  version_str = None if (data_info['version'] == VERSION_NONE) else data_info['version']
-  str_list = [
-    data_info['cell_line'],
-    data_info['guide_rna'],
-    data_info['strand'],
-    construct_str,
-    control_str,
-    version_str,
-  ]
-  return '_'.join(x for x in str_list if x is not None)
-  return data_info['name']
 
 ### Constants for 3D variation-position histograms ###
 HISTOGRAM_TITLE_FONT_SIZE = 16
@@ -341,6 +328,8 @@ GRAPH_NODE_FILTER_VARIATION_TYPES = ['insertion', 'deletion', 'none']
 GRAPH_NODE_SIZE_MIN_PX = 10
 GRAPH_NODE_SIZE_MAX_PX = 120
 GRAPH_NODE_OUTLINE_WIDTH_SCALE = 4
+GRAPH_EDGE_SHOW = True
+GRAPH_EDGE_SHOW_TYPES = ['indel']
 GRAPH_EDGE_WIDTH_SCALE = 8
 GRAPH_LINE_WIDTH_SCALE = 8
 GRAPH_FONT_SIZE_SCALE = 2

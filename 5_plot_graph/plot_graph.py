@@ -1236,10 +1236,11 @@ def make_size_legend(
     line_width_scale = line_width_scale,
   )
 
-
 def make_freq_group_legend(
-  construct_1,
-  construct_2,
+  label_1,
+  label_2,
+  color_1,
+  color_2,
   figure,
   node_size_px,
   x_anchor,
@@ -1255,15 +1256,15 @@ def make_freq_group_legend(
     'type': 'circle',
     'size': node_size_px,
     'text': library_constants.get_freq_ratio_label(
-      library_constants.FREQ_GROUP_A, construct_1, construct_2
+      library_constants.FREQ_GROUP_A, label_1, label_2
     ),
-    'color': library_constants.CONSTRUCT_COLOR[construct_1],
+    'color': color_1,
   })
   legend_items.append({
     'type': 'circle',
     'size': node_size_px,
     'text': library_constants.get_freq_ratio_label(
-      library_constants.FREQ_GROUP_B, construct_1, construct_2
+      library_constants.FREQ_GROUP_B, label_1, label_2
     ),
     'color': library_constants.SIMILAR_FREQ_COLOR,
   })
@@ -1271,13 +1272,13 @@ def make_freq_group_legend(
     'type': 'circle',
     'size': node_size_px,
     'text': library_constants.get_freq_ratio_label(
-      library_constants.FREQ_GROUP_C, construct_1, construct_2
+      library_constants.FREQ_GROUP_C, label_1, label_2
     ),
-    'color': library_constants.CONSTRUCT_COLOR[construct_2],
+    'color': color_2,
   })
   return make_legend(
     figure = figure,
-    legend_title = f'Node Fill Color',
+    legend_title = 'Node Fill Color',
     legend_items = legend_items,
     x_anchor = x_anchor,
     y_anchor = y_anchor,
@@ -1294,8 +1295,8 @@ def make_freq_group_legend(
 
 def add_plotly_colorbar(
   figure,
-  construct_1,
-  construct_2,
+  label_1,
+  label_2,
   row,
   col,
   figure_height_px,
@@ -1339,7 +1340,7 @@ def add_plotly_colorbar(
           'text': (
             'Frequency Ratio<br>'
             'Color Scale<br>'
-            f'[{library_constants.LABELS[construct_1]} / {library_constants.LABELS[construct_2]}]'
+            f'[{label_1} / {label_2}]'
           ),
           'font_size': library_constants.GRAPH_LEGEND_TITLE_FONT_SIZE * font_size_scale,
         },
@@ -1403,19 +1404,19 @@ def make_custom_legends(
     )
     y_shift_curr_px -= legend_vertical_space_px
   elif node_color_type == 'freq_group':
-    construct_1_list = list(set(
-      data_info['construct_1'] for data_info in data_info_grid.ravel()
+    label_1_list = list(set(
+      data_info['name_1'] for data_info in data_info_grid.ravel()
       if data_info['format'] == library_constants.DATA_COMPARISON
     ))
-    construct_2_list = list(set(
-      data_info['construct_2'] for data_info in data_info_grid.ravel()
+    label_2_list = list(set(
+      data_info['name_2'] for data_info in data_info_grid.ravel()
       if data_info['format'] == library_constants.DATA_COMPARISON
     ))
-    for construct_1 in construct_1_list:
-      for construct_2 in construct_2_list:
+    for label_1 in label_1_list:
+      for label_2 in label_2_list:
         y_shift_curr_px = make_freq_group_legend(
-          construct_1 = construct_1,
-          construct_2 = construct_2,
+          label_1 = label_1,
+          label_2 = label_2,
           figure = figure,
           node_size_px = node_size_max_px,
           x_anchor = 1,
@@ -1428,18 +1429,18 @@ def make_custom_legends(
         )
       y_shift_curr_px -= legend_vertical_space_px
   elif node_color_type == 'freq_ratio':
-    construct_pair_row_col = {}
+    label_pair_row_col = {}
     for row in range(data_info_grid.shape[0]):
       for col in range(data_info_grid.shape[1]):
-        construct_1 = data_info_grid[row, col]['construct_1']
-        construct_2 = data_info_grid[row, col]['construct_2']
-        construct_pair_row_col[construct_1, construct_2] = (row, col)
+        label_1 = data_info_grid[row, col]['name_1']
+        label_2 = data_info_grid[row, col]['name_2']
+        label_pair_row_col[label_1, label_2] = (row, col)
 
-    for (construct_1, construct_2), (row, col) in construct_pair_row_col.items():
+    for (label_1, label_2), (row, col) in label_pair_row_col.items():
       y_shift_curr_px = add_plotly_colorbar(
         figure = figure,
-        construct_1 = construct_1,
-        construct_2 = construct_2,
+        label_1 = label_1,
+        label_2 = label_2,
         row = row + 1,
         col = col + 1,
         # figure_height_px = figure_size_args['total_height_px'],
@@ -1676,6 +1677,7 @@ def make_graph_single_panel(
   node_label_columns = ['id'],
   node_label_position = 'bottom center',
   node_color_type = 'freq_group',
+  node_color = ['black', 'white'],
   node_size_type = 'freq',
   node_size_min_px = 5,
   node_size_max_px = 50,
@@ -1833,8 +1835,8 @@ def make_graph_single_panel(
     figure.update_traces(
       marker = {
         'colorscale': library_constants.get_freq_ratio_color_scale(
-          data_info['construct_1'],
-          data_info['construct_2'],
+          node_color[0],
+          node_color[1],
         ),
         'cmin': library_constants.FREQ_RATIO_COLOR_SCALE_LOG_MIN,
         'cmax': library_constants.FREQ_RATIO_COLOR_SCALE_LOG_MAX,
@@ -2247,6 +2249,7 @@ def get_plot_args(
   node_size_min_px = library_constants.GRAPH_NODE_SIZE_MIN_PX,
   node_outline_width_scale = library_constants.GRAPH_NODE_OUTLINE_WIDTH_SCALE,
   node_filter_variation_types = library_constants.GRAPH_NODE_FILTER_VARIATION_TYPES,
+  node_comparison_colors = library_constants.DEFAULT_NODE_COLOR,
   graph_width_px = library_constants.GRAPH_WIDTH_PX,
   graph_height_px = library_constants.GRAPH_HEIGHT_PX,
   graph_layout_precomputed_dir = None,
@@ -2258,6 +2261,8 @@ def get_plot_args(
   legend_colorbar_scale = library_constants.GRAPH_LEGEND_COLORBAR_SCALE,
   plot_range_x = None,
   plot_range_y = None,
+  edge_show = library_constants.GRAPH_EDGE_SHOW,
+  edge_show_types = library_constants.GRAPH_EDGE_SHOW_TYPES,
 ):
   if plot_type not in [
     'kamada_layout',
@@ -2277,10 +2282,13 @@ def get_plot_args(
   plot_args['node_size_max_freq'] = node_size_max_freq
   plot_args['node_filter_variation_types'] = node_filter_variation_types
   plot_args['node_outline_width_scale'] = node_outline_width_scale
+  plot_args['node_comparison_colors'] = node_comparison_colors
   plot_args['graph_stats_show'] = False
   plot_args['graph_layout_type'] = plot_type
   plot_args['graph_layout_precomputed_dir'] = graph_layout_precomputed_dir
   plot_args['graph_layout_separate_components'] = graph_layout_separate_components
+  plot_args['edge_show'] = edge_show
+  plot_args['edge_show_types'] = edge_show_types
   plot_args['edge_width_scale'] = edge_width_scale
   plot_args['legend_common'] = True
   plot_args['node_size_min_px'] = node_size_min_px
@@ -2312,7 +2320,6 @@ def get_plot_args(
     }[plot_type]
     plot_args['title'] = plot_title
   
-
   if data_info['format'] == library_constants.DATA_COMPARISON:
     plot_args['node_color_type'] = 'freq_ratio'
     plot_args['legend_colorbar_scale'] = legend_colorbar_scale
@@ -2325,7 +2332,7 @@ def get_plot_args(
 
 def parse_args():
   parser = argparse.ArgumentParser(
-    description = 'Plot graph-theory graphs.'
+    description = 'Plot variation-distance graphs.'
   )
   parser.add_argument(
     '--input',
@@ -2388,6 +2395,7 @@ def parse_args():
       ' on the universal layout showing the first nucleotide of inserted sequences.'
     )
   )
+  # FIXME: MAKE THIS NARGS = 2 SO DON'T HAVE TO SPECIFY. DEFAULT NAN.
   parser.add_argument(
     '--universal_layout_y_axis_y_range',
     nargs = '+',
@@ -2397,6 +2405,7 @@ def parse_args():
       ' the min and max y-position of the line.'
     )
   )
+  # FIXME: MAKE THIS NARGS = 2 SO DON'T HAVE TO SPECIFY. DEFAULT NAN.
   parser.add_argument(
     '--universal_layout_x_axis_x_range',
     nargs = '+',
@@ -2446,6 +2455,7 @@ def parse_args():
     ),
     default = library_constants.GRAPH_NODE_SIZE_MIN_FREQ,
   )
+  # FIXME: REVISE THIS INTO SINGLE ARGUMENT FOR MIN AND MAX
   parser.add_argument(
     '--node_max_px',
     type = float,
@@ -2465,6 +2475,16 @@ def parse_args():
     help = (
       'How much to scale the node outline width (thickness).' +
       ' Values > 1 increase the width; values < 1 decrease the width.'
+    ),
+  )
+  parser.add_argument(
+    '--node_comparison_colors',
+    type = str,
+    default = library_constants.DEFAULT_COMPARISON_COLORS,
+    nargs = 2,
+    help = (
+      'The colors to use in the gradient when the node colors' +
+      ' show the frequency ratio of two experiments.'
     ),
   )
   parser.add_argument(
@@ -2536,8 +2556,9 @@ def parse_args():
   )
   parser.add_argument(
     '--crop_x',
-    nargs = '+',
+    nargs = 2,
     type = float,
+    default = [0, 1],
     help = (
       'Range of the horizontal dimension to crop.' +
       ' Specified with normalized coords in range [0, 1].'
@@ -2545,8 +2566,9 @@ def parse_args():
   )
   parser.add_argument(
     '--crop_y',
-    nargs = '+',
+    nargs = 2,
     type = float,
+    default = [0, 1],
     help = (
       'Range of the vertical dimension to crop.' +
       ' Specified in normalized coords in range [0, 1].'
@@ -2555,7 +2577,8 @@ def parse_args():
   parser.add_argument(
     '--range_x',
     type = float,
-    nargs = '*',
+    nargs = '2',
+    default = [float('nan'), float('nan')],
     help = (
       'Range of x-axis for plotting.'
       'If not specified chosen automatically to either show all nodes or a preset value'
@@ -2565,7 +2588,8 @@ def parse_args():
   parser.add_argument(
     '--range_y',
     type = float,
-    nargs = '*',
+    nargs = '2',
+    default = [float('nan'), float('nan')],
     help = (
       'Range of y-axis for plotting.'
       'If not specified chosen automatically to either show all nodes or a preset value'
@@ -2596,27 +2620,27 @@ def parse_args():
       ' Uses the Ploty library figure.show() function to do so.'
     ),
   )
-  args = parser.parse_args()
-  if args.crop_x is not None:
-    if len(args.crop_x) != 2:
-      raise Exception(f'Need 2 values for crop_x. Got {len(args.crop_x)}')
-  if args.crop_y is not None:
-    if len(args.crop_y) != 2:
-      raise Exception(f'Need 2 values for crop_y. Got {len(args.crop_y)}')
-  if args.range_x is not None:
-    if len(args.range_x) != 2:
-      raise Exception(f'Need 2 values for range_x. Got {len(args.range_x)}')
-  if args.range_y is not None:
-    if len(args.range_y) != 2:
-      raise Exception(f'Need 2 values for range_y. Got {len(args.range_y)}')
-  if args.variation_types is None:
-    args.variation_types = [
+  args = vars(parser.parse_args())
+  # if args['crop_x'] is not None:
+  #   if len(args['crop_x']) != 2:
+  #     raise Exception(f'Need 2 values for crop_x. Got {len(args["crop_x"])}')
+  # if args['crop_y'] is not None:
+  #   if len(args['crop_y']) != 2:
+  #     raise Exception(f'Need 2 values for crop_y. Got {len(args["crop_y"])}')
+  # if args['range_x'] is not None:
+  #   if len(args['range_x']) != 2:
+  #     raise Exception(f'Need 2 values for range_x. Got {len(args["range_x"])}')
+  # if args['range_y'] is not None:
+  #   if len(args['range_y']) != 2:
+  #     raise Exception(f'Need 2 values for range_y. Got {len(args["range_y"])}')
+  if args['variation_types'] is None:
+    args['variation_types'] = [
       library_constants.VARIATION_INSERTION,
       library_constants.VARIATION_DELETION,
       library_constants.VARIATION_NONE,
     ]
   else:
-    for var_type in args.variation_types:
+    for var_type in args['variation_types']:
       if var_type not in [
         library_constants.VARIATION_INSERTION,
         library_constants.VARIATION_DELETION,
@@ -2624,61 +2648,98 @@ def parse_args():
         library_constants.VARIATION_NONE,
       ]:
         raise Exception(f'Unknown variation type: {var_type}')
-  if args.universal_layout_y_axis_y_range is not None:
-    if len(args.universal_layout_y_axis_y_range) != 2:
+  if args['universal_layout_y_axis_y_range'] is not None:
+    if len(args['universal_layout_y_axis_y_range']) != 2:
       raise Exception(
         'Need exactly 2 values for universal_layout_y_axis_y_range.' +
-        ' Got ' + str(args.universal_layout_y_axis_y_range) + '.'
+        ' Got ' + str(args['universal_layout_y_axis_y_range']) + '.'
       )
   else:
-    args.universal_layout_y_axis_y_range = [None, None]
-  if args.universal_layout_x_axis_x_range is not None:
-    if len(args.universal_layout_x_axis_x_range) != 2:
+    args['universal_layout_y_axis_y_range'] = [None, None]
+  if args['universal_layout_x_axis_x_range'] is not None:
+    if len(args['universal_layout_x_axis_x_range']) != 2:
       raise Exception(
         'Need exactly 2 values for universal_layout_x_axis_x_range.' +
-        ' Got ' + str(args.universal_layout_x_axis_x_range) + '.'
+        ' Got ' + str(args['universal_layout_x_axis_x_range']) + '.'
       )
   else:
-    args.universal_layout_x_axis_x_range = [None, None]
+    args['universal_layout_x_axis_x_range'] = [None, None]
   return args
 
-def main():
-  args = parse_args()
-  data_dir = args.input
-  data_info = file_utils.read_tsv_dict(file_names.data_info(args.input))
+def main(
+  input,
+  layout,
+  title,
+  reverse_complement,
+  subst_type,
+  node_max_freq,
+  node_min_freq,
+  node_max_px,
+  node_min_px,
+  node_comparison_colors,
+  variation_types,
+  node_outline_scale,
+  edge_scale,
+  width_px,
+  height_px,
+  precomputed_layout_dir,
+  separate_components,
+  line_width_scale,
+  font_size_scale,
+  legend,
+  legend_color_bar_scale,
+  range_x,
+  range_y,
+  universal_layout_y_axis_insertion_max_tick,
+  universal_layout_y_axis_deletion_max_tick,
+  universal_layout_y_axis_x_pos,
+  universal_layout_y_axis_y_range,
+  universal_layout_x_axis_deletion_y_pos,
+  universal_layout_x_axis_x_range,
+  universal_layout_x_axis_insertion_y_pos,
+  crop_x,
+  crop_y,
+  interactive,
+  ext,
+  output,
+):
+  
+  data_dir = input
+  data_info = file_utils.read_tsv_dict(file_names.data_info(input))
   data_label = library_constants.get_data_label(data_info)
   plot_args = get_plot_args(
     data_dir = data_dir,
     data_info = data_info,
-    plot_type = args.layout + '_layout',
-    title_show = args.title,
-    sequence_reverse_complement = args.reverse_complement,
-    node_subst_type = args.subst_type,
-    node_size_max_freq = args.node_max_freq,
-    node_size_min_freq = args.node_min_freq,
-    node_size_max_px = args.node_max_px,
-    node_size_min_px = args.node_min_px,
-    node_filter_variation_types = args.variation_types,
-    node_outline_width_scale = args.node_outline_scale,
-    edge_width_scale = args.edge_scale,
-    graph_width_px = args.width_px,
-    graph_height_px = args.height_px,
-    graph_layout_precomputed_dir = args.precomputed_layout_dir,
-    graph_layout_separate_components = args.separate_components,
-    line_width_scale = args.line_width_scale,
-    font_size_scale = args.font_size_scale,
-    legend_show = args.legend,
-    legend_colorbar_scale = args.legend_color_bar_scale,
-    plot_range_x = args.range_x,
-    plot_range_y = args.range_y,
+    plot_type = layout + '_layout',
+    title_show = title,
+    sequence_reverse_complement = reverse_complement,
+    node_subst_type = subst_type,
+    node_size_max_freq = node_max_freq,
+    node_size_min_freq = node_min_freq,
+    node_size_max_px = node_max_px,
+    node_size_min_px = node_min_px,
+    node_filter_variation_types = variation_types,
+    node_outline_width_scale = node_outline_scale,
+    node_comparison_colors = node_comparison_colors,
+    edge_width_scale = edge_scale,
+    graph_width_px = width_px,
+    graph_height_px = height_px,
+    graph_layout_precomputed_dir = precomputed_layout_dir,
+    graph_layout_separate_components = separate_components,
+    line_width_scale = line_width_scale,
+    font_size_scale = font_size_scale,
+    legend_show = legend,
+    legend_colorbar_scale = legend_color_bar_scale,
+    plot_range_x = range_x,
+    plot_range_y = range_y,
   )
   
-  figure = make_graph_figure(**plot_args, edge_show=True, edge_show_types=['indel'])
+  figure = make_graph_figure(**plot_args)
 
   sequence_data = file_utils.read_tsv(
-    file_names.sequence_data(data_dir, args.subst_type)
+    file_names.sequence_data(data_dir, subst_type)
   )
-  if args.universal_layout_y_axis_insertion_max_tick is None:
+  if universal_layout_y_axis_insertion_max_tick is None:
     try:
       max_tick_insertion = sequence_data.loc[
         sequence_data['variation_type'] == 'insertion',
@@ -2688,9 +2749,9 @@ def main():
       # incase no insertions
       max_tick_insertion = 1
   else:
-    max_tick_insertion = args.universal_layout_y_axis_insertion_max_tick
+    max_tick_insertion = universal_layout_y_axis_insertion_max_tick
   
-  if args.universal_layout_y_axis_deletion_max_tick is None:
+  if universal_layout_y_axis_deletion_max_tick is None:
     try:
       max_tick_deletion = sequence_data.loc[
         sequence_data['variation_type'] == 'deletion',
@@ -2700,63 +2761,63 @@ def main():
       # incase no deletions
       max_tick_deletion = 1
   else:
-    max_tick_deletion = args.universal_layout_y_axis_deletion_max_tick
+    max_tick_deletion = universal_layout_y_axis_deletion_max_tick
 
-  if args.universal_layout_y_axis_x_pos is not None:
+  if universal_layout_y_axis_x_pos is not None:
     make_universal_layout_y_axis(
       figure = figure,
-      x_pos = args.universal_layout_y_axis_x_pos,
+      x_pos = universal_layout_y_axis_x_pos,
       row = 1,
       col = 1,
       ref_length = len(data_info['ref_seq_window']),
       cut_pos_ref = len(data_info['ref_seq_window']) // 2,
-      y_min = args.universal_layout_y_axis_y_range[0],
-      y_max = args.universal_layout_y_axis_y_range[1],
+      y_min = universal_layout_y_axis_y_range[0],
+      y_max = universal_layout_y_axis_y_range[1],
       max_tick_deletion = max_tick_deletion,
       max_tick_insertion = max_tick_insertion,
     )
-  if args.universal_layout_x_axis_deletion_y_pos is not None:
+  if universal_layout_x_axis_deletion_y_pos is not None:
     make_universal_layout_x_axis(
       figure = figure,
       var_type = 'deletion',
-      y_pos = args.universal_layout_x_axis_deletion_y_pos,
+      y_pos = universal_layout_x_axis_deletion_y_pos,
       row = 1,
       col = 1,
       ref_length = len(data_info['ref_seq_window']),
       cut_pos_ref = len(data_info['ref_seq_window']) // 2,
-      x_min = args.universal_layout_x_axis_x_range[0],
-      x_max = args.universal_layout_x_axis_x_range[1],
+      x_min = universal_layout_x_axis_x_range[0],
+      x_max = universal_layout_x_axis_x_range[1],
       deletion_label_type = (
         'absolute' if data_info['control_type'] == '30bpDown' else 'relative'
       ),
     )
-  if args.universal_layout_x_axis_insertion_y_pos is not None:
+  if universal_layout_x_axis_insertion_y_pos is not None:
     make_universal_layout_x_axis(
       figure = figure,
       var_type = 'insertion',
-      y_pos = args.universal_layout_x_axis_insertion_y_pos,
+      y_pos = universal_layout_x_axis_insertion_y_pos,
       row = 1,
       col = 1,
       ref_length = len(data_info['ref_seq_window']),
       cut_pos_ref = len(data_info['ref_seq_window']) // 2,
-      x_min = args.universal_layout_x_axis_x_range[0],
-      x_max = args.universal_layout_x_axis_x_range[1],
+      x_min = universal_layout_x_axis_x_range[0],
+      x_max = universal_layout_x_axis_x_range[1],
     )
-  if args.interactive:
+  if interactive:
     log_utils.log('Opening interactive version in browser.')
     figure.show()
 
-  if args.output is not None:
-    file_out = os.path.join(args.output, file_names.graph_figure(data_label, args.ext))
+  if output is not None:
+    file_out = os.path.join(output, file_names.graph_figure(data_label, ext))
     file_utils.write_plotly(figure, file_out)
     log_utils.log(file_out)
 
-  if ((args.crop_x is not None)) or ((args.crop_y is not None)):
-    if args.ext == 'html':
+  if ((crop_x is not None)) or ((crop_y is not None)):
+    if ext == 'html':
       raise Exception('Cannot use crop setting with HTML output')
-    if args.crop_x is None:
+    if crop_x is None:
       crop_x = (0, 1)
-    if args.crop_y is None:
+    if crop_y is None:
       crop_y = (0, 1)
 
     image = PIL.Image.open(file_out)
@@ -2769,4 +2830,6 @@ def main():
     image.crop((left, top, right, bottom)).save(file_out)
 
 if __name__ == '__main__':
-  main()
+  main(**parse_args())
+
+# FIXME: CHANGE THE NAME FIELD TO LABEL IN THE DATA INFO
