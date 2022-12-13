@@ -117,8 +117,7 @@ def plot_histogram_impl(
   data_dir,
   data_info,
   variation_type,
-  freq_min,
-  freq_max,
+  freq_range,
   freq_log,
   axis,
   show_title,
@@ -135,11 +134,9 @@ def plot_histogram_impl(
   ref_pos_labels = library_constants.get_position_labels(label_type, ref_length)
 
   if freq_log:
-    freq_min_axis = np.log10(freq_min)
-    freq_max_axis = np.log10(freq_max)
+    freq_range_axis = np.log10(freq_range)
   else:
-    freq_min_axis = freq_min
-    freq_max_axis = freq_max
+    freq_range_axis = freq_range
 
   data_sub_long = get_variation_data(
     data_dir = data_dir,
@@ -156,8 +153,8 @@ def plot_histogram_impl(
   z = data_sub_long.iloc[:, 2].to_numpy()
 
   if freq_log:
-    z = np.log10(np.clip(z, freq_min, np.inf))
-  z -= freq_min_axis
+    z = np.log10(np.clip(z, freq_range[0], np.inf))
+  z -= freq_range_axis[0]
 
   # The clip with min .0001 is needed to prevent strange plotting
   # artifacts with plotting 0 height bars
@@ -166,7 +163,7 @@ def plot_histogram_impl(
   axis.bar3d(
     x = x,
     y = y,
-    z = np.full_like(z, freq_min_axis),
+    z = np.full_like(z, freq_range_axis[0]),
     dx = 1,
     dy = 1,
     dz = z,
@@ -220,13 +217,13 @@ def plot_histogram_impl(
     labelpad = label_pad_px * 1.5 * font_size_scale,
     fontsize = axis_label_font_size * font_size_scale,
   )
-  axis.set_zlim(freq_min_axis, freq_max_axis)
+  axis.set_zlim(freq_range_axis[0], freq_range_axis[1])
   axis.tick_params(
     axis = 'z',
     pad = 7 * font_size_scale,
   )
   if freq_log:
-    z_ticks = list(range(round(freq_min_axis), round(freq_max_axis) + 1))
+    z_ticks = list(range(round(freq_range_axis[0]), round(freq_range_axis[1]) + 1))
     z_labels = []
     for tick in z_ticks:
       if tick == 0:
@@ -250,8 +247,7 @@ def plot_histogram(
   data_dir,
   data_info,
   variation_type,
-  freq_min,
-  freq_max,
+  freq_range,
   freq_log,
   label_type,
   show_title = False,
@@ -286,8 +282,7 @@ def plot_histogram(
     data_dir = data_dir,
     data_info = data_info,
     variation_type = variation_type,
-    freq_min = freq_min,
-    freq_max = freq_max,
+    freq_range = freq_range,
     freq_log = freq_log,
     axis = axis,
     show_title = False,
@@ -341,26 +336,24 @@ def parse_args():
     ),
     required = True
   )
-  return parser.parse_args()
+  return vars(parser.parse_args())
 
-def main():
-  args = parse_args()
-  data_dir = args.input
-  data_info = file_utils.read_tsv_dict(file_names.data_info(args.input))
+def main(input, output, reverse_pos, label_type):
+  data_dir = input
+  data_info = file_utils.read_tsv_dict(file_names.data_info(input))
   data_label = library_constants.get_data_label(data_info)
   for variation_type in ['substitution', 'insertion', 'deletion']:
     plot_histogram(
-      file_out = os.path.join(args.output, file_names.histogram_3d(data_label, variation_type)),
+      file_out = os.path.join(output, file_names.histogram_3d(data_label, variation_type)),
       data_dir = data_dir,
       data_info = data_info,
       variation_type = variation_type,
-      freq_min = library_constants.HISTOGRAM_FREQ_MIN,
-      freq_max = library_constants.HISTOGRAM_FREQ_MAX,
+      freq_range = library_constants.HISTOGRAM_FREQ_RANGE,
       freq_log = True,
-      label_type = args.label_type,
+      label_type = label_type,
       show_title = False,
-      reverse_pos = args.reverse_pos,
+      reverse_pos = reverse_pos,
     )
 
 if __name__ == '__main__':
-  main()
+  main(**parse_args())

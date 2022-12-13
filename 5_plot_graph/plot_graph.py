@@ -115,64 +115,6 @@ def group_graph_nodes_by(graph, data_name):
   data = pd.series(dict(graph.nodes(data_name)))
   return list(data.groupby(data).groups.values())
 
-def make_node_spacing_layout(
-  xy_dict,
-  grid_type,
-  node_size_px_dict = None,
-  x_size_domain = None,
-  y_size_domain = None,
-  x_size_px = None,
-  y_size_px = None,
-):
-  buckets = {}
-  for id, (x, y) in xy_dict.items():
-    buckets.setdefault((x, y), [])
-    buckets[x, y].append(id)
-  
-  new_xy_dict = {}
-  for (x, y), id_list in buckets.items():
-    if grid_type == 'vert':
-      num_ids = len(id_list)
-      if num_ids == 1:
-        new_y_vals = [y]
-      else:
-        new_y_vals = y + 0.33 * (np.arange(num_ids) - ((num_ids - 1) / 2)) / (num_ids - 1)
-      for id, new_y in zip(id_list, new_y_vals):
-        new_xy_dict[id] = (x, new_y)
-    elif grid_type == 'square':
-      num_ids = len(id_list)
-      grid_size = np.ceil(np.sqrt(num_ids))
-      if grid_size <= 1:
-        grid_x = np.array([x])
-        grid_y = np.array([y])
-      else:
-        grid_x, grid_y = np.meshgrid(
-          x + 0.33 * (np.arange(grid_size) - ((grid_size - 1) / 2)) / (grid_size - 1),
-          y + 0.33 * (np.arange(grid_size) - ((grid_size - 1) / 2)) / (grid_size - 1),
-        )
-      grid_x = grid_x.ravel()
-      grid_y = grid_y.ravel()
-      for id, new_x, new_y in zip(id_list, grid_x, grid_y):
-        new_xy_dict[id] = [new_x, new_y]
-    elif grid_type == 'circle_pack':
-      bucket_pack_dict = {
-        id: {'radius': node_size_px_dict[id] / 2}
-        for id in id_list
-      }
-      bucket_pack_dict = pack_circles_origin(bucket_pack_dict)
-      for id in bucket_pack_dict:
-        x_px_offset = bucket_pack_dict[id]['x']
-        y_px_offset = bucket_pack_dict[id]['y']
-        x_domain_offset = x_px_offset / x_size_px * x_size_domain
-        y_domain_offset = y_px_offset / y_size_px * y_size_domain
-        new_xy_dict[id] = [
-          xy_dict[id][0] + x_domain_offset,
-          xy_dict[id][1] + y_domain_offset,
-        ]
-    else:
-      raise Exception('Unknown grid type: ' + str(grid_type))
-  return new_xy_dict
-
 def make_radial_layout(data_info, graph):
   node_list = graph.nodes(data=True)
 
@@ -412,8 +354,7 @@ def make_universal_layout_y_axis(
   col,
   ref_length,
   cut_pos_ref, # should be 1 based!
-  y_min = None,
-  y_max = None,
+  y_range = [float('nan'), float('nan')],
   tick_length = 0.25,
   label_font_size = library_constants.GRAPH_AXES_TICK_FONT_SIZE,
   font_size_scale = library_constants.GRAPH_FONT_SIZE_SCALE,
@@ -481,17 +422,17 @@ def make_universal_layout_y_axis(
       xanchor = 'left',
     )
 
-  if y_min is None:
-    y_min = min(tick['y_pos'] for tick in tick_list)
-  if y_max is None:
-    y_max = max(tick['y_pos'] for tick in tick_list)
+  if np.isnan(y_range[0]):
+    y_range[0] = min(tick['y_pos'] for tick in tick_list)
+  if np.isnan(y_range[1]):
+    y_range[1] = max(tick['y_pos'] for tick in tick_list)
 
   figure.add_shape(
     type = 'line',
     x0 = x_pos,
     x1 = x_pos,
-    y0 = y_min,
-    y1 = y_max,
+    y0 = y_range[0],
+    y1 = y_range[1],
     row = row,
     col = col,
     line_width = line_width_px,
@@ -507,8 +448,7 @@ def make_universal_layout_x_axis(
   col,
   ref_length,
   cut_pos_ref, # should be 1 based!
-  x_min = None,
-  x_max = None,
+  x_range = [float('nan'), float('nan')],
   insertion_axis_type = 'bracket', # tick or bracket
   deletion_label_type = 'relative', # relative or absolute
   deletion_tick_type = 'start',
@@ -651,16 +591,16 @@ def make_universal_layout_x_axis(
         yshift = -label_font_size,
       )
 
-  if x_min is None:
-    x_min = float('inf')
-  if x_max is None:
-    x_max = -float('inf')
-  x_min = min(x_min, min(tick['x_pos'] for tick in tick_list))
-  x_max = max(x_max, max(tick['x_pos'] for tick in tick_list))
+  if np.isnan(x_range[0]):
+    x_range[0] = float('inf')
+  if np.isnan(x_range[1]):
+    x_range[1] = -float('inf')
+  x_range[0] = min(x_range[0], min(tick['x_pos'] for tick in tick_list))
+  x_range[1] = max(x_range[1], max(tick['x_pos'] for tick in tick_list))
   figure.add_shape(
     type = 'line',
-    x0 = x_min,
-    x1 = x_max,
+    x0 = x_range[0],
+    x1 = x_range[1],
     y0 = y_pos,
     y1 = y_pos,
     row = row,
@@ -1178,10 +1118,8 @@ def make_outline_legend(
 
 def make_size_legend(
   figure,
-  node_size_min_freq,
-  node_size_max_freq,
-  node_size_min_px,
-  node_size_max_px,
+  node_size_freq_range,
+  node_size_px_range,
   x_anchor,
   y_anchor,
   x_shift,
@@ -1190,19 +1128,18 @@ def make_size_legend(
   font_size_scale = 1,
   line_width_scale = 1,
 ):
-  node_size_min_freq_log10 = int(np.round(np.log10(node_size_min_freq)))
-  node_size_max_freq_log10 = int(np.round(np.log10(node_size_max_freq)))
+  node_size_freq_range_log10 = int(np.round(np.log10(node_size_freq_range)))
 
-  num_legend_items = node_size_max_freq_log10 - node_size_min_freq_log10 + 1
+  num_legend_items = node_size_freq_range_log10[1] - node_size_freq_range_log10[0] + 1
 
   legend_items = []
   for i in range(num_legend_items):
-    freq_log10 = node_size_min_freq_log10 + i
+    freq_log10 = node_size_freq_range_log10[0] + i
     if num_legend_items == 1:
-      size = node_size_min_px
+      size = node_size_px_range[0]
     else:
-      size = node_size_min_px + (
-        i * (node_size_max_px - node_size_min_px) /
+      size = node_size_px_range[0] + (
+        i * (node_size_px_range[1] - node_size_px_range[0]) /
         (num_legend_items - 1)
       )
     if freq_log10 == 0:
@@ -1228,10 +1165,10 @@ def make_size_legend(
     y_anchor = y_anchor,
     x_shift = x_shift,
     y_shift = y_shift,
-    x_shift_items = node_size_max_px / 2,
-    y_shift_items = -(node_size_max_px + 10),
-    x_shift_text = legend_item_scale * (node_size_max_px + 10),
-    y_shift_item_step = -(node_size_max_px + 10),
+    x_shift_items = node_size_px_range[1] / 2,
+    y_shift_items = -(node_size_px_range[1] + 10),
+    x_shift_text = legend_item_scale * (node_size_px_range[1] + 10),
+    y_shift_item_step = -(node_size_px_range[1] + 10),
     font_size_scale = font_size_scale,
     line_width_scale = line_width_scale,
   )
@@ -1360,10 +1297,8 @@ def make_custom_legends(
   node_size_type,
   node_color_type,
   node_filter_variation_types,
-  node_size_min_freq,
-  node_size_max_freq,
-  node_size_min_px,
-  node_size_max_px,
+  node_size_freq_range,
+  node_size_px_range,
   edge_show,
   edge_show_types,
   legend_x_shift_px,
@@ -1378,7 +1313,7 @@ def make_custom_legends(
   if node_type in ['sequence_data']:
     y_shift_curr_px = make_outline_legend(
       figure = figure,
-      node_size_px = node_size_max_px,
+      node_size_px = node_size_px_range[1],
       x_anchor = 1,
       y_anchor = 1,
       x_shift = legend_x_shift_px,
@@ -1393,7 +1328,7 @@ def make_custom_legends(
     y_shift_curr_px = make_variation_color_legend(
       figure = figure,
       variation_types = node_filter_variation_types,
-      node_size_px = node_size_max_px,
+      node_size_px = node_size_px_range[1],
       x_anchor = 1,
       y_anchor = 1,
       x_shift = legend_x_shift_px,
@@ -1405,11 +1340,11 @@ def make_custom_legends(
     y_shift_curr_px -= legend_vertical_space_px
   elif node_color_type == 'freq_group':
     label_1_list = list(set(
-      data_info['name_1'] for data_info in data_info_grid.ravel()
+      data_info['label_1'] for data_info in data_info_grid.ravel()
       if data_info['format'] == library_constants.DATA_COMPARISON
     ))
     label_2_list = list(set(
-      data_info['name_2'] for data_info in data_info_grid.ravel()
+      data_info['label_2'] for data_info in data_info_grid.ravel()
       if data_info['format'] == library_constants.DATA_COMPARISON
     ))
     for label_1 in label_1_list:
@@ -1418,7 +1353,7 @@ def make_custom_legends(
           label_1 = label_1,
           label_2 = label_2,
           figure = figure,
-          node_size_px = node_size_max_px,
+          node_size_px = node_size_px_range[1],
           x_anchor = 1,
           y_anchor = 1,
           x_shift = legend_x_shift_px,
@@ -1432,8 +1367,8 @@ def make_custom_legends(
     label_pair_row_col = {}
     for row in range(data_info_grid.shape[0]):
       for col in range(data_info_grid.shape[1]):
-        label_1 = data_info_grid[row, col]['name_1']
-        label_2 = data_info_grid[row, col]['name_2']
+        label_1 = data_info_grid[row, col]['label_1']
+        label_2 = data_info_grid[row, col]['label_2']
         label_pair_row_col[label_1, label_2] = (row, col)
 
     for (label_1, label_2), (row, col) in label_pair_row_col.items():
@@ -1443,7 +1378,6 @@ def make_custom_legends(
         label_2 = label_2,
         row = row + 1,
         col = col + 1,
-        # figure_height_px = figure_size_args['total_height_px'],
         figure_height_px = figure_height_px,
         legend_colorbar_scale = legend_colorbar_scale,
         legend_x_shift_px = legend_x_shift_px,
@@ -1474,10 +1408,8 @@ def make_custom_legends(
   if node_size_type == 'freq':
     y_shift_curr_px = make_size_legend(
       figure = figure,
-      node_size_min_freq = node_size_min_freq,
-      node_size_max_freq = node_size_max_freq,
-      node_size_min_px = node_size_min_px,
-      node_size_max_px = node_size_max_px,
+      node_size_freq_range = node_size_freq_range,
+      node_size_px_range = node_size_px_range,
       x_anchor = 1,
       y_anchor = 1,
       x_shift = legend_x_shift_px,
@@ -1662,10 +1594,8 @@ def make_graph_single_panel(
   sequence_reverse_complement = False,
   node_type = 'sequence_data',
   node_subst_type = library_constants.SUBST_WITHOUT,
-  node_filter_freq_min = 0,
-  node_filter_freq_max = np.inf,
-  node_filter_dist_min = 0,
-  node_filter_dist_max = np.inf,
+  node_filter_freq_range = [0, np.inf],
+  node_filter_dist_range = [0, np.inf],
   edge_show = True,
   edge_types_show = None,
   edge_labels_show = False,
@@ -1679,14 +1609,12 @@ def make_graph_single_panel(
   node_color_type = 'freq_group',
   node_color = ['black', 'white'],
   node_size_type = 'freq',
-  node_size_min_px = 5,
-  node_size_max_px = 50,
-  node_size_min_freq = 1e-6,
-  node_size_max_freq = 1e-1,
+  node_size_px_range = [5, 50],
+  node_size_freq_range = [1e-6, 1e-1],
   node_filter_variation_types = None,
   node_outline_width_scale = 1,
-  plot_range_x = None,
-  plot_range_y = None,
+  plot_range_x = [float('nan'), float('nan')],
+  plot_range_y = [float('nan'), float('nan')],
   subplot_width_px = None,
   subplot_height_px = None,
   legend_show = True,
@@ -1717,13 +1645,13 @@ def make_graph_single_panel(
   freq_rank_columns = library_constants.FREQ_RANK_COLUMNS[data_info['format']]
   node_data = node_data.loc[
     node_data[freq_rank_columns].min(axis='columns')
-      .between(node_filter_freq_min, node_filter_freq_max, inclusive='both')
+      .between(node_filter_freq_range[0], node_filter_freq_range[1], inclusive='both')
   ]
 
   if node_type in ['sequence_data', 'variation']:
     node_data = node_data.loc[
       node_data['dist_ref']
-        .between(node_filter_dist_min, node_filter_dist_max, inclusive='both')
+        .between(node_filter_dist_range[0], node_filter_dist_range[1], inclusive='both')
     ]
 
   graph = graph.subgraph(node_data.index)
@@ -1772,10 +1700,8 @@ def make_graph_single_panel(
     node_type = node_type,
     node_color_type = node_color_type,
     node_size_type = node_size_type,
-    node_size_min_px = node_size_min_px,
-    node_size_max_px = node_size_max_px,
-    node_size_min_freq = node_size_min_freq,
-    node_size_max_freq = node_size_max_freq,
+    node_size_px_range = node_size_px_range,
+    node_size_freq_range = node_size_freq_range,
     node_outline_width_scale = node_outline_width_scale,
     reverse_complement = sequence_reverse_complement,
   )
@@ -1800,13 +1726,13 @@ def make_graph_single_panel(
       col = col,
     )
   
-  if plot_range_x is not None:
+  if not np.isnan(plot_range_x[0]):
     figure.update_xaxes(
       range = plot_range_x,
       row = row,
       col = row,
     )
-  if plot_range_y is not None:
+  if not np.isnan(plot_range_y[0]):
     figure.update_yaxes(
       range = plot_range_y,
       row = row,
@@ -1823,8 +1749,8 @@ def make_graph_single_panel(
   if legend_group_title_show:
     figure.update_traces(
       {
-        'legendgroup': data_info['name'],
-        'legendgrouptitle_text': data_info['label']['main'],
+        'legendgroup': data_info['label'],
+        'legendgrouptitle_text': data_info['label'],
       },
       row = row,
       col = col,
@@ -1838,8 +1764,8 @@ def make_graph_single_panel(
           node_color[0],
           node_color[1],
         ),
-        'cmin': library_constants.FREQ_RATIO_COLOR_SCALE_LOG_MIN,
-        'cmax': library_constants.FREQ_RATIO_COLOR_SCALE_LOG_MAX,
+        'cmin': library_constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[0],
+        'cmax': library_constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[1],
       },
       row = row,
       col = col,
@@ -1916,19 +1842,15 @@ def make_graph_figure(
   node_type = 'sequence_data',
   node_subst_type = library_constants.SUBST_WITHOUT,
   node_filter_variation_types = None,
-  node_filter_freq_min = 0,
-  node_filter_freq_max = np.inf,
-  node_filter_dist_min = 0,
-  node_filter_dist_max = np.inf,
+  node_filter_freq_range = [0, np.inf],
+  node_filter_dist_range = [0, np.inf],
   node_labels_show = False,
   node_label_columns = ['id'],
   node_label_position = 'bottom center',
   node_color_type = 'freq_group',
   node_size_type = 'freq',
-  node_size_min_px = 10,
-  node_size_max_px = 50,
-  node_size_min_freq = 1e-6,
-  node_size_max_freq = 1,
+  node_size_px_range = [10, 50],
+  node_size_freq_range = [1e-6, 1],
   edge_show = True,
   edge_show_labels = False,
   edge_show_types = list(library_constants.EDGE_TYPES),
@@ -1951,8 +1873,8 @@ def make_graph_figure(
   legend_colorbar_scale = 1,
   line_width_scale = 1,
   node_outline_width_scale = 1,
-  plot_range_x = None,
-  plot_range_y = None,
+  plot_range_x = [float('nan'), float('nan')],
+  plot_range_y = [float('nan'), float('nan')],
   graph_stats_show = False,
   graph_stats_separate = True,
   graph_stats_subplot_px = library_constants.GRAPH_STATS_SUBPLOT_PX,
@@ -1987,14 +1909,14 @@ def make_graph_figure(
     ]
 
   if 'plot_range' in LAYOUT_PROPERTIES[graph_layout_type]:
-    if plot_range_x is None:
+    if np.isnan(plot_range_x[0]):
       plot_range_x = LAYOUT_PROPERTIES[graph_layout_type]['plot_range']['x']
-    if plot_range_y is None:
+    if np.isnan(plot_range_y[0]):
       plot_range_y = LAYOUT_PROPERTIES[graph_layout_type]['plot_range']['y']
   elif LAYOUT_PROPERTIES.get(graph_layout_type, {}).get('normalize'):
-    if plot_range_x is None:
+    if np.isnan(plot_range_x[0]):
       plot_range_x = (0, 1)
-    if plot_range_y is None:
+    if np.isnan(plot_range_y[0]):
       plot_range_y = (0, 1)
 
   edge_show = edge_show and LAYOUT_PROPERTIES[graph_layout_type]['has_edges']
@@ -2059,10 +1981,8 @@ def make_graph_figure(
         data_info = data_info,
         node_type = node_type,
         node_subst_type = node_subst_type,
-        node_filter_freq_min = node_filter_freq_min,
-        node_filter_freq_max = node_filter_freq_max,
-        node_filter_dist_min = node_filter_dist_min,
-        node_filter_dist_max = node_filter_dist_max,
+        node_filter_freq_range = node_filter_freq_range,
+        node_filter_dist_range = node_filter_dist_range,
         edge_show = edge_show,
         edge_types_show = edge_show_types,
         edge_labels_show = edge_show_labels,
@@ -2076,10 +1996,8 @@ def make_graph_figure(
         node_label_position = node_label_position,
         node_color_type = node_color_type,
         node_size_type = node_size_type,
-        node_size_min_px = node_size_min_px,
-        node_size_max_px = node_size_max_px,
-        node_size_min_freq = node_size_min_freq,
-        node_size_max_freq = node_size_max_freq,
+        node_size_px_range = node_size_px_range,
+        node_size_freq_range = node_size_freq_range,
         node_filter_variation_types = node_filter_variation_types,
         node_outline_width_scale = node_outline_width_scale,
         plot_range_x = plot_range_x,
@@ -2219,10 +2137,8 @@ def make_graph_figure(
       node_size_type = node_size_type,
       node_color_type = node_color_type,
       node_filter_variation_types = node_filter_variation_types,
-      node_size_min_freq = node_size_min_freq,
-      node_size_max_freq = node_size_max_freq,
-      node_size_min_px = node_size_min_px,
-      node_size_max_px = node_size_max_px,
+      node_size_freq_range = node_size_freq_range,
+      node_size_px_range = node_size_px_range,
       edge_show = edge_show,
       edge_show_types = edge_show_types,
       legend_x_shift_px = legend_x_shift_px,
@@ -2243,10 +2159,8 @@ def get_plot_args(
   title_show = False,
   sequence_reverse_complement = False,
   node_subst_type = library_constants.SUBST_WITHOUT,
-  node_size_max_freq = library_constants.GRAPH_NODE_SIZE_MAX_FREQ,
-  node_size_min_freq = library_constants.GRAPH_NODE_SIZE_MIN_FREQ,
-  node_size_max_px = library_constants.GRAPH_NODE_SIZE_MAX_PX,
-  node_size_min_px = library_constants.GRAPH_NODE_SIZE_MIN_PX,
+  node_size_freq_range = library_constants.GRAPH_NODE_SIZE_FREQ_RANGE,
+  node_size_px_range = library_constants.GRAPH_NODE_SIZE_PX_RANGE,
   node_outline_width_scale = library_constants.GRAPH_NODE_OUTLINE_WIDTH_SCALE,
   node_filter_variation_types = library_constants.GRAPH_NODE_FILTER_VARIATION_TYPES,
   node_comparison_colors = library_constants.DEFAULT_NODE_COLOR,
@@ -2278,8 +2192,7 @@ def get_plot_args(
   plot_args['sequence_reverse_complement'] = sequence_reverse_complement
   plot_args['node_type'] = 'sequence_data'
   plot_args['node_subst_type'] = node_subst_type
-  plot_args['node_size_min_freq'] = node_size_min_freq
-  plot_args['node_size_max_freq'] = node_size_max_freq
+  plot_args['node_size_freq_range'] = node_size_freq_range
   plot_args['node_filter_variation_types'] = node_filter_variation_types
   plot_args['node_outline_width_scale'] = node_outline_width_scale
   plot_args['node_comparison_colors'] = node_comparison_colors
@@ -2291,8 +2204,7 @@ def get_plot_args(
   plot_args['edge_show_types'] = edge_show_types
   plot_args['edge_width_scale'] = edge_width_scale
   plot_args['legend_common'] = True
-  plot_args['node_size_min_px'] = node_size_min_px
-  plot_args['node_size_max_px'] = node_size_max_px
+  plot_args['node_size_px_range'] = node_size_px_range
   plot_args['col_widths_px'] = [graph_width_px]
   plot_args['row_heights_px'] = [graph_height_px]
   plot_args['title_subplot_show'] = False
@@ -2388,6 +2300,17 @@ def parse_args():
     )
   )
   parser.add_argument(
+    '--universal_layout_x_axis_deletion_label_type',
+    type = str,
+    choices = ['relative', 'absolute'],
+    default = 'relative',
+    help = (
+      'The type of labeling to use for the universal layout deletion x-axis (if present).' +
+      ' Relative labels have 0 in the middle with negative/positive values on the left/right.' +
+      ' Absolute labels have 1 on the left and the length of the reference sequence on the right.'
+    )
+  )
+  parser.add_argument(
     '--universal_layout_x_axis_insertion_y_pos',
     type = float,
     help = (
@@ -2395,21 +2318,21 @@ def parse_args():
       ' on the universal layout showing the first nucleotide of inserted sequences.'
     )
   )
-  # FIXME: MAKE THIS NARGS = 2 SO DON'T HAVE TO SPECIFY. DEFAULT NAN.
   parser.add_argument(
     '--universal_layout_y_axis_y_range',
-    nargs = '+',
+    nargs = 2,
     type = float,
+    default = [float('nan'), float('nan')],
     help = (
       'If showing an y-axis for the universal layout,' +
       ' the min and max y-position of the line.'
     )
   )
-  # FIXME: MAKE THIS NARGS = 2 SO DON'T HAVE TO SPECIFY. DEFAULT NAN.
   parser.add_argument(
     '--universal_layout_x_axis_x_range',
-    nargs = '+',
+    nargs = 2,
     type = float,
+    default = [float('nan'), float('nan')],
     help = (
       'If showing an x-axis for the universal layout,' +
       ' the min and max x-position of the line.'
@@ -2438,35 +2361,21 @@ def parse_args():
     default = library_constants.SUBST_WITHOUT,
   )
   parser.add_argument(
-    '--node_max_freq',
+    '--node_freq_range',
+    nargs = 2,
     type = float,
+    default = library_constants.GRAPH_NODE_SIZE_FREQ_RANGE,
     help = (
-      'Max frequency to determine node size.' +
+      'Min and max frequency to determine node size.' +
       'Higher frequencies are clipped to this value.'
     ),
-    default = library_constants.GRAPH_NODE_SIZE_MAX_FREQ,
   )
   parser.add_argument(
-    '--node_min_freq',
+    '--node_px_range',
+    nargs = 2,
     type = float,
-    help = (
-      'Min frequency to determine node size.' +
-      'Lower frequencies are clipped to this value.'
-    ),
-    default = library_constants.GRAPH_NODE_SIZE_MIN_FREQ,
-  )
-  # FIXME: REVISE THIS INTO SINGLE ARGUMENT FOR MIN AND MAX
-  parser.add_argument(
-    '--node_max_px',
-    type = float,
+    default = library_constants.GRAPH_NODE_SIZE_PX_RANGE,
     help = 'Largest node size as determined by the frequency.',
-    default = library_constants.GRAPH_NODE_SIZE_MAX_PX,
-  )
-  parser.add_argument(
-    '--node_min_px',
-    type = float,
-    help = 'Smallest node size as determined by the frequency.',
-    default = library_constants.GRAPH_NODE_SIZE_MIN_PX,
   )
   parser.add_argument(
     '--node_outline_scale',
@@ -2490,6 +2399,7 @@ def parse_args():
   parser.add_argument(
     '--variation_types',
     nargs = '+',
+    default = library_constants.DEFAULT_VARIATION_TYPES,
     help = (
       'The variation types that should be included in the graph.'
       ' This should be a list of the types:'
@@ -2577,7 +2487,7 @@ def parse_args():
   parser.add_argument(
     '--range_x',
     type = float,
-    nargs = '2',
+    nargs = 2,
     default = [float('nan'), float('nan')],
     help = (
       'Range of x-axis for plotting.'
@@ -2588,7 +2498,7 @@ def parse_args():
   parser.add_argument(
     '--range_y',
     type = float,
-    nargs = '2',
+    nargs = 2,
     default = [float('nan'), float('nan')],
     help = (
       'Range of y-axis for plotting.'
@@ -2621,49 +2531,9 @@ def parse_args():
     ),
   )
   args = vars(parser.parse_args())
-  # if args['crop_x'] is not None:
-  #   if len(args['crop_x']) != 2:
-  #     raise Exception(f'Need 2 values for crop_x. Got {len(args["crop_x"])}')
-  # if args['crop_y'] is not None:
-  #   if len(args['crop_y']) != 2:
-  #     raise Exception(f'Need 2 values for crop_y. Got {len(args["crop_y"])}')
-  # if args['range_x'] is not None:
-  #   if len(args['range_x']) != 2:
-  #     raise Exception(f'Need 2 values for range_x. Got {len(args["range_x"])}')
-  # if args['range_y'] is not None:
-  #   if len(args['range_y']) != 2:
-  #     raise Exception(f'Need 2 values for range_y. Got {len(args["range_y"])}')
-  if args['variation_types'] is None:
-    args['variation_types'] = [
-      library_constants.VARIATION_INSERTION,
-      library_constants.VARIATION_DELETION,
-      library_constants.VARIATION_NONE,
-    ]
-  else:
-    for var_type in args['variation_types']:
-      if var_type not in [
-        library_constants.VARIATION_INSERTION,
-        library_constants.VARIATION_DELETION,
-        library_constants.VARIATION_SUBSTITUTION,
-        library_constants.VARIATION_NONE,
-      ]:
-        raise Exception(f'Unknown variation type: {var_type}')
-  if args['universal_layout_y_axis_y_range'] is not None:
-    if len(args['universal_layout_y_axis_y_range']) != 2:
-      raise Exception(
-        'Need exactly 2 values for universal_layout_y_axis_y_range.' +
-        ' Got ' + str(args['universal_layout_y_axis_y_range']) + '.'
-      )
-  else:
-    args['universal_layout_y_axis_y_range'] = [None, None]
-  if args['universal_layout_x_axis_x_range'] is not None:
-    if len(args['universal_layout_x_axis_x_range']) != 2:
-      raise Exception(
-        'Need exactly 2 values for universal_layout_x_axis_x_range.' +
-        ' Got ' + str(args['universal_layout_x_axis_x_range']) + '.'
-      )
-  else:
-    args['universal_layout_x_axis_x_range'] = [None, None]
+  for var_type in args['variation_types']:
+    if var_type not in library_constants.VARIATION_TYPES:
+      raise Exception(f'Unknown variation type: {var_type}')
   return args
 
 def main(
@@ -2672,10 +2542,8 @@ def main(
   title,
   reverse_complement,
   subst_type,
-  node_max_freq,
-  node_min_freq,
-  node_max_px,
-  node_min_px,
+  node_freq_range,
+  node_px_range,
   node_comparison_colors,
   variation_types,
   node_outline_scale,
@@ -2695,6 +2563,7 @@ def main(
   universal_layout_y_axis_x_pos,
   universal_layout_y_axis_y_range,
   universal_layout_x_axis_deletion_y_pos,
+  universal_layout_x_axis_deletion_label_type,
   universal_layout_x_axis_x_range,
   universal_layout_x_axis_insertion_y_pos,
   crop_x,
@@ -2714,10 +2583,8 @@ def main(
     title_show = title,
     sequence_reverse_complement = reverse_complement,
     node_subst_type = subst_type,
-    node_size_max_freq = node_max_freq,
-    node_size_min_freq = node_min_freq,
-    node_size_max_px = node_max_px,
-    node_size_min_px = node_min_px,
+    node_size_freq_range = node_freq_range,
+    node_size_px_range = node_px_range,
     node_filter_variation_types = variation_types,
     node_outline_width_scale = node_outline_scale,
     node_comparison_colors = node_comparison_colors,
@@ -2771,8 +2638,7 @@ def main(
       col = 1,
       ref_length = len(data_info['ref_seq_window']),
       cut_pos_ref = len(data_info['ref_seq_window']) // 2,
-      y_min = universal_layout_y_axis_y_range[0],
-      y_max = universal_layout_y_axis_y_range[1],
+      y_range = universal_layout_y_axis_y_range,
       max_tick_deletion = max_tick_deletion,
       max_tick_insertion = max_tick_insertion,
     )
@@ -2785,11 +2651,8 @@ def main(
       col = 1,
       ref_length = len(data_info['ref_seq_window']),
       cut_pos_ref = len(data_info['ref_seq_window']) // 2,
-      x_min = universal_layout_x_axis_x_range[0],
-      x_max = universal_layout_x_axis_x_range[1],
-      deletion_label_type = (
-        'absolute' if data_info['control_type'] == '30bpDown' else 'relative'
-      ),
+      x_range = universal_layout_x_axis_x_range,
+      deletion_label_type = universal_layout_x_axis_deletion_label_type,
     )
   if universal_layout_x_axis_insertion_y_pos is not None:
     make_universal_layout_x_axis(
@@ -2800,8 +2663,7 @@ def main(
       col = 1,
       ref_length = len(data_info['ref_seq_window']),
       cut_pos_ref = len(data_info['ref_seq_window']) // 2,
-      x_min = universal_layout_x_axis_x_range[0],
-      x_max = universal_layout_x_axis_x_range[1],
+      x_range = universal_layout_x_axis_x_range,
     )
   if interactive:
     log_utils.log('Opening interactive version in browser.')
@@ -2812,13 +2674,9 @@ def main(
     file_utils.write_plotly(figure, file_out)
     log_utils.log(file_out)
 
-  if ((crop_x is not None)) or ((crop_y is not None)):
+  if (crop_x != (0, 1)) or (crop_y != (0, 1)):
     if ext == 'html':
       raise Exception('Cannot use crop setting with HTML output')
-    if crop_x is None:
-      crop_x = (0, 1)
-    if crop_y is None:
-      crop_y = (0, 1)
 
     image = PIL.Image.open(file_out)
     width_px, height_px = image.size
@@ -2832,4 +2690,4 @@ def main(
 if __name__ == '__main__':
   main(**parse_args())
 
-# FIXME: CHANGE THE NAME FIELD TO LABEL IN THE DATA INFO
+# FIXME: MUST MAKE THE PLOT RANGES MORE PREDICTABLE

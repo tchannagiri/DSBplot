@@ -63,35 +63,30 @@ EDGE_TYPES = {
   },
 }
 
-VARIATION_NONE = 'none'
-VARIATION_MIXED = 'mixed'
-VARIATION_SUBSTITUTION = 'substitution'
-VARIATION_DELETION = 'deletion'
-VARIATION_INSERTION = 'insertion'
 VARIATION_TYPES = {
-  VARIATION_NONE: {
+  'none': {
     'label': 'None',
     'short_label': 'N',
     'color': '#FFFFFF',
   },
-  VARIATION_MIXED: {
+  'mixed': {
       'label': 'Mixed',
       'short_label': 'M',
       'color': '#00FF00',
   },
-  VARIATION_SUBSTITUTION: {
+  'substitution': {
     'label': 'Substitution',
     'short_label': 'S',
     'color': '#808080',
     'color_3d': '#BFBFBF',
   },
-  VARIATION_DELETION: {
+  'deletion': {
     'label': 'Deletion',
     'short_label': 'D',
     'color': '#8080FF',
     'color_3d': '#8080FF',
   },
-  VARIATION_INSERTION: {
+  'insertion': {
     'label': 'Insertion',
     'short_label': 'I',
     'color': '#FFA500',
@@ -149,6 +144,7 @@ NON_REFERENCE_DESCRIPTION = 'Non-reference'
 #   'antisense_splicing': '#ffffff',
 # }
 
+DEFAULT_VARIATION_TYPES = ['insertion', 'deletion', 'none']
 DEFAULT_COMPARISON_COLORS = ['#ff0000', '#0000ff']
 SIMILAR_FREQ_COLOR = '#ffffff'
 
@@ -160,8 +156,7 @@ FREQ_RATIO_C = 2/3
 FREQ_RATIO_LOG_A = np.log(FREQ_RATIO_A)
 FREQ_RATIO_LOG_C = np.log(FREQ_RATIO_C)
 
-FREQ_RATIO_COLOR_SCALE_LOG_MAX = np.log(3/2)
-FREQ_RATIO_COLOR_SCALE_LOG_MIN = np.log(2/3)
+FREQ_RATIO_COLOR_SCALE_LOG_RANGE = [np.log(2/3), np.log(3/2)]
 FREQ_RATIO_COLOR_BAR_TICK_VALS = [
   np.log(2/3),
   np.log(4/5),
@@ -296,9 +291,9 @@ FREQ_RANK_COLUMNS = {
 
 def get_data_label(data_info):
   if data_info['format'] == DATA_INDIVIDUAL:
-    return data_info['name']
+    return data_info['label']
   elif data_info['format'] == DATA_COMPARISON:
-    return '_'.join([data_info['name_1'], data_info['name_2']])
+    return '_'.join([data_info['label_1'], data_info['label_2']])
   else:
     raise Exception('Unknown format: ' + str(data_info['format']))
 
@@ -315,18 +310,15 @@ HISTOGRAM_MARGIN_RIGHT_PX = 300
 HISTOGRAM_MARGIN_TOP_PX = 0
 HISTOGRAM_MARGIN_BOTTOM_PX = 100
 HISTOGRAM_DPI = 100
-HISTOGRAM_FREQ_MIN = 1e-5
-HISTOGRAM_FREQ_MAX = 1
+HISTOGRAM_FREQ_RANGE = [1e-5, 1]
 BASE_FIG_SIZE = 12
 
 ### Constants for graphs ###
 GRAPH_WIDTH_PX = 2400
 GRAPH_HEIGHT_PX = 2400
-GRAPH_NODE_SIZE_MIN_FREQ = 1e-5
-GRAPH_NODE_SIZE_MAX_FREQ = 1
+GRAPH_NODE_SIZE_FREQ_RANGE = [1e-5, 1]
 GRAPH_NODE_FILTER_VARIATION_TYPES = ['insertion', 'deletion', 'none']
-GRAPH_NODE_SIZE_MIN_PX = 10
-GRAPH_NODE_SIZE_MAX_PX = 120
+GRAPH_NODE_SIZE_PX_RANGE = [10, 120]
 GRAPH_NODE_OUTLINE_WIDTH_SCALE = 4
 GRAPH_EDGE_SHOW = True
 GRAPH_EDGE_SHOW_TYPES = ['indel']

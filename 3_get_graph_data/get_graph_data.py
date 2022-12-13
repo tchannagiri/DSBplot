@@ -37,7 +37,7 @@ def parse_args():
     choices = library_constants.SUBST_TYPES,
     help = 'Whether to process the files with/without substitutions.',
   )
-  return parser.parse_args()
+  return vars(parser.parse_args())
 
 def get_sequence_data(data, data_format):
   """
@@ -232,25 +232,27 @@ def write_graph_stats(output_dir, subst_type):
   file_utils.write_tsv(graph_stats, out_file_name)
   log_utils.log(out_file_name)
 
-def main():
-  args = parse_args()
-
-  log_utils.log(args.input)
+def main(
+  input,
+  output,
+  subst_type,
+):
+  log_utils.log(input)
   log_utils.log('------>')
 
-  # copy graphs stats
-  input_data_info_file = file_names.data_info(args.input)
-  output_data_info_file = file_names.data_info(args.output)
-  shutil.copy(input_data_info_file, output_data_info_file)
-  log_utils.log(output_data_info_file)
+  # copy data info
+  if input != output:
+    input_data_info_file = file_names.data_info(input)
+    output_data_info_file = file_names.data_info(output)
+    shutil.copy(input_data_info_file, output_data_info_file)
+    log_utils.log(output_data_info_file)
 
-  write_sequence_data(args.input, args.output, args.subst_type)
-  write_edge_data(args.output, args.subst_type)
-  write_distance_matrix(args.output, args.subst_type)
-  write_graph_stats(args.output, args.subst_type)
+  write_sequence_data(input, output, subst_type)
+  write_edge_data(output, subst_type)
+  write_distance_matrix(output, subst_type)
+  write_graph_stats(output, subst_type)
 
   log_utils.new_line()
 
 if __name__ == '__main__':
-  # FIXME: MAKE THE PARSE ARGS SEPARATE!
-  main()
+  main(**parse_args())

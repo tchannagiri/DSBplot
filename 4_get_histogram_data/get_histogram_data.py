@@ -36,7 +36,7 @@ def parse_args():
     choices = library_constants.SUBST_TYPES,
     help = 'Whether to process the files with/without substitutions.',
   )
-  return parser.parse_args()
+  return vars(parser.parse_args())
 
 def split_seqs_into_variations(sequence_data):
   """
@@ -175,22 +175,24 @@ def write_variation_grouped(output_dir, subst_type):
   file_utils.write_tsv(variation_data, out_file_name)
   log_utils.log(out_file_name)
 
-def main():
-  args = parse_args()
-
-  log_utils.log(args.input)
+def main(
+  input,
+  output,
+  subst_type,
+):
+  log_utils.log(input)
   log_utils.log('------>')
 
   # copy data info files
-  input_data_info_file = file_names.data_info(args.input)
-  output_data_info_file = file_names.data_info(args.output)
-  shutil.copy(input_data_info_file, output_data_info_file)
-  log_utils.log(output_data_info_file)
+  if input != output:
+    input_data_info_file = file_names.data_info(input)
+    output_data_info_file = file_names.data_info(output)
+    shutil.copy(input_data_info_file, output_data_info_file)
+    log_utils.log(output_data_info_file)
 
-  write_variation(args.input, args.output, args.subst_type)
-  write_variation_grouped(args.output, args.subst_type)
+  write_variation(input, output, subst_type)
+  write_variation_grouped(output, subst_type)
   log_utils.new_line()
 
 if __name__ == '__main__':
-  # FIXME: MAKE THE PARSE ARGS SEPARATE!
-  main()
+  main(**parse_args())

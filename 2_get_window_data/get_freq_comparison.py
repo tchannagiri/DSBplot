@@ -20,8 +20,7 @@ def parse_args():
     description = (
       'Combine two individual experiment directories to make a comparison' +
       ' experiment directory for comparison graphs.' +
-      ' The experiments must be compatible (have all the same attribute ' +
-      ' except for the constructs which must be different).'
+      ' The experiments must be have the same windowed reference sequence.'
     )
   )
   parser.add_argument(
@@ -94,49 +93,32 @@ def write_comparison_data(
     file_utils.write_tsv(data, output_file)
     log_utils.log(output_file)
 
-if __name__ == '__main__':
-  # FIXME: MAKE THIS HAVE SEPARATE PARSE ARGS!
-  # Parse args
-  args = parse_args()
-
+def main(input, output, subst_type):
   # Load data info
-  data_info_1 = file_utils.read_tsv_dict(file_names.data_info(args.input[0]))
-  data_info_2 = file_utils.read_tsv_dict(file_names.data_info(args.input[1]))
+  data_info_1 = file_utils.read_tsv_dict(file_names.data_info(input[0]))
+  data_info_2 = file_utils.read_tsv_dict(file_names.data_info(input[1]))
 
   # Make sure the experiments are compatible
-  if not all(
-    data_info_1[x] == data_info_2[x]
-    for x in [
-      'cell_line',
-      'dsb_type',
-      'guide_rna',
-      'strand',
-      'control_type',
-      'ref_seq_window',
-      'version',
-    ]
-  ):
+  if data_info_1['ref_seq_window'] != data_info_2['ref_seq_window']:
     raise Exception(f'Incompatible experiments:\n{data_info_1}\n{data_info_2}')
 
   # Make the data
   write_comparison_data(
-    args.input[0],
-    args.input[1],
-    args.output,
-    args.subst_type,
+    input[0],
+    input[1],
+    output,
+    subst_type,
   )
 
   # Make the comparison info
   get_window.write_data_info(
-    dir = args.output,
+    dir = output,
     format = library_constants.DATA_COMPARISON,
-    cell_line = data_info_1['cell_line'],
-    dsb_type = data_info_1['dsb_type'],
-    guide_rna = data_info_1['guide_rna'],
-    strand = data_info_1['strand'],
-    names = [data_info_1['name'], data_info_2['name']],
-    control_type = data_info_1['control_type'],
-    version = data_info_1['version'],
+    labels = [data_info_1['label'], data_info_2['label']],
+    ref_seqs = [data_info_1['ref_seq'], data_info_2['ref_seq']],
     ref_seq_window = data_info_1['ref_seq_window'],
-    ref_seq = None,
   )
+
+if __name__ == '__main__':
+  main(**parse_args())
+

@@ -94,9 +94,9 @@ def parse_args():
     required = True,
   )
   parser.add_argument(
-    '--name',
+    '--label',
     type = str,
-    help = 'Name of the library.',
+    help = 'Label of the library.',
     required = True,
   )
   return vars(parser.parse_args())
@@ -184,26 +184,32 @@ def write_alignment_window(
 def write_data_info(
   dir,
   format,
-  names,
-  ref_seq,
+  labels,
+  ref_seqs,
   ref_seq_window,
 ):
   data_info = {
     'format': format,
-    'name': names,
-    'ref_seq': ref_seq,
     'ref_seq_window': ref_seq_window,
   }
-  if (format == library_constants.DATA_INDIVIDUAL) and (len(names) == 1):
-    data_info['name'] = names[0]
-  elif (format == library_constants.DATA_COMPARISON) and (len(names) == 2):
-    data_info['name_1'] = names[0]
-    data_info['name_2'] = names[1]
+  if format == library_constants.DATA_INDIVIDUAL:
+    if len(labels) != 1:
+      raise Exception(f'Expected 1 name for individual format. Got: {len(labels)}')
+    if len(ref_seqs) != 1:
+      raise Exception(f'Expected 1 reference sequence for individual format. Got: {len(ref_seqs)}')
+    data_info['label'] = labels[0]
+    data_info['ref_seq'] = ref_seqs[0]
+  elif format == library_constants.DATA_COMPARISON:
+    if len(labels) != 2:
+      raise Exception(f'Expected 2 names for comparison format. Got: {len(labels)}')
+    if len(ref_seqs) != 1:
+      raise Exception(f'Expected 2 reference sequences for comparison format. Got: {len(ref_seqs)}')
+    data_info['label_1'] = labels[0]
+    data_info['label_2'] = labels[1]
+    data_info['ref_seq_1'] = ref_seqs[0]
+    data_info['ref_seq_2'] = ref_seqs[1]
   else:
-    raise Exception(
-      'Wrong combination of data format and constructs: ' +
-      str(format) + ', ' + str(names)
-    )
+    raise Exception('Unknown data format: ' + str(format))
   data_info = pd.DataFrame(data_info, index = [0])
   file_out = file_names.data_info(dir)
   log_utils.log(file_out)
@@ -235,7 +241,7 @@ def main(
   anchor_size,
   anchor_mismatches,
   subst_type,
-  name,
+  label,
 ):
   log_utils.log(input)
   log_utils.log('------>')
@@ -254,8 +260,8 @@ def main(
   write_data_info(
     dir = output,
     format = library_constants.DATA_INDIVIDUAL,
-    names = [name],
-    ref_seq = ref_seq,
+    labels = [label],
+    ref_seqs = [ref_seq],
     ref_seq_window = get_ref_seq_window(
       ref_seq,
       dsb_pos,
