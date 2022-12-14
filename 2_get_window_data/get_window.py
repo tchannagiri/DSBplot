@@ -202,7 +202,7 @@ def write_data_info(
   elif format == library_constants.DATA_COMPARISON:
     if len(labels) != 2:
       raise Exception(f'Expected 2 names for comparison format. Got: {len(labels)}')
-    if len(ref_seqs) != 1:
+    if len(ref_seqs) != 2:
       raise Exception(f'Expected 2 reference sequences for comparison format. Got: {len(ref_seqs)}')
     data_info['label_1'] = labels[0]
     data_info['label_2'] = labels[1]

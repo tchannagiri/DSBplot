@@ -14,7 +14,7 @@ import numpy as np
 import sklearn.decomposition
 import sklearn.manifold
 
-import PIL
+import PIL.Image
 
 import library_constants
 import common_utils
@@ -1607,7 +1607,7 @@ def make_graph_single_panel(
   node_label_columns = ['id'],
   node_label_position = 'bottom center',
   node_color_type = 'freq_group',
-  node_color = ['black', 'white'],
+  node_comparison_colors = library_constants.DEFAULT_COMPARISON_COLORS,
   node_size_type = 'freq',
   node_size_px_range = [5, 50],
   node_size_freq_range = [1e-6, 1e-1],
@@ -1615,15 +1615,15 @@ def make_graph_single_panel(
   node_outline_width_scale = 1,
   plot_range_x = [float('nan'), float('nan')],
   plot_range_y = [float('nan'), float('nan')],
-  subplot_width_px = None,
-  subplot_height_px = None,
+  subplot_width_px = None, # FIXME: DON'T NEED?
+  subplot_height_px = None, # FIXME: DON'T NEED?
   legend_show = True,
   legend_group_title_show = False,
   axis_show = False,
-  axis_font_size_scale = 1,
-  axis_tick_modulo = 1,
+  axis_font_size_scale = 1, # FIXME: DON'T NEED?
+  axis_tick_modulo = 1, # FIXME: DON'T NEED?
   font_size_scale = 1,
-  line_width_scale = 1,
+  line_width_scale = 1, # FIXME: DON'T NEED?
 ):
   ### Load node data ###
   if node_type == 'sequence_data':
@@ -1699,6 +1699,7 @@ def make_graph_single_panel(
     node_label_font_size = library_constants.GRAPH_LABEL_FONT_SIZE * font_size_scale,
     node_type = node_type,
     node_color_type = node_color_type,
+    node_comparison_colors = node_comparison_colors,
     node_size_type = node_size_type,
     node_size_px_range = node_size_px_range,
     node_size_freq_range = node_size_freq_range,
@@ -1761,8 +1762,8 @@ def make_graph_single_panel(
     figure.update_traces(
       marker = {
         'colorscale': library_constants.get_freq_ratio_color_scale(
-          node_color[0],
-          node_color[1],
+          node_comparison_colors[0],
+          node_comparison_colors[1],
         ),
         'cmin': library_constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[0],
         'cmax': library_constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[1],
@@ -1848,6 +1849,7 @@ def make_graph_figure(
   node_label_columns = ['id'],
   node_label_position = 'bottom center',
   node_color_type = 'freq_group',
+  node_comparison_colors = library_constants.DEFAULT_COMPARISON_COLORS,
   node_size_type = 'freq',
   node_size_px_range = [10, 50],
   node_size_freq_range = [1e-6, 1],
@@ -1995,6 +1997,7 @@ def make_graph_figure(
         node_label_columns = node_label_columns,
         node_label_position = node_label_position,
         node_color_type = node_color_type,
+        node_comparison_colors = node_comparison_colors,
         node_size_type = node_size_type,
         node_size_px_range = node_size_px_range,
         node_size_freq_range = node_size_freq_range,
@@ -2163,7 +2166,7 @@ def get_plot_args(
   node_size_px_range = library_constants.GRAPH_NODE_SIZE_PX_RANGE,
   node_outline_width_scale = library_constants.GRAPH_NODE_OUTLINE_WIDTH_SCALE,
   node_filter_variation_types = library_constants.GRAPH_NODE_FILTER_VARIATION_TYPES,
-  node_comparison_colors = library_constants.DEFAULT_NODE_COLOR,
+  node_comparison_colors = library_constants.DEFAULT_COMPARISON_COLORS,
   graph_width_px = library_constants.GRAPH_WIDTH_PX,
   graph_height_px = library_constants.GRAPH_HEIGHT_PX,
   graph_layout_precomputed_dir = None,
@@ -2275,13 +2278,13 @@ def parse_args():
     help = (
       'If present, adds a title to the plot showing the type of'
       ' and the name of the data set.'
-    )
+    ),
   )
   parser.add_argument(
     '--layout',
     choices = ['kamada', 'radial', 'mds', 'universal', 'fractal'],
     default = 'radial',
-    help = 'The algorithm to use for laying out the graph.'
+    help = 'The algorithm to use for laying out the graph.',
   )
   parser.add_argument(
     '--universal_layout_y_axis_x_pos',
@@ -2674,6 +2677,8 @@ def main(
     file_utils.write_plotly(figure, file_out)
     log_utils.log(file_out)
 
+  crop_x = tuple(crop_x)
+  crop_y = tuple(crop_y)
   if (crop_x != (0, 1)) or (crop_y != (0, 1)):
     if ext == 'html':
       raise Exception('Cannot use crop setting with HTML output')
@@ -2691,3 +2696,4 @@ if __name__ == '__main__':
   main(**parse_args())
 
 # FIXME: MUST MAKE THE PLOT RANGES MORE PREDICTABLE
+# FIXME: MAKE SEPARTE COMMAND FOR INPUT AND OUTPUT LOGGING!

@@ -27,7 +27,7 @@ def parse_args():
     required = True,
   )
   parser.add_argument(
-    '--names',
+    '--column_names',
     nargs = '+',
     help = (
       'Names to use as suffixes to the Count columns of the output.' +
@@ -46,11 +46,14 @@ def parse_args():
     action = 'store_true',
   )
   args = vars(parser.parse_args())
-  if len(args['input']) != len(args['names']):
-    raise Exception(f"Number of names {len(args['names'])} does not match number of inputs {len(args['names'])}.")
+  if len(args['input']) != len(args['column_names']):
+    raise Exception(
+      f"Number of columns names {len(args['column_names'])} does" +
+      f" not match number of inputs {len(args['input'])}."
+    )
   return args
 
-def main(input, names, output, quiet = True):
+def main(input, column_names, output, quiet = True):
   num_repeats = len(input)
 
   for x in input:
@@ -63,23 +66,23 @@ def main(input, names, output, quiet = True):
 
   if not quiet:
     for i in range(num_repeats):
-      log_utils.log(f"Num sequences {names[i]}: {data[i].shape[0]}")
+      log_utils.log(f"Num sequences {column_names[i]}: {data[i].shape[0]}")
 
-  data = pd.concat(data, axis='columns', join='outer', keys=names)
+  data = pd.concat(data, axis='columns', join='outer', keys=column_names)
   data.columns = data.columns.map(lambda x: '_'.join([x[1], x[0]]))
   data = data.reset_index()
   
   data_combined = pd.DataFrame(
     {
       'Sequence': list(data['Sequence']),
-      'Num_Subst': list(data['Num_Subst_' + names[0]]),
+      'Num_Subst': list(data['Num_Subst_' + column_names[0]]),
       'CIGAR': list(data['CIGAR'])
     },
     index = data.index,
   )
   data_combined['Num_Subst'] = data_combined['Num_Subst'].fillna(0).astype(int)
   for i in range(num_repeats):
-    data_combined['Count_' + names[i]] = data['Count_' + names[i]].fillna(0).astype(int)
+    data_combined['Count_' + column_names[i]] = data['Count_' + column_names[i]].fillna(0).astype(int)
 
   if not quiet:
     log_utils.log(f"Num sequences combined: {data_combined.shape[0]}\n")

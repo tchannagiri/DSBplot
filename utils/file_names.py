@@ -4,7 +4,10 @@ import library_constants
 IMAGE_DIR = 'images'
 
 def make_file_name(dir, *args, ext):
-  return os.path.join(dir, '_'.join(map(str, args)) + os.path.extsep + ext)
+  return os.path.join(dir, '_'.join(map(str, args)) + '.' + ext)
+
+def bowtie2_build(dir, name):
+  return os.path.join(dir, 'bowtie2_build', name)
 
 def window(dir, freq_type, subst_type):
   library_constants.check_subst_type(subst_type)
@@ -38,11 +41,8 @@ def variation_grouped(dir, subst_type):
 def data_info(dir):
   return make_file_name(dir, 'data_info', ext = 'tsv')
 
-def ref(dir):
-  return make_file_name(dir, 'ref', ext='.fa')
-
 def histogram_3d(data_name, variation_type):
-  return '_'.join([data_name, variation_type]) + os.path.extsep + 'png'
+  return '_'.join([data_name, variation_type]) + '.png'
 
 def graph_figure(data_name, ext='png'):
   return data_name + os.path.extsep  + ext

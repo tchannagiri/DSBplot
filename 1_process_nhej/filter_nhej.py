@@ -334,7 +334,6 @@ def main(
     raise Exception('No reads captured')
 
   read_data = pd.DataFrame.from_records(list(read_data.values()))
-  print(read_data.columns)
   read_data = read_data.sort_values('Count', ascending = False)
   file_utils.write_tsv(read_data, output)
   log_utils.log('------>')

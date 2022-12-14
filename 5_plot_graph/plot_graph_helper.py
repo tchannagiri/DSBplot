@@ -250,16 +250,15 @@ def get_node_color(
   node_data,
   node_color_type,
   node_color_freq_range,
-  node_color_1 = None,
-  node_color_2 = None,
+  node_comparison_colors,
 ):
   if node_color_type == 'freq_group':
     if data_info['format'] != library_constants.DATA_COMPARISON:
       raise Exception('Need a comparison data set: ' + data_info['label'])
     node_freq_group = get_node_freq_group(node_data)
     node_color = pd.Series(library_constants.SIMILAR_FREQ_COLOR, index=node_data.index)
-    node_color.loc[node_freq_group == library_constants.FREQ_GROUP_A] = node_color_1
-    node_color.loc[node_freq_group == library_constants.FREQ_GROUP_C] = node_color_2
+    node_color.loc[node_freq_group == library_constants.FREQ_GROUP_A] = node_comparison_colors[0]
+    node_color.loc[node_freq_group == library_constants.FREQ_GROUP_C] = node_comparison_colors[1]
     return node_color
   elif node_color_type == 'freq':
      scaled_freq = log_transform_scale(
@@ -332,7 +331,6 @@ def make_node_traces(
   node_hover_text,
   node_size,
   node_color,
-  node_color_type,
   node_group,
   node_group_type,
   node_label_position,
@@ -395,6 +393,7 @@ def make_point_traces(
   node_label_font_size,
   node_type,
   node_color_type,
+  node_comparison_colors,
   node_size_type,
   node_size_px_range,
   node_size_freq_range,
@@ -431,6 +430,7 @@ def make_point_traces(
     node_data = node_data,
     node_color_type = node_color_type,
     node_color_freq_range = node_size_freq_range,
+    node_comparison_colors = node_comparison_colors,
   )
 
   node_group = get_node_trace_group(
@@ -448,7 +448,6 @@ def make_point_traces(
     node_hover_text = hover_text,
     node_size = node_size,
     node_color = node_color,
-    node_color_type = node_color_type,
     node_label_position = node_label_position,
     node_group = node_group,
     node_group_type = node_color_type,

@@ -44,8 +44,7 @@ def parse_args():
     help = 'Whether to use with files with/without substitutions.',
     required = True,
   )
-  args = parser.parse_args()
-  return args
+  return vars(parser.parse_args())
 
 def get_comparison_data(data_1, data_2, join_columns, freq_columns):
   data_1 = data_1[join_columns + freq_columns]
@@ -74,6 +73,9 @@ def write_comparison_data(
   output_dir,
   subst_type,
 ):
+  log_utils.log(input_dir_1)
+  log_utils.log(input_dir_2)
+  log_utils.log('------>')
   for freq_type in [
     library_constants.FREQ_FILTER_MEAN
   ]:
@@ -118,6 +120,7 @@ def main(input, output, subst_type):
     ref_seqs = [data_info_1['ref_seq'], data_info_2['ref_seq']],
     ref_seq_window = data_info_1['ref_seq_window'],
   )
+  log_utils.new_line()
 
 if __name__ == '__main__':
   main(**parse_args())
