@@ -1,18 +1,15 @@
 import sys
 import datetime
 
-LOG_FILE = sys.stdout
+  
+def log(s):
+  print(datetime.datetime.now().strftime("%H:%M:%S: ") + str(s))
 
-def set_log_file(file_name):
-  global LOG_FILE
-  if file_name is not None:
-    LOG_FILE = open(file_name, 'w')
-  else:
-    LOG_FILE = None
+def log_input(s):
+  log('(input) ' + str(s))
 
-def log(s=''):
-  if LOG_FILE is not None:
-    LOG_FILE.write(datetime.datetime.now().strftime("%H:%M:%S: ") + str(s) + '\n')
+def log_output(s):
+  log('(output) ' + str(s))
 
 def new_line():
-  LOG_FILE.write('\n')
+  print()

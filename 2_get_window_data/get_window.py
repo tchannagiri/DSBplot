@@ -179,7 +179,7 @@ def write_alignment_window(
     subst_type,
   )
   file_utils.write_tsv(data, output_file)
-  log_utils.log(output_file)
+  log_utils.log_output(output_file)
 
 def write_data_info(
   dir,
@@ -212,7 +212,7 @@ def write_data_info(
     raise Exception('Unknown data format: ' + str(format))
   data_info = pd.DataFrame(data_info, index = [0])
   file_out = file_names.data_info(dir)
-  log_utils.log(file_out)
+  log_utils.log_output(file_out)
   file_utils.write_tsv(data_info, file_out)
 
 def get_ref_seq_window(ref_seq, dsb_pos, window_size):
@@ -243,8 +243,7 @@ def main(
   subst_type,
   label,
 ):
-  log_utils.log(input)
-  log_utils.log('------>')
+  log_utils.log_input(input)
 
   ref_seq = fasta_utils.read_fasta_seq(ref_seq_file)
   write_alignment_window(

@@ -208,7 +208,7 @@ def main(
   quiet = True,
 ):
   # parse command line arguments
-  log_utils.log(sam_file)
+  log_utils.log_input(sam_file)
 
   # read reference sequence from fasta file
   ref_seq = fasta_utils.read_fasta_seq(ref_seq_file)
@@ -336,8 +336,7 @@ def main(
   read_data = pd.DataFrame.from_records(list(read_data.values()))
   read_data = read_data.sort_values('Count', ascending = False)
   file_utils.write_tsv(read_data, output)
-  log_utils.log('------>')
-  log_utils.log(output)
+  log_utils.log_output(output)
 
   total_accepted = sum(read_data['Count'])
   if total_accepted != (accepted_repeat + accepted_new):

@@ -11,7 +11,7 @@ import log_utils
 import file_names
 import library_constants
 
-def main():
+def parse_args():
   parser = argparse.ArgumentParser(
     description = (
       f'Convert the raw read counts in the input data into frequencies' +
@@ -69,43 +69,43 @@ def main():
       f' Sequences with frequences <= this are discarded.'
     ),
   )
-  args = parser.parse_args()
+  return vars(parser.parse_args())
 
+def main(input, output, subst_type, total_reads, freq_min):
   input_file = file_names.window(
-    args.input,
+    input,
     library_constants.COUNT,
-    args.subst_type,
+    subst_type,
   )
-  log_utils.log(input_file)
-  log_utils.log('------>')
+  log_utils.log_input(input_file)
 
   data = file_utils.read_tsv(input_file)
 
   count_cols = data.columns[data.columns.str.startswith('count_')]
-  if len(count_cols) != len(args.total_reads):
+  if len(count_cols) != len(total_reads):
     raise Exception(
-      f'Expected {len(args.total_reads)} count columns.' +
+      f'Expected {len(total_reads)} count columns.' +
       f' Got {len(count_cols)}.'
     )
   freq_cols = count_cols.str.replace('count_', 'freq_')
 
-  data[freq_cols] = data[count_cols].divide(args.total_reads, axis='columns')
+  data[freq_cols] = data[count_cols].divide(total_reads, axis='columns')
   data = data.drop(count_cols, axis='columns')
 
   output_file = file_names.window(
-    args.input,
+    input,
     library_constants.FREQ,
-    args.subst_type,
+    subst_type,
   )
   file_utils.write_tsv(data, output_file)
   log_utils.log(output_file)
 
-  data = data.loc[data[freq_cols].min(axis='columns') > args.freq_min]
+  data = data.loc[data[freq_cols].min(axis='columns') > freq_min]
   
   output_file = file_names.window(
-    args.input,
+    output,
     library_constants.FREQ_FILTER,
-    args.subst_type,
+    subst_type,
   )
   file_utils.write_tsv(data, output_file)
   log_utils.log(output_file)
@@ -113,17 +113,17 @@ def main():
   data['freq_mean'] = data[freq_cols].mean(axis='columns')
   data = data.sort_values('freq_mean', ascending = False)
   output_file = file_names.window(
-    args.input,
+    input,
     library_constants.FREQ_FILTER_MEAN,
-    args.subst_type,
+    subst_type,
   )
   file_utils.write_tsv(
     data[['ref_align', 'read_align', 'freq_mean']],
     output_file,
   )
-  log_utils.log(output_file)
+  log_utils.log_output(output_file)
 
   log_utils.new_line()
   
 if __name__ == '__main__':
-  main()
+  main(**parse_args())

@@ -57,7 +57,7 @@ def main(input, column_names, output, quiet = True):
   num_repeats = len(input)
 
   for x in input:
-    log_utils.log(x)
+    log_utils.log_input(x)
 
   data = [
     pd.read_csv(input[i], sep='\t').set_index(['Sequence', 'CIGAR'])
@@ -85,10 +85,9 @@ def main(input, column_names, output, quiet = True):
     data_combined['Count_' + column_names[i]] = data['Count_' + column_names[i]].fillna(0).astype(int)
 
   if not quiet:
-    log_utils.log(f"Num sequences combined: {data_combined.shape[0]}\n")
+    log_utils.log(f"Num sequences combined: {data_combined.shape[0]}")
   file_utils.write_tsv(data_combined, output)
-  log_utils.log('------>')
-  log_utils.log(output)
+  log_utils.log_output(output)
   log_utils.new_line()
   
 if __name__ == '__main__':

@@ -15,7 +15,12 @@ import file_names
 import common_utils
 import file_utils
 import log_utils
+import library_constants
+
 import filter_nhej
+import combine_repeat
+import get_window
+import get_freq
 
 def parse_args():
   parser = argparse.ArgumentParser(
@@ -29,6 +34,12 @@ def parse_args():
       'Input FASTQ files of raw reads.' +
       ' Each file is considered a repeat of the same experiment.'
     ),
+    required = True
+  )
+  parser.add_argument(
+    '--output',
+    type = common_utils.check_dir_output,
+    help = 'Output directory.',
     required = True
   )
   parser.add_argument(
@@ -47,10 +58,55 @@ def parse_args():
     ),
   )
   parser.add_argument(
-    '--output',
-    type = common_utils.check_dir_output,
-    help = 'Output directory.',
-    required = True
+    '--window_size',
+    type = int,
+    default = 10,
+    help = (
+      'Size of window around DSB site to extract.' +
+      ' The nucleotides at the positions' +
+      ' {DSB_POS - WINDOW_SIZE + 1, ..., DSB_POS + WINDOW_SIZE} are extracted.' +
+      ' The actual number of nucleotides extracted may vary depending' +
+      ' on how many insertions/deletion the alignment of the sequence has.'
+    ),
+  )
+  parser.add_argument(
+    '--anchor_size',
+    type = int,
+    default = 20,
+    help = (
+      'Size of anchor on left/right of the window to check for mismatches.'
+    ),
+  )
+  parser.add_argument(
+    '--anchor_mismatches',
+    type = int,
+    default = 1,
+    help = (
+      'Maximum number of mismatches allowed on the left/right anchor sequences.\n'
+      'Reads with more than the allowed number of mismatches on the left/right anchor\n'
+      'will be discarded. This limit is applied to the left/right anchors separately.'
+    ),
+  )
+  parser.add_argument(
+    '--total_reads',
+    type = int,
+    help = (
+      'Total reads for each file.'
+      ' Must be the same number of arguments as the number of ' +
+      ' Count columns in INPUT.'
+    ),
+    nargs = '+',
+    required = True,
+  )
+  parser.add_argument(
+    '--freq_min',
+    type = float,
+    default = 1e-5,
+    help = (
+      f'Minimum frequency for output in' +
+      f' windows_{library_constants.FREQ_FILTER_MEAN}.' +
+      f' Sequences with frequences <= this are discarded.'
+    ),
   )
   parser.add_argument(
     '--label',
@@ -67,9 +123,14 @@ def parse_args():
 
 def main(
   input,
+  output,
   ref_seq_file,
   dsb_pos,
-  output,
+  window_size,
+  anchor_size,
+  anchor_mismatches,
+  total_reads,
+  freq_min,
   label,
   quiet,
 ):
@@ -79,23 +140,53 @@ def main(
     'build',
   )
   file_utils.make_parent_dir(bowtie2_build_dir)
-  log_utils.log('Bowtie2 build dir: ' + bowtie2_build_dir)
+  log_utils.log_input('Bowtie2 build dir: ' + bowtie2_build_dir)
   os.system(f'bowtie2-build-s {ref_seq_file} {bowtie2_build_dir} --quiet')
 
+  filter_nhej_file_list = []
   for i, input_1 in enumerate(input, 1):
     sam_file = os.path.join(output, 'sam', f'{i}.sam')
     file_utils.make_parent_dir(sam_file)
-    log_utils.log('Bowtie2 SAM output file: ' + sam_file)
     os.system(f'bowtie2-align-s -x {bowtie2_build_dir} {input_1} -S {sam_file} --quiet')
+    log_utils.log_output('Bowtie2 SAM file: ' + sam_file)
 
-    filter_nhej_dir = os.path.join(output, '1_filter_nhej', f'{i}.tsv')
-    log_utils.log('Filter NHEJ dir: ' + filter_nhej_dir)
+    filter_nhej_file = os.path.join(output, '1_filter_nhej', f'{i}.tsv')
     filter_nhej.main(
       ref_seq_file = ref_seq_file,
       sam_file = sam_file,
-      output = filter_nhej_dir,
+      output = filter_nhej_file,
       dsb_pos = dsb_pos,
       quiet = quiet,
+    )
+    filter_nhej_file_list.append(filter_nhej_file)
+  
+  combine_repeat_file = os.path.join(output, '2_combine_repeat', 'out.tsv')
+  combine_repeat.main(
+    input = filter_nhej_file_list,
+    column_names = [f'r{i}' for i in range(1, len(input) + 1)],
+    output = combine_repeat_file,
+    quiet = quiet,
+  )
+
+  window_dir = os.path.join(output, '3_window')
+  for subst_type in library_constants.SUBST_TYPES:
+    get_window.main(
+      input = combine_repeat_file,
+      output = window_dir,
+      ref_seq_file = ref_seq_file,
+      dsb_pos = dsb_pos,
+      window_size = window_size,
+      anchor_size = anchor_size,
+      anchor_mismatches = anchor_mismatches,
+      subst_type = subst_type,
+      label = label,
+    )
+    get_freq.main(
+      input = window_dir,
+      output = window_dir,
+      subst_type = subst_type,
+      total_reads = total_reads,
+      freq_min = freq_min,
     )
 
 if __name__ == '__main__':
@@ -114,6 +205,11 @@ if __name__ == '__main__':
     'data/output',
     '--label',
     'db_R1',
+    '--total_reads',
+    '3000',
+    '3000',
+    '3000',
+    '3000',
   ]
   main(**parse_args())
 
