@@ -6,7 +6,7 @@ IMAGE_DIR = 'images'
 def make_file_name(dir, *args, ext):
   return os.path.join(dir, '_'.join(map(str, args)) + '.' + ext)
 
-def bowtie2_build(dir, name):
+def bowtie2_build_dir(dir, name):
   return os.path.join(dir, 'bowtie2_build', name)
 
 def window(dir, freq_type, subst_type):
@@ -40,6 +40,27 @@ def variation_grouped(dir, subst_type):
 
 def data_info(dir):
   return make_file_name(dir, 'data_info', ext = 'tsv')
+
+def bowtie2_build(dir):
+  return os.path.join(dir, '0_bowtie2_build', 'build')
+
+def sam_dir(dir):
+  return os.path.join(dir, '0_sam')
+
+def filter_nhej_dir(dir):
+  return os.path.join(dir, '1_filter_nhej')
+
+def combine_repeat_dir(dir):
+  return os.path.join(dir, '2_combine_repeat')
+
+def window_dir(dir):
+  return os.path.join(dir, '3_window')
+
+def graph_dir(dir):
+  return os.path.join(dir, '4_graph')
+
+def histogram_dir(dir):
+  return os.path.join(dir, '5_histogram')
 
 def histogram_3d(data_name, variation_type):
   return '_'.join([data_name, variation_type]) + '.png'

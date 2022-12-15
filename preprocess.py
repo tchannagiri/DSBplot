@@ -136,23 +136,19 @@ def main(
   label,
   quiet,
 ):
-  bowtie2_build_dir = os.path.join(
-    output,
-    '0_bowtie2_build',
-    'build',
-  )
-  file_utils.make_parent_dir(bowtie2_build_dir)
-  log_utils.log_input('Bowtie2 build dir: ' + bowtie2_build_dir)
-  os.system(f'bowtie2-build-s {ref_seq_file} {bowtie2_build_dir} --quiet')
+  bowtie2_build_file = os.path.join(file_names.bowtie2_build(output))
+  file_utils.make_parent_dir(bowtie2_build_file)
+  log_utils.log_input('Bowtie2 build file: ' + bowtie2_build_file)
+  os.system(f'bowtie2-build-s {ref_seq_file} {bowtie2_build_file} --quiet')
 
   filter_nhej_file_list = []
   for i, input_1 in enumerate(input, 1):
-    sam_file = os.path.join(output, 'sam', f'{i}.sam')
+    sam_file = os.path.join(file_names.sam_dir(output), f'{i}.sam')
     file_utils.make_parent_dir(sam_file)
-    os.system(f'bowtie2-align-s -x {bowtie2_build_dir} {input_1} -S {sam_file} --quiet')
+    os.system(f'bowtie2-align-s -x {bowtie2_build_file} {input_1} -S {sam_file} --quiet')
     log_utils.log_output('Bowtie2 SAM file: ' + sam_file)
 
-    filter_nhej_file = os.path.join(output, '1_filter_nhej', f'{i}.tsv')
+    filter_nhej_file = os.path.join(file_names.filter_nhej_dir(output), f'{i}.tsv')
     filter_nhej.main(
       ref_seq_file = ref_seq_file,
       sam_file = sam_file,
@@ -162,7 +158,7 @@ def main(
     )
     filter_nhej_file_list.append(filter_nhej_file)
   
-  combine_repeat_file = os.path.join(output, '2_combine_repeat', 'out.tsv')
+  combine_repeat_file = os.path.join(file_names.combine_repeat_dir(output), 'out.tsv')
   combine_repeat.main(
     input = filter_nhej_file_list,
     column_names = [f'r{i}' for i in range(1, len(input) + 1)],
@@ -170,13 +166,13 @@ def main(
     quiet = quiet,
   )
 
-  window_dir = os.path.join(output, '3_window')
-  graph_dir = os.path.join(output, '4_graph')
-  histogram_dir = os.path.join(output, '5_histogram')
+  window_dir = file_names.window_dir(output)
+  graph_dir = file_names.graph_dir(output)
+  histogram_dir = file_names.histogram_dir(output)
   for subst_type in library_constants.SUBST_TYPES:
     get_window.main(
       input = combine_repeat_file,
-      output = window_dir,
+      output = file_names.window_dir(output),
       ref_seq_file = ref_seq_file,
       dsb_pos = dsb_pos,
       window_size = window_size,
