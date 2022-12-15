@@ -21,6 +21,8 @@ import filter_nhej
 import combine_repeat
 import get_window
 import get_freq
+import get_graph_data
+import get_histogram_data
 
 def parse_args():
   parser = argparse.ArgumentParser(
@@ -169,6 +171,8 @@ def main(
   )
 
   window_dir = os.path.join(output, '3_window')
+  graph_dir = os.path.join(output, '4_graph')
+  histogram_dir = os.path.join(output, '5_histogram')
   for subst_type in library_constants.SUBST_TYPES:
     get_window.main(
       input = combine_repeat_file,
@@ -187,6 +191,16 @@ def main(
       subst_type = subst_type,
       total_reads = total_reads,
       freq_min = freq_min,
+    )
+    get_graph_data.main(
+      input = window_dir,
+      output = graph_dir,
+      subst_type = subst_type,
+    )
+    get_histogram_data.main(
+      input = graph_dir,
+      output = histogram_dir,
+      subst_type = subst_type,
     )
 
 if __name__ == '__main__':

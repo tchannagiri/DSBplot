@@ -98,7 +98,7 @@ def main(input, output, subst_type, total_reads, freq_min):
     subst_type,
   )
   file_utils.write_tsv(data, output_file)
-  log_utils.log(output_file)
+  log_utils.log_output(output_file)
 
   data = data.loc[data[freq_cols].min(axis='columns') > freq_min]
   
@@ -108,7 +108,7 @@ def main(input, output, subst_type, total_reads, freq_min):
     subst_type,
   )
   file_utils.write_tsv(data, output_file)
-  log_utils.log(output_file)
+  log_utils.log_output(output_file)
 
   data['freq_mean'] = data[freq_cols].mean(axis='columns')
   data = data.sort_values('freq_mean', ascending = False)

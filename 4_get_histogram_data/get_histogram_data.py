@@ -4,7 +4,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../util
 
 import pandas as pd
 import argparse
-import shutil
 
 import file_names
 import file_utils
@@ -117,7 +116,7 @@ def write_variation(input_dir, output_dir, subst_type):
   )
   out_file_name = file_names.variation(output_dir, subst_type)
   file_utils.write_tsv(variation_data, out_file_name)
-  log_utils.log(out_file_name)
+  log_utils.log_output(out_file_name)
 
 def write_variation_grouped(output_dir, subst_type):
   """
@@ -173,22 +172,21 @@ def write_variation_grouped(output_dir, subst_type):
   ]
   out_file_name = file_names.variation_grouped(output_dir, subst_type)
   file_utils.write_tsv(variation_data, out_file_name)
-  log_utils.log(out_file_name)
+  log_utils.log_output(out_file_name)
 
 def main(
   input,
   output,
   subst_type,
 ):
-  log_utils.log(input)
-  log_utils.log('------>')
+  log_utils.log_input(input)
 
   # copy data info files
   if input != output:
     input_data_info_file = file_names.data_info(input)
     output_data_info_file = file_names.data_info(output)
-    shutil.copy(input_data_info_file, output_data_info_file)
-    log_utils.log(output_data_info_file)
+    file_utils.copy(input_data_info_file, output_data_info_file)
+    log_utils.log_output(output_data_info_file)
 
   write_variation(input, output, subst_type)
   write_variation_grouped(output, subst_type)

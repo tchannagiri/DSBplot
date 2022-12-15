@@ -5,7 +5,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../util
 
 import pandas as pd
 import argparse
-import shutil
 
 import common_utils
 import library_constants
@@ -73,9 +72,8 @@ def write_comparison_data(
   output_dir,
   subst_type,
 ):
-  log_utils.log(input_dir_1)
-  log_utils.log(input_dir_2)
-  log_utils.log('------>')
+  log_utils.log_input(input_dir_1)
+  log_utils.log_input(input_dir_2)
   for freq_type in [
     library_constants.FREQ_FILTER_MEAN
   ]:
@@ -93,7 +91,7 @@ def write_comparison_data(
     )
     output_file = file_names.window(output_dir, freq_type, subst_type)
     file_utils.write_tsv(data, output_file)
-    log_utils.log(output_file)
+    log_utils.log_output(output_file)
 
 def main(input, output, subst_type):
   # Load data info

@@ -5,7 +5,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../util
 import itertools
 import pandas as pd
 import argparse
-import shutil
 
 import file_names
 import file_utils
@@ -119,7 +118,7 @@ def write_sequence_data(input_dir, output_dir, subst_type):
   data = get_sequence_data(data, data_info['format'])
   out_file_name = file_names.sequence_data(output_dir, subst_type)
   file_utils.write_tsv(data, out_file_name)
-  log_utils.log(out_file_name)
+  log_utils.log_output(out_file_name)
 
 def get_edge_data(sequence_data):
   """
@@ -179,7 +178,7 @@ def write_edge_data(output_dir, subst_type):
   sequence_data = file_utils.read_tsv(in_file_name)
   edge_data = get_edge_data(sequence_data)
   file_utils.write_tsv(edge_data, out_file_name)
-  log_utils.log(out_file_name)
+  log_utils.log_output(out_file_name)
 
 def get_distance_matrix(sequence_data):
   """
@@ -216,7 +215,7 @@ def write_distance_matrix(output_dir, subst_type):
   sequence_data = file_utils.read_tsv(in_file_name)
   distance_matrix = get_distance_matrix(sequence_data)
   file_utils.write_tsv(distance_matrix, out_file_name)
-  log_utils.log(out_file_name)
+  log_utils.log_output(out_file_name)
 
 def write_graph_stats(output_dir, subst_type):
   """
@@ -230,22 +229,20 @@ def write_graph_stats(output_dir, subst_type):
   graph_stats = pd.DataFrame.from_records([graph_stats])
   out_file_name = file_names.graph_stats(output_dir, subst_type)
   file_utils.write_tsv(graph_stats, out_file_name)
-  log_utils.log(out_file_name)
+  log_utils.log_output(out_file_name)
 
 def main(
   input,
   output,
   subst_type,
 ):
-  log_utils.log(input)
-  log_utils.log('------>')
+  log_utils.log_input(input)
 
   # copy data info
   if input != output:
     input_data_info_file = file_names.data_info(input)
     output_data_info_file = file_names.data_info(output)
-    shutil.copy(input_data_info_file, output_data_info_file)
-    log_utils.log(output_data_info_file)
+    file_utils.copy(input_data_info_file, output_data_info_file)
 
   write_sequence_data(input, output, subst_type)
   write_edge_data(output, subst_type)

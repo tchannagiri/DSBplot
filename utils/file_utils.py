@@ -1,3 +1,4 @@
+import shutil
 import csv
 import os
 import pandas as pd
@@ -37,11 +38,14 @@ def count_lines(file):
   with open(file) as input:
     return sum(1 for _ in input)
 
+def copy(file_src, file_dst):
+  make_parent_dir(file_dst)
+  shutil.copy(file_src, file_dst)
+
 def write_pyplot(figure, file):
   if type(file) == str:
     make_parent_dir(file)
   figure.savefig(file)
-
 
 def write_plotly(figure, file):
   if type(file) == str:
