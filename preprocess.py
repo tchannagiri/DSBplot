@@ -200,26 +200,5 @@ def main(
     )
 
 if __name__ == '__main__':
-  sys.argv = [
-    '',
-    '--input',
-    'data/0_fastq/db1_R1.fq',
-    'data/0_fastq/db2_R1.fq',
-    'data/0_fastq/db3_R1.fq',
-    'data/0_fastq/db4_R1.fq',
-    '--ref_seq_file',
-    'data/0_ref_seq/1DSB_R1_branch.fa',
-    '--dsb_pos',
-    '50',
-    '--output',
-    'data/output',
-    '--label',
-    'db_R1',
-    '--total_reads',
-    '3000',
-    '3000',
-    '3000',
-    '3000',
-  ]
   main(**parse_args())
 

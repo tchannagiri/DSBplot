@@ -2563,10 +2563,9 @@ def main(
   crop_y,
   interactive,
 ):
-  
+  log_utils.log_input(input)
   data_dir = input
   data_info = file_utils.read_tsv_dict(file_names.data_info(input))
-  data_label = library_constants.get_data_label(data_info)
   plot_args = get_plot_args(
     data_dir = data_dir,
     data_info = data_info,
@@ -2665,7 +2664,7 @@ def main(
     if ext not in ['.png', '.html']:
       raise Exception('Unknown file extension: ' + str(ext))
     file_utils.write_plotly(figure, output)
-    log_utils.log(output)
+    log_utils.log_output(output)
 
     crop_x = tuple(crop_x)
     crop_y = tuple(crop_y)
@@ -2682,7 +2681,10 @@ def main(
       bottom = crop_y[1] * height_px
 
       image.crop((left, top, right, bottom)).save(output)
+  log_utils.new_line()
+
 if __name__ == '__main__':
   main(**parse_args())
 
 # FIXME: MUST MAKE THE PLOT RANGES MORE PREDICTABLE
+# FIXME: HOW IS THE TITLE DETERMINED?

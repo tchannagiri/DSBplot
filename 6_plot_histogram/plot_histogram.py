@@ -253,6 +253,7 @@ def plot_histogram(
   show_title = False,
   reverse_pos = False,
 ):
+  log_utils.log_input(data_dir)
   if data_info['format'] != library_constants.DATA_INDIVIDUAL:
     raise Exception('Only applicable for individual data sets')
 
@@ -299,7 +300,8 @@ def plot_histogram(
     )
 
   file_utils.write_pyplot(figure, file_out)
-  log_utils.log(file_out)
+  log_utils.log_output(file_out)
+  log_utils.new_line()
 
 
 def parse_args():
@@ -314,8 +316,14 @@ def parse_args():
   )
   parser.add_argument(
     '--output',
-    type = common_utils.check_dir_output,
-    help = 'Output directory.',
+    type = common_utils.check_file_output,
+    help = 'Output image file. Must have extension ".png".',
+    required = True,
+  )
+  parser.add_argument(
+    '--variation_type',
+    choices = ['substitution', 'insertion', 'deletion'],
+    help = 'Which variation type to show in the histogram.',
     required = True,
   )
   parser.add_argument(
@@ -324,7 +332,7 @@ def parse_args():
     help = (
       'Whether to reverse the x-axis positions.' +
       ' Useful if comparing reverse strand data with forward strand data.'
-    )
+    ),
   )
   parser.add_argument(
     '--label_type',
@@ -334,26 +342,24 @@ def parse_args():
       ' from 1 to ref_length, or relative positions from -ref_length / 2 to ref_length / 2'
       ' (skipping 0).'
     ),
-    required = True
+    required = True,
   )
   return vars(parser.parse_args())
 
-def main(input, output, reverse_pos, label_type):
+def main(input, output, variation_type, reverse_pos, label_type):
   data_dir = input
   data_info = file_utils.read_tsv_dict(file_names.data_info(input))
-  data_label = library_constants.get_data_label(data_info)
-  for variation_type in ['substitution', 'insertion', 'deletion']:
-    plot_histogram(
-      file_out = os.path.join(output, file_names.histogram_3d(data_label, variation_type)),
-      data_dir = data_dir,
-      data_info = data_info,
-      variation_type = variation_type,
-      freq_range = library_constants.HISTOGRAM_FREQ_RANGE,
-      freq_log = True,
-      label_type = label_type,
-      show_title = False,
-      reverse_pos = reverse_pos,
-    )
+  plot_histogram(
+    file_out = output,
+    data_dir = data_dir,
+    data_info = data_info,
+    variation_type = variation_type,
+    freq_range = library_constants.HISTOGRAM_FREQ_RANGE,
+    freq_log = True,
+    label_type = label_type,
+    show_title = False,
+    reverse_pos = reverse_pos,
+  )
 
 if __name__ == '__main__':
   main(**parse_args())
