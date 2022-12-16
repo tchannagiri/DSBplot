@@ -2257,19 +2257,11 @@ def parse_args():
   )
   parser.add_argument(
     '--output',
-    type = common_utils.check_dir_output,
+    type = common_utils.check_file_output,
     help = (
-      'Output directory.' +
-      ' If not given no output will be written.'
-    ),
-  )
-  parser.add_argument(
-    '--ext',
-    choices = ['png', 'html'],
-    default = 'png',
-    help = (
-      'Which types of file to generate from the Plotly library:' +
-      ' static PNG or interactive HTML.'
+      'Output file. If not given no output will be written.' +
+      ' The file extension should be either ".png" or ".html"' +
+      ' for a static PNG or interactive HTML output respectively.'
     ),
   )
   parser.add_argument(
@@ -2403,6 +2395,7 @@ def parse_args():
     '--variation_types',
     nargs = '+',
     default = library_constants.DEFAULT_VARIATION_TYPES,
+    choices = list(library_constants.VARIATION_TYPES),
     help = (
       'The variation types that should be included in the graph.'
       ' This should be a list of the types:'
@@ -2533,14 +2526,11 @@ def parse_args():
       ' Uses the Ploty library figure.show() function to do so.'
     ),
   )
-  args = vars(parser.parse_args())
-  for var_type in args['variation_types']:
-    if var_type not in library_constants.VARIATION_TYPES:
-      raise Exception(f'Unknown variation type: {var_type}')
-  return args
+  return vars(parser.parse_args())
 
 def main(
   input,
+  output,
   layout,
   title,
   reverse_complement,
@@ -2572,8 +2562,6 @@ def main(
   crop_x,
   crop_y,
   interactive,
-  ext,
-  output,
 ):
   
   data_dir = input
@@ -2673,27 +2661,28 @@ def main(
     figure.show()
 
   if output is not None:
-    file_out = os.path.join(output, file_names.graph_figure(data_label, ext))
-    file_utils.write_plotly(figure, file_out)
-    log_utils.log(file_out)
+    ext = os.path.splitext(output)[1]
+    if ext not in ['.png', '.html']:
+      raise Exception('Unknown file extension: ' + str(ext))
+    file_utils.write_plotly(figure, output)
+    log_utils.log(output)
 
-  crop_x = tuple(crop_x)
-  crop_y = tuple(crop_y)
-  if (crop_x != (0, 1)) or (crop_y != (0, 1)):
-    if ext == 'html':
-      raise Exception('Cannot use crop setting with HTML output')
+    crop_x = tuple(crop_x)
+    crop_y = tuple(crop_y)
+    if (crop_x != (0, 1)) or (crop_y != (0, 1)):
+      if ext == '.html':
+        raise Exception('Cannot use crop setting with HTML output')
 
-    image = PIL.Image.open(file_out)
-    width_px, height_px = image.size
+      image = PIL.Image.open(output)
+      width_px, height_px = image.size
 
-    left = crop_x[0] * width_px
-    right = crop_x[1] * width_px
-    top = crop_y[0] * height_px
-    bottom = crop_y[1] * height_px
-    image.crop((left, top, right, bottom)).save(file_out)
+      left = crop_x[0] * width_px
+      right = crop_x[1] * width_px
+      top = crop_y[0] * height_px
+      bottom = crop_y[1] * height_px
 
+      image.crop((left, top, right, bottom)).save(output)
 if __name__ == '__main__':
   main(**parse_args())
 
 # FIXME: MUST MAKE THE PLOT RANGES MORE PREDICTABLE
-# FIXME: MAKE SEPARTE COMMAND FOR INPUT AND OUTPUT LOGGING!
