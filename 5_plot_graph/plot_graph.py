@@ -1615,15 +1615,10 @@ def make_graph_single_panel(
   node_outline_width_scale = 1,
   plot_range_x = [float('nan'), float('nan')],
   plot_range_y = [float('nan'), float('nan')],
-  subplot_width_px = None, # FIXME: DON'T NEED?
-  subplot_height_px = None, # FIXME: DON'T NEED?
   legend_show = True,
   legend_group_title_show = False,
   axis_show = False,
-  axis_font_size_scale = 1, # FIXME: DON'T NEED?
-  axis_tick_modulo = 1, # FIXME: DON'T NEED?
   font_size_scale = 1,
-  line_width_scale = 1, # FIXME: DON'T NEED?
 ):
   ### Load node data ###
   if node_type == 'sequence_data':
@@ -1927,10 +1922,10 @@ def make_graph_figure(
   num_cols_total = data_dir_grid.shape[1]
 
   if title_subplot_show:
-    subplot_titles = np.full_like(data_dir_grid, None)
+    subplot_titles = np.full_like(data_info_grid, None)
     for row in range(num_rows_total):
       for col in range(num_cols_total):
-        subplot_titles[row, col] = os.path.split(data_dir_grid[row, col])[-1]
+        subplot_titles[row, col] = library_constants.get_data_label(data_info_grid[row, col])
   else:
     subplot_titles = None
 
@@ -2005,15 +2000,10 @@ def make_graph_figure(
         node_outline_width_scale = node_outline_width_scale,
         plot_range_x = plot_range_x,
         plot_range_y = plot_range_y,
-        subplot_width_px = col_widths_px[col - 1],
-        subplot_height_px = row_heights_px[row - 1],
         legend_show = legend_show,
         legend_group_title_show = legend_plotly_show and (not legend_common),
         font_size_scale = font_size_scale,
-        line_width_scale = line_width_scale,
         axis_show = axis_show,
-        axis_font_size_scale = axis_font_size_scale,
-        axis_tick_modulo = axis_tick_modulo,
       )
 
       if (
@@ -2269,7 +2259,7 @@ def parse_args():
     action = 'store_true',
     help = (
       'If present, adds a title to the plot showing the type of'
-      ' and the name of the data set.'
+      ' layout and the label of the data.'
     ),
   )
   parser.add_argument(
