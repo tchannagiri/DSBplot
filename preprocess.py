@@ -21,6 +21,7 @@ import filter_nhej
 import combine_repeat
 import get_window
 import get_freq
+import get_freq_comparison
 import get_graph_data
 import get_histogram_data
 
@@ -36,13 +37,13 @@ def parse_args():
       'Input FASTQ files of raw reads.' +
       ' Each file is considered a repeat of the same experiment.'
     ),
-    required = True
+    required = True,
   )
   parser.add_argument(
     '--output',
     type = common_utils.check_dir_output,
     help = 'Output directory.',
-    required = True
+    required = True,
   )
   parser.add_argument(
     '--ref_seq_file',
@@ -123,7 +124,9 @@ def parse_args():
   )
   return vars(parser.parse_args())
 
-def main(
+# The alignment, filtering, and combining stages.
+# Everything up to the point of combine samples for comparison.
+def do_stage_1(
   input,
   output,
   ref_seq_file,
@@ -147,6 +150,7 @@ def main(
     file_utils.make_parent_dir(sam_file)
     os.system(f'bowtie2-align-s -x {bowtie2_build_file} {input_1} -S {sam_file} --quiet')
     log_utils.log_output('Bowtie2 SAM file: ' + sam_file)
+    log_utils.new_line()
 
     filter_nhej_file = os.path.join(file_names.filter_nhej_dir(output), f'{i}.tsv')
     filter_nhej.main(
@@ -158,7 +162,7 @@ def main(
     )
     filter_nhej_file_list.append(filter_nhej_file)
   
-  combine_repeat_file = os.path.join(file_names.combine_repeat_dir(output), 'out.tsv')
+  combine_repeat_file = file_names.combine_repeat_file(output)
   combine_repeat.main(
     input = filter_nhej_file_list,
     column_names = [f'r{i}' for i in range(1, len(input) + 1)],
@@ -167,12 +171,10 @@ def main(
   )
 
   window_dir = file_names.window_dir(output)
-  graph_dir = file_names.graph_dir(output)
-  histogram_dir = file_names.histogram_dir(output)
   for subst_type in library_constants.SUBST_TYPES:
     get_window.main(
       input = combine_repeat_file,
-      output = file_names.window_dir(output),
+      output = window_dir,
       ref_seq_file = ref_seq_file,
       dsb_pos = dsb_pos,
       window_size = window_size,
@@ -188,6 +190,22 @@ def main(
       total_reads = total_reads,
       freq_min = freq_min,
     )
+
+# The stages after the point of merging inputs from two directories.
+def do_stage_2(output, input_comparison = None):
+  window_dir = file_names.window_dir(output)
+  graph_dir = file_names.graph_dir(output)
+  histogram_dir = file_names.histogram_dir(output)
+  for subst_type in library_constants.SUBST_TYPES:
+    if input_comparison is not None:
+      get_freq_comparison.main(
+        input = [
+          file_names.window_dir(input_comparison[0]),
+          file_names.window_dir(input_comparison[1]),
+        ],
+        output = window_dir,
+        subst_type = subst_type,
+      )
     get_graph_data.main(
       input = window_dir,
       output = graph_dir,
@@ -199,6 +217,34 @@ def main(
       subst_type = subst_type,
     )
 
+def main(
+  input,
+  output,
+  ref_seq_file,
+  dsb_pos,
+  window_size,
+  anchor_size,
+  anchor_mismatches,
+  total_reads,
+  freq_min,
+  label,
+  quiet,
+):
+  do_stage_1(
+    input = input,
+    output = output,
+    ref_seq_file = ref_seq_file,
+    dsb_pos = dsb_pos,
+    window_size = window_size,
+    anchor_size = anchor_size,
+    anchor_mismatches = anchor_mismatches,
+    total_reads = total_reads,
+    freq_min = freq_min,
+    label = label,
+    quiet = quiet,
+  )
+  do_stage_2(output = output)
+ 
+
 if __name__ == '__main__':
   main(**parse_args())
-

@@ -50,8 +50,8 @@ def sam_dir(dir):
 def filter_nhej_dir(dir):
   return os.path.join(dir, '1_filter_nhej')
 
-def combine_repeat_dir(dir):
-  return os.path.join(dir, '2_combine_repeat')
+def combine_repeat_file(dir):
+  return os.path.join(dir, '2_combine_repeat', 'out.tsv')
 
 def window_dir(dir):
   return os.path.join(dir, '3_window')
