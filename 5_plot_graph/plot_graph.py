@@ -2675,6 +2675,3 @@ def main(
 
 if __name__ == '__main__':
   main(**parse_args())
-
-# FIXME: MUST MAKE THE PLOT RANGES MORE PREDICTABLE
-# FIXME: HOW IS THE TITLE DETERMINED?

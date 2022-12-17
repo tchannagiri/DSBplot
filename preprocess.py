@@ -113,7 +113,7 @@ def parse_args():
   )
   parser.add_argument(
     '--label',
-    type = common_utils.check_dir_output,
+    type = str,
     help = 'Label of the experiment to be used in plot titles.',
     required = True,
   )
@@ -139,7 +139,7 @@ def do_stage_1(
   label,
   quiet,
 ):
-  bowtie2_build_file = os.path.join(file_names.bowtie2_build(output))
+  bowtie2_build_file = file_names.bowtie2_build(output)
   file_utils.make_parent_dir(bowtie2_build_file)
   log_utils.log_input('Bowtie2 build file: ' + bowtie2_build_file)
   os.system(f'bowtie2-build-s {ref_seq_file} {bowtie2_build_file} --quiet')
