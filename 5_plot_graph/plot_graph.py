@@ -313,6 +313,8 @@ def make_universal_layout(data_info, graph, reverse_complement=False):
     else:
       dist_ref = data['dist_ref']
       var_type = data['variation_type']
+      if var_type not in bucket_dict:
+        raise Exception('Unhandled variation type for universal layout: ' + str(var_type))
       bucket_dict[var_type].setdefault(dist_ref, [])
       bucket_dict[var_type][dist_ref].append(data)
 

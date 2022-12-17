@@ -6,7 +6,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'utils')
 import argparse
 
 import common_utils
-import log_utils
 
 import preprocess
 
