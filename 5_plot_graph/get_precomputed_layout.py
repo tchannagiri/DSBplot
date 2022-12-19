@@ -206,15 +206,9 @@ def make_precomputed_layout(
   layout = plot_graph.make_graph_layout(
     data_dir = data_dir,
     data_info = data_info,
-    node_type = 'sequence_data',
     node_subst_type = subst_type,
     graph = graph,
     layout_type = layout,
-    node_size_px_dict = None,
-    x_size_domain = None,
-    y_size_domain = None,
-    x_size_px = None,
-    y_size_px = None,
     separate_components = False,
     precomputed_layout_dir = None,
   )

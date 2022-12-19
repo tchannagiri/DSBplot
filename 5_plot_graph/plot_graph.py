@@ -259,10 +259,14 @@ def get_pos_universal_layout(
   dist_ref,
   var_type,
   cut_pos_ref,
+  insertion_x_scale = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
+  insertion_y_scale = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
+  deletion_x_scale = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
+  deletion_y_scale = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
   if var_type == 'insertion':
-    # Place the x coordinate alphabetically so that A is left most
-    # and T is right most. This is intended to place the insertions
+    # Place the x-coordinate alphabetically so that A is left-most
+    # and T is right-most. This is intended to place the insertions
     # in a tree based on the common prefix of the insertion nucleotides.
     # To prevent overlapping the nodes are placed in multiple rows for
     # higher numbers of insertions.
@@ -277,14 +281,17 @@ def get_pos_universal_layout(
     row = kmer_index % num_rows
     col = kmer_index // num_rows
     prev_rows_offset = sum(
-      1 + row_spec[i]['rows'] * row_spec[i]['row_space']
+      row_spec[i]['rows'] * row_spec[i]['row_space']
       for i in row_spec
       if i < dist_ref
     )
     curr_row_offset = row * row_spec[dist_ref]['row_space']
-    y = 1 + prev_rows_offset + curr_row_offset
-    x = ((col / num_cols) - 0.5 * (1 - 1 / num_cols))
-    return (x * 22, y + 1)
+    y = 2 + prev_rows_offset + curr_row_offset
+    x = (col / num_cols) - 0.5 * (1 - 1 / num_cols)
+    return (
+      2 * x * insertion_x_scale,
+      0.5 * y * insertion_y_scale,
+    )
   elif var_type == 'deletion':
     # Place the x coordinate so that the most upstream deletion
     # is the left most, and most downstream deletion is right most.
@@ -294,10 +301,21 @@ def get_pos_universal_layout(
     last_del_pos = first_del_pos + dist_ref - 1
     avg_del_pos = (first_del_pos + last_del_pos) / 2
     x = avg_del_pos - (cut_pos_ref + 0.5)
-    y = dist_ref
-    return (x * 2, -(y + 1))
+    y = -dist_ref
+    return (
+      x * deletion_x_scale,
+      y * deletion_y_scale,
+    )
 
-def make_universal_layout(data_info, graph, reverse_complement=False):
+def make_universal_layout(
+  data_info,
+  graph,
+  reverse_complement = False,
+  insertion_x_scale = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
+  insertion_y_scale = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
+  deletion_x_scale = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
+  deletion_y_scale = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
+):
   node_list = graph.nodes(data=True)
 
   bucket_dict = {
@@ -341,11 +359,15 @@ def make_universal_layout(data_info, graph, reverse_complement=False):
           read_align = kmer_utils.reverse_complement(read_align)
 
         xy_dict[data['id']] = get_pos_universal_layout(
-          ref_align,
-          read_align,
-          dist_ref,
-          var_type,
-          cut_pos_ref,
+          ref_align = ref_align,
+          read_align = read_align,
+          dist_ref = dist_ref,
+          var_type = var_type,
+          cut_pos_ref = cut_pos_ref,
+          insertion_x_scale = insertion_x_scale,
+          insertion_y_scale = insertion_y_scale,
+          deletion_x_scale = deletion_x_scale,
+          deletion_y_scale = deletion_y_scale,
         )
   return xy_dict
 
@@ -671,23 +693,29 @@ def make_mds_layout(data_set, graph, distance_matrix):
 
 def make_graph_layout_single(
   data_info,
-  node_type,
   graph,
   layout_type,
-  node_size_px_dict = None,
-  x_size_domain = None,
-  y_size_domain = None,
-  x_size_px = None,
-  y_size_px = None,
   distance_matrix = None,
   reverse_complement = False,
+  universal_layout_x_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
+  universal_layout_y_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
+  universal_layout_x_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
+  universal_layout_y_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
   if layout_type == 'mds_layout':
     layout = make_mds_layout(data_info, graph, distance_matrix)
   elif layout_type == 'radial_layout':
     layout = make_radial_layout(data_info, graph)
   elif layout_type == 'universal_layout':
-    layout = make_universal_layout(data_info, graph, reverse_complement)
+    layout = make_universal_layout(
+      data_info,
+      graph,
+      reverse_complement,
+      insertion_x_scale = universal_layout_x_scale_insertion,
+      insertion_y_scale = universal_layout_y_scale_insertion,
+      deletion_x_scale = universal_layout_x_scale_deletion,
+      deletion_y_scale = universal_layout_y_scale_deletion,
+    )
   elif layout_type == 'fractal_layout':
     layout = make_fractal_layout(data_info, graph, reverse_complement)
   elif layout_type == 'kamada_layout':
@@ -814,18 +842,16 @@ def make_grid_spec(
 def make_graph_layout(
   data_dir,
   data_info,
-  node_type,
   node_subst_type,
   graph,
   layout_type,
   precomputed_layout_dir = None,
-  node_size_px_dict = None,
-  x_size_domain = None,
-  y_size_domain = None,
-  x_size_px = None,
-  y_size_px = None,
   separate_components = True,
   reverse_complement = False,
+  universal_layout_x_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
+  universal_layout_y_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
+  universal_layout_x_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
+  universal_layout_y_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
   if precomputed_layout_dir is not None:
     separate_components = False
@@ -868,16 +894,14 @@ def make_graph_layout(
     layout_list = [
       make_graph_layout_single(
         data_info = data_info,
-        node_type = node_type,
         graph = subgraph,
         layout_type = layout_type,
-        node_size_px_dict = node_size_px_dict,
-        x_size_domain = x_size_domain,
-        y_size_domain = y_size_domain,
-        x_size_px = x_size_px,
-        y_size_px = y_size_px,
         distance_matrix = distance_matrix,
         reverse_complement = reverse_complement,
+        universal_layout_x_scale_insertion = universal_layout_x_scale_insertion,
+        universal_layout_y_scale_insertion = universal_layout_y_scale_insertion,
+        universal_layout_x_scale_deletion = universal_layout_x_scale_deletion,
+        universal_layout_y_scale_deletion = universal_layout_y_scale_deletion,
       )
       for subgraph in subgraph_list
     ]
@@ -1621,6 +1645,10 @@ def make_graph_single_panel(
   legend_group_title_show = False,
   axis_show = False,
   font_size_scale = 1,
+  universal_layout_x_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
+  universal_layout_y_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
+  universal_layout_x_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
+  universal_layout_y_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
   ### Load node data ###
   if node_type == 'sequence_data':
@@ -1664,13 +1692,16 @@ def make_graph_single_panel(
   graph_layout = make_graph_layout(
     data_dir = data_dir,
     data_info = data_info,
-    node_type = node_type,
     node_subst_type = node_subst_type,
     graph = graph,
     layout_type = graph_layout_type,
     precomputed_layout_dir = graph_layout_precomputed_dir,
     separate_components = graph_layout_separate_components,
     reverse_complement = sequence_reverse_complement,
+    universal_layout_x_scale_insertion = universal_layout_x_scale_insertion,
+    universal_layout_y_scale_insertion = universal_layout_y_scale_insertion,
+    universal_layout_x_scale_deletion = universal_layout_x_scale_deletion,
+    universal_layout_y_scale_deletion = universal_layout_y_scale_deletion,
   )
 
   ### Plot edges and nodes ###
@@ -1889,8 +1920,10 @@ def make_graph_figure(
   margin_right_min_px = library_constants.GRAPH_MARGIN_RIGHT_MIN_PX,
   font_size_scale = 1,
   axis_show = False,
-  axis_font_size_scale = 1,
-  axis_tick_modulo = 1,
+  universal_layout_x_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
+  universal_layout_y_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
+  universal_layout_x_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
+  universal_layout_y_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
   data_info_grid = np.full_like(data_dir_grid, None)
   for row in range(data_dir_grid.shape[0]):
@@ -2006,6 +2039,10 @@ def make_graph_figure(
         legend_group_title_show = legend_plotly_show and (not legend_common),
         font_size_scale = font_size_scale,
         axis_show = axis_show,
+        universal_layout_x_scale_insertion = universal_layout_x_scale_insertion,
+        universal_layout_y_scale_insertion = universal_layout_y_scale_insertion,
+        universal_layout_x_scale_deletion = universal_layout_x_scale_deletion,
+        universal_layout_y_scale_deletion = universal_layout_y_scale_deletion,
       )
 
       if (
@@ -2172,6 +2209,10 @@ def get_plot_args(
   plot_range_y = None,
   edge_show = library_constants.GRAPH_EDGE_SHOW,
   edge_show_types = library_constants.GRAPH_EDGE_SHOW_TYPES,
+  universal_layout_x_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
+  universal_layout_y_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
+  universal_layout_x_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
+  universal_layout_y_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
   if plot_type not in [
     'kamada_layout',
@@ -2215,6 +2256,10 @@ def get_plot_args(
   plot_args['margin_right_min_px'] = 0
   plot_args['plot_range_x'] = plot_range_x
   plot_args['plot_range_y'] = plot_range_y
+  plot_args['universal_layout_x_scale_insertion'] = universal_layout_x_scale_insertion
+  plot_args['universal_layout_y_scale_insertion'] = universal_layout_y_scale_insertion
+  plot_args['universal_layout_x_scale_deletion'] = universal_layout_x_scale_deletion
+  plot_args['universal_layout_y_scale_deletion'] = universal_layout_y_scale_deletion
 
   if title_show:
     plot_title = library_constants.get_data_label(data_info)
@@ -2340,6 +2385,45 @@ def parse_args():
       'If showing an y-axis for the universal layout,' +
         ' the max tick value for the insertion side.'
     )
+  )
+  parser.add_argument(
+    '--universal_layout_x_scale_insertion',
+    type = float,
+    default = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
+    help = (
+      'The factor for determining the scale on the universal layout insertion x-axis.' +
+      ' X-axis values will be between +/- this value.'
+    ),
+  )
+  parser.add_argument(
+    '--universal_layout_y_scale_insertion',
+    type = float,
+    default = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
+    help = (
+      'The factor for determining the scale on the universal layout insertion y-axis.' +
+      ' Each level of the y-axis (each level has vertices with the same number of insertions)' +
+      ' will be this large.'
+    ),
+  )
+  parser.add_argument(
+    '--universal_layout_x_scale_deletion',
+    type = float,
+    default = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
+    help = (
+      'The factor for determining the scale on the universal layout deletion x-axis.' +
+      ' Shifting a deletion left/right by 1 nucleotide will shift the corresponding' +
+      ' vertex by this much.' 
+    ),
+  )
+  parser.add_argument(
+    '--universal_layout_y_scale_deletion',
+    type = float,
+    default = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
+    help = (
+      'The factor for determining the scale on the universal layout deletion y-axis.' +
+      ' Each level of the y-axis (each level has vertices with the same number of deletions)' +
+      ' will be this large.'
+    ),
   )
   parser.add_argument(
     '--subst_type',
@@ -2551,6 +2635,10 @@ def main(
   universal_layout_x_axis_deletion_label_type,
   universal_layout_x_axis_x_range,
   universal_layout_x_axis_insertion_y_pos,
+  universal_layout_x_scale_insertion,
+  universal_layout_y_scale_insertion,
+  universal_layout_x_scale_deletion,
+  universal_layout_y_scale_deletion,
   crop_x,
   crop_y,
   interactive,
@@ -2581,6 +2669,10 @@ def main(
     legend_colorbar_scale = legend_color_bar_scale,
     plot_range_x = range_x,
     plot_range_y = range_y,
+    universal_layout_x_scale_insertion = universal_layout_x_scale_insertion,
+    universal_layout_y_scale_insertion = universal_layout_y_scale_insertion,
+    universal_layout_x_scale_deletion = universal_layout_x_scale_deletion,
+    universal_layout_y_scale_deletion = universal_layout_y_scale_deletion,
   )
   
   figure = make_graph_figure(**plot_args)
