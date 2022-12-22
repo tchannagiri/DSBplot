@@ -3,7 +3,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../utils/'))) # allow importing the utils dir
 import argparse
 
-import library_constants
+import constants
 import common_utils
 import file_utils
 import log_utils
@@ -44,8 +44,8 @@ def parse_args():
     type = str,
     default = 'without',
     choices = [
-      library_constants.SUBST_WITH,
-      library_constants.SUBST_WITHOUT
+      constants.SUBST_WITH,
+      constants.SUBST_WITHOUT
     ],
     help = 'Whether to keep or ignore substitutions.',
     required = True,
@@ -73,7 +73,7 @@ def main(
 
   data = [
     file_utils.read_tsv(
-      file_names.window(x, library_constants.COUNT, subst_type)
+      file_names.window(x, constants.COUNT, subst_type)
     )
     for x in input
   ]
@@ -112,7 +112,7 @@ def main(
 
   output_file = file_names.window(
     output,
-    library_constants.COUNT,
+    constants.COUNT,
     subst_type,
   )
   file_utils.write_tsv(data, output_file)

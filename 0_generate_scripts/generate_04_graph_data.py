@@ -4,7 +4,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../utils/'))) # allow importing the utils dir
 import log_utils
 import generate_constants
-import library_constants
+import constants
 import generate_03_get_window
 
 def get_input_dir(name):
@@ -25,7 +25,7 @@ if __name__ == '__main__':
       mode = 'w',
       encoding = generate_constants.OUTPUT_ENCODING[ext],
     ) as file_out:
-      for subst_type in library_constants.SUBST_TYPES:
+      for subst_type in constants.SUBST_TYPES:
         for info in (
           generate_constants.EXPERIMENT_INFO.to_dict('records') +
           generate_constants.EXPERIMENT_INFO_COMPARISON.to_dict('records')

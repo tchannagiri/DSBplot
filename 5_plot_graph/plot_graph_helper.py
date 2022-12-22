@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), './utils/'))) # allow importing the utils dir
 
-import library_constants
+import constants
 import kmer_utils
 
 import plotly.graph_objects as go
@@ -37,8 +37,8 @@ def format_hover_html(data_info, the_dict, format_type, reverse_complement=False
   if format_type == 'node':
     column_names = [
       'id',
-      *library_constants.FREQ_COLUMNS[data_info['format']],
-      *library_constants.FREQ_RANK_COLUMNS[data_info['format']],
+      *constants.FREQ_COLUMNS[data_info['format']],
+      *constants.FREQ_RANK_COLUMNS[data_info['format']],
       'variation_type',
       'dist_ref',
       'substitution',
@@ -123,8 +123,8 @@ def get_node_label_text(
     for label_type in node_label_columns:
       if label_type in row_data:
         if label_type == 'variation_type':
-          label = library_constants.VARIATION_TYPES[row_data[label_type]]['short_label']
-        elif library_constants.is_freq_column(label_type):
+          label = constants.VARIATION_TYPES[row_data[label_type]]['short_label']
+        elif constants.is_freq_column(label_type):
           label = f'{row_data[label_type]: .2e}'
         elif reverse_complement and (label_type in ['ref_align', 'read_align']):
           label = kmer_utils.reverse_complement(str(row_data[label_type]))
@@ -172,7 +172,7 @@ def log_transform_ratio(
   return log_ratios
 
 def get_max_freq(data_info, node_data):
-  return node_data[library_constants.FREQ_COLUMNS[data_info['format']]].max(axis='columns')
+  return node_data[constants.FREQ_COLUMNS[data_info['format']]].max(axis='columns')
 
 def get_node_size(
   data_info,
@@ -200,20 +200,20 @@ def get_node_freq_group(node_data):
     log_transform_ratio(
       node_data['freq_mean_1'],
       node_data['freq_mean_2'],
-      library_constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[0],
-      library_constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[1],
+      constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[0],
+      constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[1],
     ),
     index = node_data.index,
   )
   node_freq_group = pd.Series(
-    library_constants.FREQ_GROUP_B,
+    constants.FREQ_GROUP_B,
     index = node_data.index
   )
-  node_freq_group.loc[log_ratio > library_constants.FREQ_RATIO_LOG_A] = (
-    library_constants.FREQ_GROUP_A
+  node_freq_group.loc[log_ratio > constants.FREQ_RATIO_LOG_A] = (
+    constants.FREQ_GROUP_A
   )
-  node_freq_group.loc[log_ratio < library_constants.FREQ_RATIO_LOG_C] = (
-    library_constants.FREQ_GROUP_B
+  node_freq_group.loc[log_ratio < constants.FREQ_RATIO_LOG_C] = (
+    constants.FREQ_GROUP_B
   )
 
 def get_node_color(
@@ -224,12 +224,12 @@ def get_node_color(
   node_comparison_colors,
 ):
   if node_color_type == 'freq_group':
-    if data_info['format'] != library_constants.DATA_COMPARISON:
+    if data_info['format'] != constants.DATA_COMPARISON:
       raise Exception('Need a comparison data set: ' + data_info['label'])
     node_freq_group = get_node_freq_group(node_data)
-    node_color = pd.Series(library_constants.SIMILAR_FREQ_COLOR, index=node_data.index)
-    node_color.loc[node_freq_group == library_constants.FREQ_GROUP_A] = node_comparison_colors[0]
-    node_color.loc[node_freq_group == library_constants.FREQ_GROUP_C] = node_comparison_colors[1]
+    node_color = pd.Series(constants.SIMILAR_FREQ_COLOR, index=node_data.index)
+    node_color.loc[node_freq_group == constants.FREQ_GROUP_A] = node_comparison_colors[0]
+    node_color.loc[node_freq_group == constants.FREQ_GROUP_C] = node_comparison_colors[1]
     return node_color
   elif node_color_type == 'freq':
      scaled_freq = log_transform_scale(
@@ -247,23 +247,23 @@ def get_node_color(
       index = node_data.index,
     )
   elif node_color_type == 'freq_ratio':
-    if data_info['format'] != library_constants.DATA_COMPARISON:
+    if data_info['format'] != constants.DATA_COMPARISON:
       raise Exception('Need a comparison data set: ' + data_info['label'])
     return pd.Series(
       log_transform_ratio(
         node_data['freq_mean_1'],
         node_data['freq_mean_2'],
-        library_constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[0],
-        library_constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[1],
+        constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[0],
+        constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[1],
       ),
       index = node_data.index,
     )
   elif node_color_type == 'variation_type':
     return node_data['variation_type'].apply(
-      lambda x: library_constants.VARIATION_TYPES[x]['color']
+      lambda x: constants.VARIATION_TYPES[x]['color']
     )
   else:
-    return pd.Series(library_constants.DEFAULT_NODE_COLOR, index=node_data.index)
+    return pd.Series(constants.DEFAULT_NODE_COLOR, index=node_data.index)
 
 def get_node_trace_group(node_data, node_group_type):
   group_key_lists = []
@@ -294,24 +294,24 @@ def make_node_traces(
   for group_key, node_data_group in node_data.groupby(node_group):
     is_ref = group_key[0]
     if is_ref:
-      line_color = library_constants.REFERENCE_OUTLINE_COLOR
-      line_width = library_constants.REFERENCE_OUTLINE_WIDTH
-      trace_name = library_constants.REFERENCE_DESCRIPTION
+      line_color = constants.REFERENCE_OUTLINE_COLOR
+      line_width = constants.REFERENCE_OUTLINE_WIDTH
+      trace_name = constants.REFERENCE_DESCRIPTION
     else:
       if node_group_type == 'variation_type':
         variation_type = group_key[1]
-        trace_name = library_constants.VARIATION_TYPES[variation_type]['label']
+        trace_name = constants.VARIATION_TYPES[variation_type]['label']
       elif node_group_type == 'freq_group':
         freq_group = group_key[1]
-        trace_name = library_constants.get_freq_ratio_label(
+        trace_name = constants.get_freq_ratio_label(
           freq_group,
           data_info['label_1'],
           data_info['label_2'],
         )
       else:
-        trace_name = library_constants.NON_REFERENCE_DESCRIPTION
-      line_color = library_constants.DEFAULT_OUTLINE_COLOR
-      line_width = library_constants.DEFAULT_OUTLINE_WIDTH
+        trace_name = constants.NON_REFERENCE_DESCRIPTION
+      line_color = constants.DEFAULT_OUTLINE_COLOR
+      line_width = constants.DEFAULT_OUTLINE_WIDTH
       
     trace_args = {
       'name': trace_name,
@@ -411,7 +411,7 @@ def make_edges_traces(
   layout,
   show_edge_labels,
   show_edge_types,
-  edge_width_scale = library_constants.GRAPH_EDGE_WIDTH_SCALE,
+  edge_width_scale = constants.GRAPH_EDGE_WIDTH_SCALE,
   reverse_complement = False,
 ):
   edge_args = {}
@@ -419,10 +419,10 @@ def make_edges_traces(
     edge_args[edge_type] = dict(
       x = [],
       y = [],
-      name = library_constants.EDGE_TYPES[edge_type]['label'],
+      name = constants.EDGE_TYPES[edge_type]['label'],
       line = dict(
-        dash = library_constants.EDGE_TYPES[edge_type]['line_dash'],
-        color = library_constants.EDGE_TYPES[edge_type]['plot_color'],
+        dash = constants.EDGE_TYPES[edge_type]['line_dash'],
+        color = constants.EDGE_TYPES[edge_type]['plot_color'],
         width = edge_width_scale,
       ),
       mode = 'lines',

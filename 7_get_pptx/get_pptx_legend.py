@@ -23,7 +23,7 @@ import PIL
 
 import get_pptx_helpers
 
-import library_constants
+import constants
 
 def get_legend_pptx(
   slide,
@@ -226,8 +226,8 @@ def get_variation_color_legend_pptx(
     items.append({
       'type': 'circle',
       'size': node_size_pt,
-      'text': library_constants.VARIATION_TYPES[var_type]['label'],
-      'color': library_constants.VARIATION_TYPES[var_type]['color'],
+      'text': constants.VARIATION_TYPES[var_type]['label'],
+      'color': constants.VARIATION_TYPES[var_type]['color'],
       'line_width': line_width_pt,
     })
   return get_legend_pptx(
@@ -273,7 +273,7 @@ def get_outline_legend_pptx(
     'size': node_size_pt,
     'text': 'Reference',
     'color': 'FFFFFF',
-    'line_color': library_constants.REFERENCE_OUTLINE_COLOR,
+    'line_color': constants.REFERENCE_OUTLINE_COLOR,
     'line_width': 2 * line_width_pt,
   })
   items.append({
@@ -281,7 +281,7 @@ def get_outline_legend_pptx(
     'size': node_size_pt,
     'text': 'Non-reference',
     'color': 'FFFFFF',
-    'line_color': library_constants.DEFAULT_OUTLINE_COLOR,
+    'line_color': constants.DEFAULT_OUTLINE_COLOR,
     'line_width': line_width_pt,
   })
   return get_legend_pptx(
@@ -325,24 +325,24 @@ def get_node_legend_pptx(
     {
       'type': 'circle',
       'size': node_size_pt,
-      'text': library_constants.VARIATION_TYPES['insertion']['label'],
-      'color': library_constants.VARIATION_TYPES['insertion']['color'],
+      'text': constants.VARIATION_TYPES['insertion']['label'],
+      'color': constants.VARIATION_TYPES['insertion']['color'],
       'line_width': line_width_pt,
     },
     {
       'type': 'circle',
       'size': node_size_pt,
-      'text': library_constants.VARIATION_TYPES['deletion']['label'],
-      'color': library_constants.VARIATION_TYPES['deletion']['color'],
+      'text': constants.VARIATION_TYPES['deletion']['label'],
+      'color': constants.VARIATION_TYPES['deletion']['color'],
       'line_width': line_width_pt,
     },
     {
       'type': 'circle',
       'size': node_size_pt,
-      'text': library_constants.REFERENCE_DESCRIPTION,
-      'color': library_constants.DEFAULT_NODE_COLOR,
+      'text': constants.REFERENCE_DESCRIPTION,
+      'color': constants.DEFAULT_NODE_COLOR,
       'line_width': 2 * line_width_pt,
-      'line_color': library_constants.REFERENCE_OUTLINE_COLOR,
+      'line_color': constants.REFERENCE_OUTLINE_COLOR,
     },
   ]
   return get_legend_pptx(
@@ -493,9 +493,9 @@ def get_freq_ratio_legend_pptx(
     color_bar.rotation = -90
   else:
     raise Exception('Unknown orientation: ' + str(orientation))
-  num_ticks = len(library_constants.FREQ_RATIO_COLOR_BAR_TICK_TEXT)
-  for i, text in enumerate(library_constants.FREQ_RATIO_COLOR_BAR_TICK_TEXT):
-    i_rev = len(library_constants.FREQ_RATIO_COLOR_BAR_TICK_TEXT) - i - 1 # descending order
+  num_ticks = len(constants.FREQ_RATIO_COLOR_BAR_TICK_TEXT)
+  for i, text in enumerate(constants.FREQ_RATIO_COLOR_BAR_TICK_TEXT):
+    i_rev = len(constants.FREQ_RATIO_COLOR_BAR_TICK_TEXT) - i - 1 # descending order
     if orientation == 'v':
       x_label_pt = x_pt + color_bar_minor_axis_pt / 2
       y_label_pt = (

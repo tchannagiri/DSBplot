@@ -11,7 +11,7 @@ import common_utils
 import file_utils
 import log_utils
 import file_names
-import library_constants
+import constants
 
 def get_figure_args_pyplot(
   col_widths_px,
@@ -74,7 +74,7 @@ def get_variation_data(
   ref_length = len(data_info['ref_seq_window'])
 
   data_long = file_utils.read_tsv(
-    file_names.variation_grouped(data_dir, library_constants.SUBST_WITH)
+    file_names.variation_grouped(data_dir, constants.SUBST_WITH)
   )
   data_long = data_long.loc[data_long['variation_type'] == variation_type]
   if reverse_pos:
@@ -122,16 +122,16 @@ def plot_histogram_impl(
   axis,
   show_title,
   label_type,
-  tick_modulus = library_constants.HISTOGRAM_AXIS_TICK_MODULUS,
-  axis_label_font_size = library_constants.HISTOGRAM_AXIS_LABEL_FONT_SIZE,
-  axis_tick_font_size = library_constants.HISTOGRAM_AXIS_TICK_FONT_SIZE,
-  font_size_scale = library_constants.HISTOGRAM_TITLE_FONT_SIZE,
+  tick_modulus = constants.HISTOGRAM_AXIS_TICK_MODULUS,
+  axis_label_font_size = constants.HISTOGRAM_AXIS_LABEL_FONT_SIZE,
+  axis_tick_font_size = constants.HISTOGRAM_AXIS_TICK_FONT_SIZE,
+  font_size_scale = constants.HISTOGRAM_TITLE_FONT_SIZE,
   label_pad_px = 10,
   reverse_pos = False,
 ):
 
   ref_length = len(data_info['ref_seq_window'])
-  ref_pos_labels = library_constants.get_position_labels(label_type, ref_length)
+  ref_pos_labels = constants.get_position_labels(label_type, ref_length)
 
   if freq_log:
     freq_range_axis = np.log10(freq_range)
@@ -146,7 +146,7 @@ def plot_histogram_impl(
     reverse_pos = reverse_pos,
   )
 
-  color = library_constants.VARIATION_TYPES[variation_type]['color_3d']
+  color = constants.VARIATION_TYPES[variation_type]['color_3d']
 
   x = data_sub_long.iloc[:, 0].to_numpy()
   y = data_sub_long.iloc[:, 1].to_numpy()
@@ -238,8 +238,8 @@ def plot_histogram_impl(
 
   if show_title:
     axis.set_title(
-      library_constants.LABELS[data_info['control_type']] + ' ' + variation_type.capitalize(),
-      fontsize = library_constants.HISTOGRAM_TITLE_FONT_SIZE * font_size_scale,
+      constants.LABELS[data_info['control_type']] + ' ' + variation_type.capitalize(),
+      fontsize = constants.HISTOGRAM_TITLE_FONT_SIZE * font_size_scale,
     )
 
 def plot_histogram(
@@ -254,7 +254,7 @@ def plot_histogram(
   reverse_pos = False,
 ):
   log_utils.log_input(data_dir)
-  if data_info['format'] != library_constants.DATA_INDIVIDUAL:
+  if data_info['format'] != constants.DATA_INDIVIDUAL:
     raise Exception('Only applicable for individual data sets')
 
   figure, axis = plt.subplots(
@@ -265,19 +265,19 @@ def plot_histogram(
       'proj_type': 'ortho',
     },
     **get_figure_args_pyplot(
-      col_widths_px = [library_constants.HISTOGRAM_WIDTH_PX],
-      row_heights_px = [library_constants.HISTOGRAM_HEIGHT_PX],
+      col_widths_px = [constants.HISTOGRAM_WIDTH_PX],
+      row_heights_px = [constants.HISTOGRAM_HEIGHT_PX],
       col_space_px = 0,
       row_space_px = 0,
-      margin_left_px = library_constants.HISTOGRAM_MARGIN_LEFT_PX,
-      margin_right_px = library_constants.HISTOGRAM_MARGIN_RIGHT_PX,
-      margin_top_px = library_constants.HISTOGRAM_MARGIN_TOP_PX,
-      margin_bottom_px = library_constants.HISTOGRAM_MARGIN_BOTTOM_PX,
-      dpi = library_constants.HISTOGRAM_DPI,
+      margin_left_px = constants.HISTOGRAM_MARGIN_LEFT_PX,
+      margin_right_px = constants.HISTOGRAM_MARGIN_RIGHT_PX,
+      margin_top_px = constants.HISTOGRAM_MARGIN_TOP_PX,
+      margin_bottom_px = constants.HISTOGRAM_MARGIN_BOTTOM_PX,
+      dpi = constants.HISTOGRAM_DPI,
     ),
   )
 
-  font_size_scale = library_constants.HISTOGRAM_FONT_SIZE_SCALE
+  font_size_scale = constants.HISTOGRAM_FONT_SIZE_SCALE
 
   plot_histogram_impl(
     data_dir = data_dir,
@@ -288,15 +288,15 @@ def plot_histogram(
     axis = axis,
     show_title = False,
     label_type = label_type,
-    tick_modulus = library_constants.HISTOGRAM_AXIS_TICK_MODULUS,
+    tick_modulus = constants.HISTOGRAM_AXIS_TICK_MODULUS,
     font_size_scale = font_size_scale,
     reverse_pos = reverse_pos,
   )
 
   if show_title:
     figure.suptitle(
-      library_constants.get_data_label(data_info) + '\n' + variation_type, 
-      fontsize = library_constants.HISTOGRAM_TITLE_FONT_SIZE * font_size_scale,
+      constants.get_data_label(data_info) + '\n' + variation_type, 
+      fontsize = constants.HISTOGRAM_TITLE_FONT_SIZE * font_size_scale,
     )
 
   file_utils.write_pyplot(figure, file_out)
@@ -354,7 +354,7 @@ def main(input, output, variation_type, reverse_pos, label_type):
     data_dir = data_dir,
     data_info = data_info,
     variation_type = variation_type,
-    freq_range = library_constants.HISTOGRAM_FREQ_RANGE,
+    freq_range = constants.HISTOGRAM_FREQ_RANGE,
     freq_log = True,
     label_type = label_type,
     show_title = False,

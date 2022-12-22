@@ -3,7 +3,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../utils/'))) # allow importing the utils dir
 import log_utils
 import generate_constants
-import library_constants
+import constants
 import generate_04_graph_data
 import generate_06_precomputed_layout
 
@@ -35,7 +35,7 @@ if __name__ == '__main__':
           generate_constants.EXPERIMENT_INFO.to_dict('records') +
           generate_constants.EXPERIMENT_INFO_COMPARISON.to_dict('records')
         ):
-          if info['control_type'] == library_constants.CONTROL_NOT:
+          if info['control_type'] == constants.CONTROL_NOT:
             input_dir = get_input_dir(info['name'])
             output_dir = get_output_dir(
               generate_constants.USE_LAYOUT,
@@ -74,13 +74,13 @@ if __name__ == '__main__':
               arg_precomputed_layout_dir = ''
             arg_layout = '--layout ' + generate_constants.USE_LAYOUT
             arg_reverse_complement = (
-              (info['strand'] == library_constants.STRAND_R2) and
+              (info['strand'] == constants.STRAND_R2) and
               (
                 (generate_constants.USE_LAYOUT == generate_constants.LAYOUT_UNIVERSAL) or
                 (generate_constants.USE_LAYOUT == generate_constants.LAYOUT_FRACTAL) or
                 (
                   (generate_constants.USE_LAYOUT == generate_constants.LAYOUT_RADIAL) and
-                  (info['dsb_type'] != library_constants.DSB_TYPE_1)
+                  (info['dsb_type'] != constants.DSB_TYPE_1)
                 )
               )
             )

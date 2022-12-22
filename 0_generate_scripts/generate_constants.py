@@ -3,27 +3,27 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../utils/'))) # allow importing the utils dir
 import pandas as pd
 import file_utils
-import library_constants
+import constants
 
 def get_name_library(info):
   name = (
     info['library'] +
     '_' +
-    library_constants.get_data_label(info)
+    constants.get_data_label(info)
   )
-  for version in library_constants.VERSIONS:
+  for version in constants.VERSIONS:
     name = name.replace('_' + version, '')
   return name
 
 def get_name_experiment(info):
-  return library_constants.get_data_label(info)
+  return constants.get_data_label(info)
 
 def get_ref_seq_file(info):
   return (
     info['dsb_type'] +
     '_' + info['strand'] +
     '_' + info['construct'] +
-    (('_' + str(info['version'])) if (info['version'] != library_constants.VERSION_NONE) else '') +
+    (('_' + str(info['version'])) if (info['version'] != constants.VERSION_NONE) else '') +
     os.path.extsep + 'fa'
   )
 
@@ -63,7 +63,7 @@ def get_min_read_length(info):
   return x.iloc[0]
 
 LIBRARY_INFO = file_utils.read_tsv(os.path.dirname(__file__) + '/library_info.tsv')
-LIBRARY_INFO['format'] = library_constants.DATA_INDIVIDUAL
+LIBRARY_INFO['format'] = constants.DATA_INDIVIDUAL
 LIBRARY_INFO['name'] = LIBRARY_INFO.apply(get_name_library, axis='columns')
 LIBRARY_INFO['ref_seq_file'] = LIBRARY_INFO.apply(get_ref_seq_file, axis='columns')
 LIBRARY_INFO['dsb_pos'] = LIBRARY_INFO.apply(get_dsb_pos, axis='columns')
@@ -92,13 +92,13 @@ ANTISENSE_MERGED_PAIRS = {
 def get_library_info_antisense_merged():
   info_list = []
   for (library_1, library_2), library_new in ANTISENSE_MERGED_PAIRS.items():
-    for strand in library_constants.STRANDS:
+    for strand in constants.STRANDS:
       info_1 = get_library_info(library = library_1, strand = strand)
       info_2 = get_library_info(library = library_2, strand = strand)
       info_merged = info_1.copy()
       info_merged['total_reads'] += info_2['total_reads']
       info_merged['library'] = library_new
-      info_merged['version'] = library_constants.VERSION_MERGED
+      info_merged['version'] = constants.VERSION_MERGED
       info_merged['name'] = get_name_library(info_merged)
       info_merged['dsb_pos'] = None
       info_merged['ref_seq_file'] = None
@@ -129,7 +129,7 @@ EXPERIMENT_INFO = LIBRARY_INFO.groupby([
   total_reads_list = ('total_reads', list),
   min_read_length = ('min_read_length', 'first'),
 ).reset_index()
-EXPERIMENT_INFO['format'] = library_constants.DATA_INDIVIDUAL
+EXPERIMENT_INFO['format'] = constants.DATA_INDIVIDUAL
 EXPERIMENT_INFO['name'] = EXPERIMENT_INFO.apply(get_name_experiment, axis='columns')
 
 LAYOUT_GROUP_2DSB = '2DSB'
@@ -145,28 +145,28 @@ LAYOUT_GROUPS = [
 
 EXPERIMENT_INFO['layout_group'] = None
 EXPERIMENT_INFO.loc[
-  EXPERIMENT_INFO['dsb_type'] == library_constants.DSB_TYPE_2,
+  EXPERIMENT_INFO['dsb_type'] == constants.DSB_TYPE_2,
   'layout_group'
 ] = LAYOUT_GROUP_2DSB
 EXPERIMENT_INFO.loc[
   (
-    (EXPERIMENT_INFO['dsb_type'] == library_constants.DSB_TYPE_1) &
-    (EXPERIMENT_INFO['guide_rna'] == library_constants.GUIDE_RNA_A)
+    (EXPERIMENT_INFO['dsb_type'] == constants.DSB_TYPE_1) &
+    (EXPERIMENT_INFO['guide_rna'] == constants.GUIDE_RNA_A)
   ),
   'layout_group'
 ] = LAYOUT_GROUP_1DSB_A
 EXPERIMENT_INFO.loc[
   (
-    (EXPERIMENT_INFO['dsb_type'] == library_constants.DSB_TYPE_1) &
-    (EXPERIMENT_INFO['guide_rna'] == library_constants.GUIDE_RNA_B)
+    (EXPERIMENT_INFO['dsb_type'] == constants.DSB_TYPE_1) &
+    (EXPERIMENT_INFO['guide_rna'] == constants.GUIDE_RNA_B)
   ),
   'layout_group'
 ] = LAYOUT_GROUP_1DSB_B
 EXPERIMENT_INFO.loc[
-  EXPERIMENT_INFO['dsb_type'] == library_constants.DSB_TYPE_2anti,
+  EXPERIMENT_INFO['dsb_type'] == constants.DSB_TYPE_2anti,
   'layout_group'
 ] = LAYOUT_GROUP_2DSBanti
-EXPERIMENT_INFO['format'] = library_constants.DATA_INDIVIDUAL
+EXPERIMENT_INFO['format'] = constants.DATA_INDIVIDUAL
 
 def get_experiment_info(**args):
   info = EXPERIMENT_INFO
@@ -191,13 +191,13 @@ def get_experiment_info_comparison():
   ]
   for key, experiments in EXPERIMENT_INFO.groupby(experiments_comparison_keys):
     key_dict = dict(zip(experiments_comparison_keys, key))
-    if key_dict['control_type'] == library_constants.CONTROL_NOT:
-      if key_dict['dsb_type'] == library_constants.DSB_TYPE_2anti:
-        construct_1_list = [library_constants.CONSTRUCT_ANTISENSE]
-        construct_2_list = [library_constants.CONSTRUCT_SPLICING]
+    if key_dict['control_type'] == constants.CONTROL_NOT:
+      if key_dict['dsb_type'] == constants.DSB_TYPE_2anti:
+        construct_1_list = [constants.CONSTRUCT_ANTISENSE]
+        construct_2_list = [constants.CONSTRUCT_SPLICING]
       else:
-        construct_1_list = [library_constants.CONSTRUCT_SENSE]
-        construct_2_list = [library_constants.CONSTRUCT_BRANCH, library_constants.CONSTRUCT_CMV]
+        construct_1_list = [constants.CONSTRUCT_SENSE]
+        construct_2_list = [constants.CONSTRUCT_BRANCH, constants.CONSTRUCT_CMV]
       for construct_1 in construct_1_list:
         for construct_2 in construct_2_list:
           experiment_1 = experiments.loc[experiments['construct'] == construct_1]
@@ -217,7 +217,7 @@ def get_experiment_info_comparison():
           experiment_new['construct'] = construct_1 + '_' + construct_2
           experiment_new['name_1'] = experiment_1['name']
           experiment_new['name_2'] = experiment_2['name']
-          experiment_new['format'] = library_constants.DATA_COMPARISON
+          experiment_new['format'] = constants.DATA_COMPARISON
           experiment_new['name'] = get_name_experiment(experiment_new)
           experiments_comparison.append(experiment_new)
   return pd.DataFrame.from_records(experiments_comparison)

@@ -15,7 +15,7 @@ import file_names
 import common_utils
 import file_utils
 import log_utils
-import library_constants
+import constants
 
 import filter_nhej
 import combine_repeat
@@ -107,7 +107,7 @@ def parse_args():
     default = 1e-5,
     help = (
       f'Minimum frequency for output in' +
-      f' windows_{library_constants.FREQ_FILTER_MEAN}.' +
+      f' windows_{constants.FREQ_FILTER_MEAN}.' +
       f' Sequences with frequences <= this are discarded.'
     ),
   )
@@ -171,7 +171,7 @@ def do_stage_1(
   )
 
   window_dir = file_names.window_dir(output)
-  for subst_type in library_constants.SUBST_TYPES:
+  for subst_type in constants.SUBST_TYPES:
     get_window.main(
       input = combine_repeat_file,
       output = window_dir,
@@ -196,7 +196,7 @@ def do_stage_2(output, input_comparison = None):
   window_dir = file_names.window_dir(output)
   graph_dir = file_names.graph_dir(output)
   histogram_dir = file_names.histogram_dir(output)
-  for subst_type in library_constants.SUBST_TYPES:
+  for subst_type in constants.SUBST_TYPES:
     if input_comparison is not None:
       get_freq_comparison.main(
         input = [

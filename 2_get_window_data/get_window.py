@@ -9,7 +9,7 @@ import alignment_utils
 import fasta_utils
 import alignment_window
 import remove_substitution
-import library_constants
+import constants
 import file_names
 
 import pandas as pd
@@ -84,10 +84,10 @@ def parse_args():
   parser.add_argument(
     '--subst_type',
     type = str,
-    default = library_constants.SUBST_WITHOUT,
+    default = constants.SUBST_WITHOUT,
     choices = [
-      library_constants.SUBST_WITH,
-      library_constants.SUBST_WITHOUT
+      constants.SUBST_WITH,
+      constants.SUBST_WITHOUT
     ],
     help = 'Whether to keep or ignore substitutions.',
     required = True,
@@ -174,7 +174,7 @@ def write_alignment_window(
   data = data.drop('count_min', axis='columns')
   output_file = file_names.window(
     output_dir,
-    library_constants.COUNT,
+    constants.COUNT,
     subst_type,
   )
   file_utils.write_tsv(data, output_file)
@@ -191,14 +191,14 @@ def write_data_info(
     'format': format,
     'ref_seq_window': ref_seq_window,
   }
-  if format == library_constants.DATA_INDIVIDUAL:
+  if format == constants.DATA_INDIVIDUAL:
     if len(labels) != 1:
       raise Exception(f'Expected 1 name for individual format. Got: {len(labels)}')
     if len(ref_seqs) != 1:
       raise Exception(f'Expected 1 reference sequence for individual format. Got: {len(ref_seqs)}')
     data_info['label'] = labels[0]
     data_info['ref_seq'] = ref_seqs[0]
-  elif format == library_constants.DATA_COMPARISON:
+  elif format == constants.DATA_COMPARISON:
     if len(labels) != 2:
       raise Exception(f'Expected 2 names for comparison format. Got: {len(labels)}')
     if len(ref_seqs) != 2:
@@ -257,7 +257,7 @@ def main(
   )
   write_data_info(
     dir = output,
-    format = library_constants.DATA_INDIVIDUAL,
+    format = constants.DATA_INDIVIDUAL,
     labels = [label],
     ref_seqs = [ref_seq],
     ref_seq_window = get_ref_seq_window(

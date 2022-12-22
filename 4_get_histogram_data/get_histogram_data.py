@@ -10,7 +10,7 @@ import file_utils
 import alignment_utils
 import log_utils
 import common_utils
-import library_constants
+import constants
 
 
 def parse_args():
@@ -32,7 +32,7 @@ def parse_args():
   parser.add_argument(
     '--subst_type',
     type = str,
-    choices = library_constants.SUBST_TYPES,
+    choices = constants.SUBST_TYPES,
     help = 'Whether to process the files with/without substitutions.',
   )
   return vars(parser.parse_args())
@@ -108,8 +108,8 @@ def write_variation(input_dir, output_dir, subst_type):
       variation_data,
       common_utils.get_freq_ranks(
         variation_data,
-        library_constants.FREQ_COLUMNS[data_info['format']],
-        library_constants.FREQ_RANK_COLUMNS[data_info['format']],
+        constants.FREQ_COLUMNS[data_info['format']],
+        constants.FREQ_RANK_COLUMNS[data_info['format']],
       )
     ],
     axis = 'columns',
@@ -126,7 +126,7 @@ def write_variation_grouped(output_dir, subst_type):
   """
   variation_data = file_utils.read_tsv(file_names.variation(output_dir, subst_type))
   data_info = file_utils.read_tsv_dict(file_names.data_info(output_dir))
-  freq_column_list = library_constants.FREQ_COLUMNS[data_info['format']]
+  freq_column_list = constants.FREQ_COLUMNS[data_info['format']]
   variation_data = variation_data[[
     'id',
     *freq_column_list,
@@ -160,7 +160,7 @@ def write_variation_grouped(output_dir, subst_type):
       common_utils.get_freq_ranks(
         variation_data,
         freq_column_list,
-        library_constants.FREQ_RANK_COLUMNS[data_info['format']],
+        constants.FREQ_RANK_COLUMNS[data_info['format']],
       )
     ],
     axis = 'columns',

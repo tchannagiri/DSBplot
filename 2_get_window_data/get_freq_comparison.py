@@ -7,7 +7,7 @@ import pandas as pd
 import argparse
 
 import common_utils
-import library_constants
+import constants
 import file_names
 import file_utils
 import log_utils
@@ -39,7 +39,7 @@ def parse_args():
   parser.add_argument(
     '--subst_type',
     type = str,
-    choices = library_constants.SUBST_TYPES,
+    choices = constants.SUBST_TYPES,
     help = 'Whether to use with files with/without substitutions.',
     required = True,
   )
@@ -75,7 +75,7 @@ def write_comparison_data(
   log_utils.log_input(input_dir_1)
   log_utils.log_input(input_dir_2)
   for freq_type in [
-    library_constants.FREQ_FILTER_MEAN
+    constants.FREQ_FILTER_MEAN
   ]:
     input_file_1 = file_names.window(input_dir_1, freq_type, subst_type)
     input_file_2 = file_names.window(input_dir_2, freq_type, subst_type)
@@ -113,7 +113,7 @@ def main(input, output, subst_type):
   # Make the comparison info
   get_window.write_data_info(
     dir = output,
-    format = library_constants.DATA_COMPARISON,
+    format = constants.DATA_COMPARISON,
     labels = [data_info_1['label'], data_info_2['label']],
     ref_seqs = [data_info_1['ref_seq'], data_info_2['ref_seq']],
     ref_seq_window = data_info_1['ref_seq_window'],

@@ -9,19 +9,19 @@ import file_utils
 import common_utils
 import log_utils
 import file_names
-import library_constants
+import constants
 
 def parse_args():
   parser = argparse.ArgumentParser(
     description = (
       f'Convert the raw read counts in the input data into frequencies' +
       f' using the input total reads. Outputs 3 files:' +
-      f' (1) windows_{library_constants.FREQ}.tsv: contains the all the sequences' +
+      f' (1) windows_{constants.FREQ}.tsv: contains the all the sequences' +
       f' with the counts converted to frequencies.' +
-      f' (2) windows_{library_constants.FREQ_FILTER}.tsv:' +
+      f' (2) windows_{constants.FREQ_FILTER}.tsv:' +
       f' the previous file with the sequences removed whose frequency is <= FREQ_MIN' +
       f' in any of the repeats.' +
-      f' (3) windows_{library_constants.FREQ_FILTER_MEAN}.tsv: ' +
+      f' (3) windows_{constants.FREQ_FILTER_MEAN}.tsv: ' +
       f' contains the means of the frequencies in the previous file (over all repeats).'
     )
   )
@@ -53,8 +53,8 @@ def parse_args():
     type = str,
     default = 'without',
     choices = [
-      library_constants.SUBST_WITH,
-      library_constants.SUBST_WITHOUT,
+      constants.SUBST_WITH,
+      constants.SUBST_WITHOUT,
     ],
     help = 'Whether to process the files with/without substitutions.',
     required = True,
@@ -65,7 +65,7 @@ def parse_args():
     default = 1e-5,
     help = (
       f'Minimum frequency for output in' +
-      f' windows_{library_constants.FREQ_FILTER_MEAN}.' +
+      f' windows_{constants.FREQ_FILTER_MEAN}.' +
       f' Sequences with frequences <= this are discarded.'
     ),
   )
@@ -74,7 +74,7 @@ def parse_args():
 def main(input, output, subst_type, total_reads, freq_min):
   input_file = file_names.window(
     input,
-    library_constants.COUNT,
+    constants.COUNT,
     subst_type,
   )
   log_utils.log_input(input_file)
@@ -94,7 +94,7 @@ def main(input, output, subst_type, total_reads, freq_min):
 
   output_file = file_names.window(
     input,
-    library_constants.FREQ,
+    constants.FREQ,
     subst_type,
   )
   file_utils.write_tsv(data, output_file)
@@ -104,7 +104,7 @@ def main(input, output, subst_type, total_reads, freq_min):
   
   output_file = file_names.window(
     output,
-    library_constants.FREQ_FILTER,
+    constants.FREQ_FILTER,
     subst_type,
   )
   file_utils.write_tsv(data, output_file)
@@ -114,7 +114,7 @@ def main(input, output, subst_type, total_reads, freq_min):
   data = data.sort_values('freq_mean', ascending = False)
   output_file = file_names.window(
     input,
-    library_constants.FREQ_FILTER_MEAN,
+    constants.FREQ_FILTER_MEAN,
     subst_type,
   )
   file_utils.write_tsv(

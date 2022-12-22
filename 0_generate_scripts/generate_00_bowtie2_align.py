@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../utils/'))) # allow importing the utils dir
 import log_utils
-import library_constants
+import constants
 import generate_constants
 
 def get_input_file(library, strand):
@@ -40,7 +40,7 @@ if __name__ == '__main__':
           ref_seq_bowtie2_build = get_bowtie2_build_file(ref_seq_file)
           file_out.write(f"{generate_constants.BOWTIE2_BUILD_COMMAND[ext]} ref_seq/{ref_seq_file} {ref_seq_bowtie2_build}\n")
       for info in generate_constants.LIBRARY_INFO.to_dict('records'):
-        if info['version'] != library_constants.VERSION_MERGED:
+        if info['version'] != constants.VERSION_MERGED:
           input_file = get_input_file(info['library'], info['strand'])
           output_file = get_output_file(info['name'])
           ref_seq_bowtie2_build = get_bowtie2_build_file(info['ref_seq_file'])

@@ -3,7 +3,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../utils/'))) # allow importing the utils dir
 import log_utils
 import file_utils
-import library_constants
+import constants
 import file_names
 import generate_constants
 import generate_01_filter_nhej
@@ -29,15 +29,15 @@ def get_combine_repeat_counts(library_info):
 def get_window_counts(library_info):
   return file_utils.read_tsv(file_names.window(
     generate_03_get_window.get_output_dir(library_info['name_experiment']),
-    library_constants.COUNT,
-    library_constants.SUBST_WITHOUT
+    constants.COUNT,
+    constants.SUBST_WITHOUT
   ))['count_' + library_info['library']].sum()
 
 def get_window_counts_filter(library_info):
   freq = file_utils.read_tsv(file_names.window(
     generate_03_get_window.get_output_dir(library_info['name_experiment']),
-    library_constants.FREQ_FILTER,
-    library_constants.SUBST_WITHOUT
+    constants.FREQ_FILTER,
+    constants.SUBST_WITHOUT
   ))['freq_' + library_info['library']]
   freq = freq[freq > 1e-5].sum()
   return round(library_info['total_reads'] *freq)
@@ -48,8 +48,8 @@ if __name__ == '__main__':
   count_data_list = []
   for library_info in generate_constants.LIBRARY_INFO.to_dict('records'):
     if (
-      (library_info['version'] != library_constants.VERSION_MERGED) and
-      (library_info['control_type'] != library_constants.CONTROL_30BPDOWN)
+      (library_info['version'] != constants.VERSION_MERGED) and
+      (library_info['control_type'] != constants.CONTROL_30BPDOWN)
     ):
       log_utils.log(library_info['name'])
       count_data = {'library': library_info['name']}

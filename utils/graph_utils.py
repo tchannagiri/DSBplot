@@ -1,6 +1,6 @@
 import file_names
 import file_utils
-import library_constants
+import constants
 import alignment_utils
 
 import Levenshtein
@@ -126,7 +126,7 @@ def get_graph_stats_ref_component(data_format, graph):
 
   freq_stats = {}
   if graph.number_of_nodes() > 0:
-    for column in library_constants.FREQ_COLUMNS[data_format]:
+    for column in constants.FREQ_COLUMNS[data_format]:
       ref_freq = node_view[ref_id][column] if num_nodes > 0 else 0
       non_ref_freq = sum(x[1][column] for x in node_view if x[0] != ref_id)
       freq_stats['ref_' + column] = ref_freq

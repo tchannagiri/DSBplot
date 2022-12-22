@@ -10,7 +10,7 @@ import networkx as nx
 import plotly.graph_objects as go
 import plotly.subplots as ps
 
-import library_constants
+import constants
 import common_utils
 import log_utils
 import kmer_utils
@@ -53,7 +53,7 @@ def parse_args():
   )
   parser.add_argument(
     '--subst_type',
-    choices = library_constants.SUBST_TYPES,
+    choices = constants.SUBST_TYPES,
     help = 'Whether to use the data with or without substitutions.',
     required = True,
   )

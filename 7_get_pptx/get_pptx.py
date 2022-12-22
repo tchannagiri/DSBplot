@@ -10,7 +10,7 @@ import common_utils
 import file_utils
 import file_names
 import log_utils
-import library_constants
+import constants
 import get_pptx_helpers
 import get_pptx_legend
 
@@ -25,12 +25,12 @@ import PIL
 PPTX_TEMPLATE_FILE = os.path.join(os.path.dirname(__file__), 'template.pptx') # make this an arg!
 
 FORMAT_LEGENDS = {
-  library_constants.DATA_COMPARISON: [
+  constants.DATA_COMPARISON: [
     'node_size',
     'node_outline',
     'edge_type',
   ],
-  library_constants.DATA_INDIVIDUAL: [
+  constants.DATA_INDIVIDUAL: [
     'node_size',
     'node_outline',
     'edge_type',
@@ -550,9 +550,9 @@ def get_slide(
         construct_1 = legend['construct_1']
         construct_2 = legend['construct_2']
         if orientation == 'v':
-          title = f'Ratio\n[{library_constants.LABELS[construct_1]} / {library_constants.LABELS[construct_2]}]'
+          title = f'Ratio\n[{constants.LABELS[construct_1]} / {constants.LABELS[construct_2]}]'
         elif orientation == 'h':
-          title = f'Ratio [{library_constants.LABELS[construct_1]} / {library_constants.LABELS[construct_2]}]'
+          title = f'Ratio [{constants.LABELS[construct_1]} / {constants.LABELS[construct_2]}]'
         else:
           raise Exception('Impossible')
         color_bar_file = legend['color_bar_file']
@@ -652,7 +652,7 @@ def parse_args():
       'Max frequency to determine node size.' +
       ' Higher frequencies are clipped to this value.'
     ),
-    default = library_constants.GRAPH_NODE_SIZE_MAX_FREQ,
+    default = constants.GRAPH_NODE_SIZE_MAX_FREQ,
   )
   parser.add_argument(
     '--node_min_freq',
@@ -661,19 +661,19 @@ def parse_args():
       'Min frequency to determine node size.' +
       ' Lower frequencies are clipped to this value.'
     ),
-    default = library_constants.GRAPH_NODE_SIZE_MIN_FREQ,
+    default = constants.GRAPH_NODE_SIZE_MIN_FREQ,
   )
   parser.add_argument(
     '--node_max_px',
     type = float,
     help = 'Largest node size as determined by the frequency.',
-    default = library_constants.GRAPH_NODE_SIZE_MAX_PX,
+    default = constants.GRAPH_NODE_SIZE_MAX_PX,
   )
   parser.add_argument(
     '--node_min_px',
     type = float,
     help = 'Smallest node size as determined by the frequency.',
-    default = library_constants.GRAPH_NODE_SIZE_MIN_PX,
+    default = constants.GRAPH_NODE_SIZE_MIN_PX,
   )
   parser.add_argument(
     '--title',
