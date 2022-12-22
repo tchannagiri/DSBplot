@@ -1,4 +1,3 @@
-import kmer_utils
 import numpy as np
 
 def get_alignment_window(

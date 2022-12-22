@@ -259,10 +259,10 @@ def get_pos_universal_layout(
   dist_ref,
   var_type,
   cut_pos_ref,
-  insertion_x_scale = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
-  insertion_y_scale = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
-  deletion_x_scale = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
-  deletion_y_scale = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
+  x_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
+  y_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
+  x_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
+  y_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
   if var_type == 'insertion':
     # Place the x-coordinate alphabetically so that A is left-most
@@ -289,8 +289,8 @@ def get_pos_universal_layout(
     y = 2 + prev_rows_offset + curr_row_offset
     x = (col / num_cols) - 0.5 * (1 - 1 / num_cols)
     return (
-      2 * x * insertion_x_scale,
-      0.5 * y * insertion_y_scale,
+      2 * x * x_scale_insertion,
+      0.5 * y * y_scale_insertion,
     )
   elif var_type == 'deletion':
     # Place the x coordinate so that the most upstream deletion
@@ -303,18 +303,18 @@ def get_pos_universal_layout(
     x = avg_del_pos - (cut_pos_ref + 0.5)
     y = -dist_ref
     return (
-      x * deletion_x_scale,
-      y * deletion_y_scale,
+      x * x_scale_deletion,
+      y * y_scale_deletion,
     )
 
 def make_universal_layout(
   data_info,
   graph,
   reverse_complement = False,
-  insertion_x_scale = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
-  insertion_y_scale = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
-  deletion_x_scale = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
-  deletion_y_scale = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
+  x_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
+  y_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
+  x_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
+  y_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
   node_list = graph.nodes(data=True)
 
@@ -364,10 +364,10 @@ def make_universal_layout(
           dist_ref = dist_ref,
           var_type = var_type,
           cut_pos_ref = cut_pos_ref,
-          insertion_x_scale = insertion_x_scale,
-          insertion_y_scale = insertion_y_scale,
-          deletion_x_scale = deletion_x_scale,
-          deletion_y_scale = deletion_y_scale,
+          x_scale_insertion = x_scale_insertion,
+          y_scale_insertion = y_scale_insertion,
+          x_scale_deletion = x_scale_deletion,
+          y_scale_deletion = y_scale_deletion,
         )
   return xy_dict
 
@@ -378,13 +378,17 @@ def make_universal_layout_y_axis(
   col,
   ref_length,
   cut_pos_ref, # should be 1 based!
+  max_tick_insertion,
+  max_tick_deletion,
   y_range = [float('nan'), float('nan')],
   tick_length = 0.25,
   label_font_size = library_constants.GRAPH_AXES_TICK_FONT_SIZE,
   font_size_scale = library_constants.GRAPH_FONT_SIZE_SCALE,
-  max_tick_insertion = 8,
-  max_tick_deletion = 10,
   line_width_px = 4,
+  x_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
+  y_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
+  x_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
+  y_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
   tick_list = [{'dist_ref': 0, 'y_pos': 0}]
   for dist_ref in range(1, max(max_tick_insertion, max_tick_deletion) + 1):
@@ -406,11 +410,15 @@ def make_universal_layout_y_axis(
         continue
 
       y_pos = get_pos_universal_layout(
-        fake_ref_align,
-        fake_read_align,
-        dist_ref,
-        var_type,
-        cut_pos_ref,
+        ref_align = fake_ref_align,
+        read_align = fake_read_align,
+        dist_ref = dist_ref,
+        var_type = var_type,
+        cut_pos_ref = cut_pos_ref,
+        x_scale_insertion = x_scale_insertion,
+        y_scale_insertion = y_scale_insertion,
+        x_scale_deletion = x_scale_deletion,
+        y_scale_deletion = y_scale_deletion,
       )[1]
 
       tick_list.append(
@@ -463,7 +471,6 @@ def make_universal_layout_y_axis(
     line_color = 'black',
   )
 
-
 def make_universal_layout_x_axis(
   figure,
   var_type,
@@ -480,6 +487,10 @@ def make_universal_layout_x_axis(
   label_font_size = None,
   font_size_scale = library_constants.GRAPH_FONT_SIZE_SCALE,
   line_width_px = 4,
+  x_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
+  y_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
+  x_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
+  y_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
   if insertion_axis_type not in ['tick', 'bracket']:
     raise Exception('Invalid insertion axis type: ' + str(insertion_axis_type))
@@ -506,11 +517,15 @@ def make_universal_layout_x_axis(
         ('A' * (ref_length - cut_pos_ref))
       )
       x_pos = get_pos_universal_layout(
-        fake_ref_align,
-        fake_read_align,
-        1,
-        'insertion',
-        cut_pos_ref,
+        ref_align = fake_ref_align,
+        read_align = fake_read_align,
+        dist_ref = 1,
+        var_type = 'insertion',
+        cut_pos_ref = cut_pos_ref,
+        x_scale_insertion = x_scale_insertion,
+        y_scale_insertion = y_scale_insertion,
+        x_scale_deletion = x_scale_deletion,
+        y_scale_deletion = y_scale_deletion,
       )[0]
       tick_list.append({
         'x_pos': x_pos,
@@ -587,7 +602,7 @@ def make_universal_layout_x_axis(
   for tick in tick_list:
     tick_length = tick.get('tick_length', base_tick_length)
 
-    if not(tick.get('omit_tick', False)):
+    if not tick.get('omit_tick', False):
       # tick line
       figure.add_shape(
         type = 'line',
@@ -711,10 +726,10 @@ def make_graph_layout_single(
       data_info,
       graph,
       reverse_complement,
-      insertion_x_scale = universal_layout_x_scale_insertion,
-      insertion_y_scale = universal_layout_y_scale_insertion,
-      deletion_x_scale = universal_layout_x_scale_deletion,
-      deletion_y_scale = universal_layout_y_scale_deletion,
+      x_scale_insertion = universal_layout_x_scale_insertion,
+      y_scale_insertion = universal_layout_y_scale_insertion,
+      x_scale_deletion = universal_layout_x_scale_deletion,
+      y_scale_deletion = universal_layout_y_scale_deletion,
     )
   elif layout_type == 'fractal_layout':
     layout = make_fractal_layout(data_info, graph, reverse_complement)
@@ -2715,6 +2730,10 @@ def main(
       y_range = universal_layout_y_axis_y_range,
       max_tick_deletion = max_tick_deletion,
       max_tick_insertion = max_tick_insertion,
+      x_scale_insertion = universal_layout_x_scale_insertion,
+      y_scale_insertion = universal_layout_y_scale_insertion,
+      x_scale_deletion = universal_layout_x_scale_deletion,
+      y_scale_deletion = universal_layout_y_scale_deletion,
     )
   if universal_layout_x_axis_deletion_y_pos is not None:
     make_universal_layout_x_axis(
@@ -2727,6 +2746,10 @@ def main(
       cut_pos_ref = len(data_info['ref_seq_window']) // 2,
       x_range = universal_layout_x_axis_x_range,
       deletion_label_type = universal_layout_x_axis_deletion_label_type,
+      x_scale_insertion = universal_layout_x_scale_insertion,
+      y_scale_insertion = universal_layout_y_scale_insertion,
+      x_scale_deletion = universal_layout_x_scale_deletion,
+      y_scale_deletion = universal_layout_y_scale_deletion,
     )
   if universal_layout_x_axis_insertion_y_pos is not None:
     make_universal_layout_x_axis(
@@ -2738,6 +2761,10 @@ def main(
       ref_length = len(data_info['ref_seq_window']),
       cut_pos_ref = len(data_info['ref_seq_window']) // 2,
       x_range = universal_layout_x_axis_x_range,
+      x_scale_insertion = universal_layout_x_scale_insertion,
+      y_scale_insertion = universal_layout_y_scale_insertion,
+      x_scale_deletion = universal_layout_x_scale_deletion,
+      y_scale_deletion = universal_layout_y_scale_deletion,
     )
   if interactive:
     log_utils.log('Opening interactive version in browser.')
