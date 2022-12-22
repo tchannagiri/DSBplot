@@ -374,8 +374,6 @@ def make_universal_layout(
 def make_universal_layout_y_axis(
   figure,
   x_pos,
-  row,
-  col,
   ref_length,
   cut_pos_ref, # should be 1 based!
   max_tick_insertion,
@@ -436,8 +434,6 @@ def make_universal_layout_y_axis(
       x1 = x_pos + tick_length,
       y0 = tick['y_pos'],
       y1 = tick['y_pos'],
-      row = row,
-      col = col,
       line_width = line_width_px,
       line_color = 'black',
     )
@@ -448,8 +444,6 @@ def make_universal_layout_y_axis(
       y = tick['y_pos'],
       text = str(tick['dist_ref']),
       showarrow = False,
-      row = row,
-      col = col,
       font_size = label_font_size * font_size_scale,
       xanchor = 'left',
     )
@@ -465,8 +459,6 @@ def make_universal_layout_y_axis(
     x1 = x_pos,
     y0 = y_range[0],
     y1 = y_range[1],
-    row = row,
-    col = col,
     line_width = line_width_px,
     line_color = 'black',
   )
@@ -475,8 +467,6 @@ def make_universal_layout_x_axis(
   figure,
   var_type,
   y_pos,
-  row,
-  col,
   ref_length,
   cut_pos_ref, # should be 1 based!
   x_range = [float('nan'), float('nan')],
@@ -610,8 +600,6 @@ def make_universal_layout_x_axis(
         x1 = tick['x_pos'],
         y0 = y_pos,
         y1 = y_pos - tick_length,
-        row = row,
-        col = col,
         line_width = line_width_px,
         line_color = 'black',
       )
@@ -623,8 +611,6 @@ def make_universal_layout_x_axis(
         y = y_pos - 1.5 * tick_length,
         text = str(tick['text']),
         showarrow = False,
-        row = row,
-        col = col,
         font_size = label_font_size * font_size_scale,
         xanchor = 'center',
         yshift = -label_font_size,
@@ -642,8 +628,6 @@ def make_universal_layout_x_axis(
     x1 = x_range[1],
     y0 = y_pos,
     y1 = y_pos,
-    row = row,
-    col = col,
     line_width = line_width_px,
     line_color = 'black',
   )
@@ -1275,8 +1259,6 @@ def add_plotly_colorbar(
   figure,
   label_1,
   label_2,
-  row,
-  col,
   figure_height_px,
   legend_colorbar_scale = 1,
   legend_x_shift_px = 0,
@@ -1325,16 +1307,13 @@ def add_plotly_colorbar(
         'tickfont_size': library_constants.GRAPH_LEGEND_FONT_SIZE * font_size_scale,
       },
     },
-    row = row,
-    col = col,
   )
   return legend_y_shift_px - colorbar_height_px
 
 def make_custom_legends(
   figure,
   figure_height_px,
-  data_info_grid,
-  node_type,
+  data_info,
   node_size_type,
   node_color_type,
   node_filter_variation_types,
@@ -1348,30 +1327,31 @@ def make_custom_legends(
   legend_colorbar_scale,
   font_size_scale,
   line_width_scale,
+  x_anchor_frac = library_constants.GRAPH_LEGEND_CUSTOM_X_ANCHOR_FRAC,
+  y_anchor_frac = library_constants.GRAPH_LEGEND_CUSTOM_Y_ANCHOR_FRAC,
 ):
   y_shift_curr_px = 0
 
-  if node_type in ['sequence_data']:
-    y_shift_curr_px = make_outline_legend(
-      figure = figure,
-      node_size_px = node_size_px_range[1],
-      x_anchor = 1,
-      y_anchor = 1,
-      x_shift = legend_x_shift_px,
-      y_shift = y_shift_curr_px,
-      legend_item_scale = legend_item_scale,
-      font_size_scale = font_size_scale,
-      line_width_scale = line_width_scale,
-    )
-    y_shift_curr_px -= legend_vertical_space_px
+  y_shift_curr_px = make_outline_legend(
+    figure = figure,
+    node_size_px = node_size_px_range[1],
+    x_anchor = x_anchor_frac,
+    y_anchor = y_anchor_frac,
+    x_shift = legend_x_shift_px,
+    y_shift = y_shift_curr_px,
+    legend_item_scale = legend_item_scale,
+    font_size_scale = font_size_scale,
+    line_width_scale = line_width_scale,
+  )
+  y_shift_curr_px -= legend_vertical_space_px
 
   if node_color_type == 'variation_type':
     y_shift_curr_px = make_variation_color_legend(
       figure = figure,
       variation_types = node_filter_variation_types,
       node_size_px = node_size_px_range[1],
-      x_anchor = 1,
-      y_anchor = 1,
+      x_anchor = x_anchor_frac,
+      y_anchor = y_anchor_frac,
       x_shift = legend_x_shift_px,
       y_shift = y_shift_curr_px,
       legend_item_scale = legend_item_scale,
@@ -1380,53 +1360,33 @@ def make_custom_legends(
     )
     y_shift_curr_px -= legend_vertical_space_px
   elif node_color_type == 'freq_group':
-    label_1_list = list(set(
-      data_info['label_1'] for data_info in data_info_grid.ravel()
-      if data_info['format'] == library_constants.DATA_COMPARISON
-    ))
-    label_2_list = list(set(
-      data_info['label_2'] for data_info in data_info_grid.ravel()
-      if data_info['format'] == library_constants.DATA_COMPARISON
-    ))
-    for label_1 in label_1_list:
-      for label_2 in label_2_list:
-        y_shift_curr_px = make_freq_group_legend(
-          label_1 = label_1,
-          label_2 = label_2,
-          figure = figure,
-          node_size_px = node_size_px_range[1],
-          x_anchor = 1,
-          y_anchor = 1,
-          x_shift = legend_x_shift_px,
-          y_shift = y_shift_curr_px,
-          legend_item_scale = legend_item_scale,
-          font_size_scale = font_size_scale,
-          line_width_scale = line_width_scale,
-        )
-      y_shift_curr_px -= legend_vertical_space_px
+    y_shift_curr_px = make_freq_group_legend(
+      label_1 = data_info['label_1'],
+      label_2 = data_info['label_2'],
+      figure = figure,
+      node_size_px = node_size_px_range[1],
+      x_anchor = x_anchor_frac,
+      y_anchor = y_anchor_frac,
+      x_shift = legend_x_shift_px,
+      y_shift = y_shift_curr_px,
+      legend_item_scale = legend_item_scale,
+      font_size_scale = font_size_scale,
+      line_width_scale = line_width_scale,
+    )
+    y_shift_curr_px -= legend_vertical_space_px
   elif node_color_type == 'freq_ratio':
-    label_pair_row_col = {}
-    for row in range(data_info_grid.shape[0]):
-      for col in range(data_info_grid.shape[1]):
-        label_1 = data_info_grid[row, col]['label_1']
-        label_2 = data_info_grid[row, col]['label_2']
-        label_pair_row_col[label_1, label_2] = (row, col)
-
-    for (label_1, label_2), (row, col) in label_pair_row_col.items():
-      y_shift_curr_px = add_plotly_colorbar(
-        figure = figure,
-        label_1 = label_1,
-        label_2 = label_2,
-        row = row + 1,
-        col = col + 1,
-        figure_height_px = figure_height_px,
-        legend_colorbar_scale = legend_colorbar_scale,
-        legend_x_shift_px = legend_x_shift_px,
-        legend_y_shift_px = y_shift_curr_px,
-        line_width_scale = line_width_scale,
-        font_size_scale = font_size_scale,
-      )
-      y_shift_curr_px -= legend_vertical_space_px * 2
+    y_shift_curr_px = add_plotly_colorbar(
+      figure = figure,
+      label_1 = data_info['label_1'],
+      label_2 = data_info['label_2'],
+      figure_height_px = figure_height_px,
+      legend_colorbar_scale = legend_colorbar_scale,
+      legend_x_shift_px = legend_x_shift_px,
+      legend_y_shift_px = y_shift_curr_px,
+      line_width_scale = line_width_scale,
+      font_size_scale = font_size_scale,
+    )
+    y_shift_curr_px -= legend_vertical_space_px * 2
   else:
     raise Exception('Unknown node color type: ' + str(node_color_type))
   
@@ -1434,10 +1394,10 @@ def make_custom_legends(
     y_shift_curr_px = make_edge_legend(
       figure = figure,
       edge_type_list = edge_show_types,
-      line_size_px = library_constants.GRAPH_EDGE_LEGEND_ITEM_LINE_SIZE_PX,
-      line_width_px = library_constants.GRAPH_EDGE_LEGEND_ITEM_LINE_WIDTH_PX,
-      x_anchor = 1,
-      y_anchor = 1,
+      line_size_px = library_constants.GRAPH_LEGEND_EDGE_ITEM_LINE_SIZE_PX,
+      line_width_px = library_constants.GRAPH_LEGEND_EDGE_ITEM_LINE_WIDTH_PX,
+      x_anchor = x_anchor_frac,
+      y_anchor = y_anchor_frac,
       x_shift = legend_x_shift_px,
       y_shift = y_shift_curr_px,
       legend_item_scale = legend_item_scale,
@@ -1451,8 +1411,8 @@ def make_custom_legends(
       figure = figure,
       node_size_freq_range = node_size_freq_range,
       node_size_px_range = node_size_px_range,
-      x_anchor = 1,
-      y_anchor = 1,
+      x_anchor = x_anchor_frac,
+      y_anchor = y_anchor_frac,
       x_shift = legend_x_shift_px,
       y_shift = y_shift_curr_px,
       legend_item_scale = legend_item_scale,
@@ -1466,9 +1426,6 @@ def make_custom_legends(
 def make_graph_stats(
   figure,
   data_dir,
-  data_info,
-  row,
-  col,
   x,
   y,
   x_shift,
@@ -1510,8 +1467,6 @@ def make_graph_stats(
       f'Num seq deletion:     {graph_stats["num_seq_deletion"][0]}<br>'
     ),
     showarrow = False,
-    row = row,
-    col = col,
   )
 
 def make_graph_stats_ref_component(
@@ -1519,8 +1474,6 @@ def make_graph_stats_ref_component(
   data_dir,
   data_info,
   subst_type,
-  row,
-  col,
   x,
   y,
   x_shift,
@@ -1531,16 +1484,6 @@ def make_graph_stats_ref_component(
 ):
   graph_stats = file_utils.read_tsv_dict(
     file_names.graph_stats(data_dir, subst_type)
-  )
-  # Need a dummy scatter to initialize the axes
-  figure.add_scatter(
-    x = [0],
-    y = [0],
-    row = row,
-    col = col,
-    marker_color = library_constants.GRAPH_BACKGROUND_COLOR,
-    marker_size = 0,
-    showlegend = False,
   )
 
   stat_lines = [
@@ -1616,31 +1559,27 @@ def make_graph_stats_ref_component(
     font_family = 'Monospace',
     text = (
       '<span style="text-decoration: underline;">'
-        'Graph Invariants (ref component only)'
+        'Graph Statistics (ref component only)'
       '</span><br>' +
       stat_lines
     ),
     showarrow = False,
-    row = row,
-    col = col,
   )
-
 
 def make_graph_figure_helper(
   figure,
   data_dir,
   data_info,
-  sequence_reverse_complement = False,
-  node_type = library_constants.GRAPH_NODE_TYPE,
+  sequence_reverse_complement = library_constants.GRAPH_SEQUENCE_REVERSE_COMPLEMENT,
   node_subst_type = library_constants.SUBST_WITHOUT,
-  node_filter_freq_range = [0, np.inf],
-  node_filter_dist_range = [0, np.inf],
+  node_filter_freq_range = library_constants.GRAPH_NODE_FILTER_FREQ_RANGE,
+  node_filter_dist_range = library_constants.GRAPH_NODE_FILTER_DIST_RANGE,
   edge_show = library_constants.GRAPH_EDGE_SHOW,
   edge_types_show = library_constants.GRAPH_EDGE_SHOW_TYPES,
   edge_labels_show = library_constants.GRAPH_EDGE_LABELS_SHOW,
   edge_width_scale = library_constants.GRAPH_EDGE_WIDTH_SCALE,
-  graph_layout_type = library_constants.GRAPH_LAYOUT,
-  graph_layout_precomputed_dir = None,
+  graph_layout_type = library_constants.GRAPH_LAYOUT_TYPE,
+  graph_layout_precomputed_dir = library_constants.GRAPH_LAYOUT_PRECOMPUTED_DIR,
   graph_layout_separate_components = library_constants.GRAPH_LAYOUT_SEPARATE_COMPONENTS,
   node_labels_show = library_constants.GRAPH_NODE_LABEL_SHOW,
   node_label_columns = library_constants.GRAPH_NODE_LABEL_COLUMNS,
@@ -1652,9 +1591,9 @@ def make_graph_figure_helper(
   node_size_freq_range = library_constants.GRAPH_NODE_SIZE_FREQ_RANGE,
   node_filter_variation_types = library_constants.GRAPH_NODE_FILTER_VARIATION_TYPES,
   node_outline_width_scale = library_constants.GRAPH_NODE_OUTLINE_WIDTH_SCALE,
-  plot_range_x = [float('nan'), float('nan')],
-  plot_range_y = [float('nan'), float('nan')],
-  legend_plotly_show = library_constants.GRAPH_LEGEND_SHOW,
+  plot_range_x = library_constants.GRAPH_PLOT_RANGE_X,
+  plot_range_y = library_constants.GRAPH_PLOT_RANGE_Y,
+  legend_plotly_show = library_constants.GRAPH_LEGEND_CUSTOM_SHOW,
   axes_show = library_constants.GRAPH_AXES_SHOW,
   font_size_scale = library_constants.GRAPH_FONT_SIZE_SCALE,
   universal_layout_x_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
@@ -1663,14 +1602,7 @@ def make_graph_figure_helper(
   universal_layout_y_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
   ### Load node data ###
-  if node_type == 'sequence_data':
-    node_data = file_utils.read_tsv(file_names.sequence_data(data_dir, node_subst_type))
-  elif node_type == 'variation':
-    node_data = file_utils.read_tsv(file_names.variation(data_dir, node_subst_type))
-  elif node_type == 'variation_grouped':
-    node_data = file_utils.read_tsv(file_names.variation_grouped(data_dir, node_subst_type))
-  else:
-    raise Exception('Unknown node data type: ' + str(node_type))
+  node_data = file_utils.read_tsv(file_names.sequence_data(data_dir, node_subst_type))
   node_data = node_data.set_index('id', drop=False)
 
   ### Load graph ###
@@ -1685,14 +1617,13 @@ def make_graph_figure_helper(
       .between(node_filter_freq_range[0], node_filter_freq_range[1], inclusive='both')
   ]
 
-  if node_type in ['sequence_data', 'variation']:
-    node_data = node_data.loc[
-      node_data['dist_ref'].between(
-        node_filter_dist_range[0],
-        node_filter_dist_range[1],
-        inclusive = 'both'
-      )
-    ]
+  node_data = node_data.loc[
+    node_data['dist_ref'].between(
+      node_filter_dist_range[0],
+      node_filter_dist_range[1],
+      inclusive = 'both'
+    )
+  ]
 
   graph = graph.subgraph(node_data.index)
 
@@ -1700,7 +1631,6 @@ def make_graph_figure_helper(
 
   graph_layout_separate_components = (
     graph_layout_separate_components and
-    (node_type in ['sequence_data']) and
     (len(graph.nodes()) > 10)
   )
   
@@ -1740,7 +1670,6 @@ def make_graph_figure_helper(
     node_label_columns = node_label_columns,
     node_label_position = node_label_position,
     node_label_font_size = library_constants.GRAPH_LABEL_FONT_SIZE * font_size_scale,
-    node_type = node_type,
     node_color_type = node_color_type,
     node_comparison_colors = node_comparison_colors,
     node_size_type = node_size_type,
@@ -1798,59 +1727,53 @@ def get_figure_size_args(
 
 def make_graph_figure(
   data_dir,
-  graph_layout_type = 'kamada_layout',
-  graph_layout_precomputed_dir = None,
-  graph_layout_separate_components = True,
-  sequence_reverse_complement = False,
-  node_type = 'sequence_data',
-  node_subst_type = library_constants.SUBST_WITHOUT,
-  node_filter_variation_types = None,
-  node_filter_freq_range = [0, np.inf],
-  node_filter_dist_range = [0, np.inf],
-  node_labels_show = False,
-  node_label_columns = ['id'],
-  node_label_position = 'bottom center',
-  node_color_type = 'freq_group',
+  graph_layout_type = library_constants.GRAPH_LAYOUT_TYPE,
+  graph_layout_precomputed_dir = library_constants.GRAPH_LAYOUT_PRECOMPUTED_DIR,
+  graph_layout_separate_components = library_constants.GRAPH_LAYOUT_SEPARATE_COMPONENTS,
+  sequence_reverse_complement = library_constants.GRAPH_SEQUENCE_REVERSE_COMPLEMENT,
+  node_subst_type = library_constants.GRAPH_NODE_SUBST_TYPE,
+  node_filter_variation_types = library_constants.GRAPH_NODE_FILTER_VARIATION_TYPES,
+  node_filter_freq_range = library_constants.GRAPH_NODE_FILTER_FREQ_RANGE,
+  node_filter_dist_range = library_constants.GRAPH_NODE_FILTER_DIST_RANGE,
+  node_label_show = library_constants.GRAPH_NODE_LABEL_SHOW,
+  node_label_columns = library_constants.GRAPH_NODE_LABEL_COLUMNS,
+  node_label_position = library_constants.GRAPH_NODE_LABEL_POSITION,
+  node_color_type = library_constants.GRAPH_NODE_COLOR_TYPE,
   node_comparison_colors = library_constants.DEFAULT_COMPARISON_COLORS,
-  node_size_type = 'freq',
-  node_size_px_range = [10, 50],
-  node_size_freq_range = [1e-6, 1],
-  edge_show = True,
-  edge_show_labels = False,
-  edge_show_types = list(library_constants.EDGE_TYPES),
-  edge_width_scale = 1,
-  graph_width_px = None,
-  graph_height_px = None,
-  title = None,
-  title_height_px = library_constants.GRAPH_TITLE_HEIGHT_PX,
-  title_y_shift_px = library_constants.GRAPH_TITLE_HEIGHT_PX / 2,
-  title_subplot_show = True,
-  legend_plotly_show = False,
-  legend_custom_show = True,
-  legend_width_px = library_constants.GRAPH_LEGEND_WIDTH_PX,
-  legend_x_shift_px = 0,
+  node_size_type = library_constants.GRAPH_NODE_SIZE_TYPE,
+  node_size_px_range = library_constants.GRAPH_NODE_SIZE_PX_RANGE,
+  node_size_freq_range = library_constants.GRAPH_NODE_SIZE_FREQ_RANGE,
+  edge_show = library_constants.GRAPH_EDGE_SHOW,
+  edge_show_labels = library_constants.GRAPH_EDGE_SHOW_LABELS,
+  edge_show_types = library_constants.GRAPH_EDGE_SHOW_TYPES,
+  edge_width_scale = library_constants.GRAPH_EDGE_WIDTH_SCALE,
+  graph_width_px = library_constants.GRAPH_WIDTH_PX,
+  graph_height_px = library_constants.GRAPH_HEIGHT_PX,
+  title = library_constants.GRAPH_TITLE,
+  title_y_shift_px = library_constants.GRAPH_TITLE_Y_SHIFT_PX,
+  legend_plotly_show = library_constants.GRAPH_LEGEND_PLOTLY_SHOW,
+  legend_custom_show = library_constants.GRAPH_LEGEND_CUSTOM_SHOW,
+  legend_x_shift_px = library_constants.GRAPH_LEGEND_X_SHIFT_PX,
   legend_vertical_space_px = library_constants.GRAPH_LEGEND_VERTICAL_SPACE_PX,
-  legend_item_scale = 1,
-  legend_colorbar_scale = 1,
-  line_width_scale = 1,
-  node_outline_width_scale = 1,
-  plot_range_x = [float('nan'), float('nan')],
-  plot_range_y = [float('nan'), float('nan')],
-  graph_stats_show = False,
-  graph_stats_subplot_width_px = library_constants.GRAPH_STATS_SUBPLOT_WIDTH_PX,
-  graph_stats_separate = False,
-  graph_stats_x = 0,
-  graph_stats_y = 1,
-  graph_stats_x_shift = 20,
-  graph_stats_y_shift = -20,
-  graph_stats_x_anchor = 'left',
-  graph_stats_y_anchor = 'top',
-  margin_top_min_px = library_constants.GRAPH_MARGIN_TOP_MIN_PX,
-  margin_bottom_min_px = library_constants.GRAPH_MARGIN_BOTTOM_MIN_PX,
-  margin_left_min_px = library_constants.GRAPH_MARGIN_LEFT_MIN_PX,
-  margin_right_min_px = library_constants.GRAPH_MARGIN_RIGHT_MIN_PX,
-  font_size_scale = 1,
-  axis_show = False,
+  legend_item_scale = library_constants.GRAPH_LEGEND_ITEM_SCALE,
+  legend_colorbar_scale = library_constants.GRAPH_LEGEND_COLORBAR_SCALE,
+  line_width_scale = library_constants.GRAPH_LINE_WIDTH_SCALE,
+  node_outline_width_scale = library_constants.GRAPH_NODE_OUTLINE_WIDTH_SCALE,
+  plot_range_x = library_constants.GRAPH_PLOT_RANGE_X,
+  plot_range_y = library_constants.GRAPH_PLOT_RANGE_Y,
+  graph_stats_show = library_constants.GRAPH_STATS_SHOW,
+  graph_stats_x_frac = library_constants.GRAPH_STATS_X_FRAC,
+  graph_stats_y_frac = library_constants.GRAPH_STATS_Y_FRAC,
+  graph_stats_x_shift_px = library_constants.GRAPH_STATS_X_SHIFT,
+  graph_stats_y_shift_px = library_constants.GRAPH_STATS_Y_SHIFT,
+  graph_stats_x_anchor = library_constants.GRAPH_STATS_X_ANCHOR,
+  graph_stats_y_anchor = library_constants.GRAPH_STATS_Y_ANCHOR,
+  margin_top_px = library_constants.GRAPH_MARGIN_TOP_MIN_PX,
+  margin_bottom_px = library_constants.GRAPH_MARGIN_BOTTOM_MIN_PX,
+  margin_left_px = library_constants.GRAPH_MARGIN_LEFT_MIN_PX,
+  margin_right_px = library_constants.GRAPH_MARGIN_RIGHT_MIN_PX,
+  font_size_scale = library_constants.GRAPH_FONT_SIZE_SCALE,
+  axes_show = library_constants.GRAPH_AXES_SHOW,
   universal_layout_x_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
   universal_layout_y_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
   universal_layout_x_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
@@ -1879,27 +1802,12 @@ def make_graph_figure(
 
   edge_show = edge_show and LAYOUT_PROPERTIES[graph_layout_type]['has_edges']
 
-  if graph_stats_separate:
-    graph_width_px += graph_stats_subplot_width_px
-  figure_size_args = get_figure_size_args(
-    content_width_px = graph_width_px,
-    content_height_px = graph_height_px,
-    margin_top_px = margin_top_min_px,
-    margin_bottom_px = margin_bottom_min_px,
-    margin_left_px = margin_left_min_px,
-    margin_right_px = margin_right_min_px,
-  )
-  # CONTINUE HERE!!!! WORKING ON REMOVING THE SUBPLOT FUNCTIONALITY
-  # HOW DO THE MARGINS WORK AGAIN? SHOULD THE MEASUREMENTS BE
-  # SUPPLIED IN THE update_layout() COMMAND OR IN THE BELOW FIGURE()
-  # CONSTRUCTOR?
   figure = plotly.graph_objects.Figure()
 
   make_graph_figure_helper(
     figure = figure,
     data_dir = data_dir,
     data_info = data_info,
-    node_type = node_type,
     node_subst_type = node_subst_type,
     node_filter_freq_range = node_filter_freq_range,
     node_filter_dist_range = node_filter_dist_range,
@@ -1911,7 +1819,7 @@ def make_graph_figure(
     graph_layout_precomputed_dir = graph_layout_precomputed_dir,
     graph_layout_separate_components = graph_layout_separate_components,
     sequence_reverse_complement = sequence_reverse_complement,
-    node_labels_show = node_labels_show,
+    node_labels_show = node_label_show,
     node_label_columns = node_label_columns,
     node_label_position = node_label_position,
     node_color_type = node_color_type,
@@ -1925,76 +1833,31 @@ def make_graph_figure(
     plot_range_y = plot_range_y,
     legend_plotly_show = legend_plotly_show,
     font_size_scale = font_size_scale,
-    axes_show = axis_show,
+    axes_show = axes_show,
     universal_layout_x_scale_insertion = universal_layout_x_scale_insertion,
     universal_layout_y_scale_insertion = universal_layout_y_scale_insertion,
     universal_layout_x_scale_deletion = universal_layout_x_scale_deletion,
     universal_layout_y_scale_deletion = universal_layout_y_scale_deletion,
   )
 
-  if (
-    graph_stats_show and
-    graph_stats_separate and
-    LAYOUT_PROPERTIES[graph_layout_type]['normalize']
-  ):
-    def shift_content(trace):
-      trace['x'] = [
-        None
-        if x is None else
-        (
-          (graph_stats_subplot_width_px + graph_width_px[col - 1] * x) /
-          content_col_widths_with_stats_px[col - 1]
-        )
-        for x in trace['x']
-      ]
-    figure.for_each_trace(
-      shift_content,
-      selector = {'type': 'scatter'},
-      row = row,
-      col = col,
-    )
-
   if graph_stats_show:
     make_graph_stats_ref_component(
       figure = figure,
       data_dir = data_dir,
       data_info = data_info,
-      row = row,
-      col = col,
-      x = graph_stats_x,
-      y = graph_stats_y,
-      x_shift = graph_stats_x_shift,
-      y_shift = graph_stats_y_shift,
+      subst_type = node_subst_type,
+      x = graph_stats_x_frac,
+      y = graph_stats_y_frac,
+      x_shift = -margin_left_px + graph_stats_x_shift_px,
+      y_shift = graph_stats_y_shift_px,
       x_anchor = graph_stats_x_anchor,
       y_anchor = graph_stats_y_anchor,
       font_size_scale = font_size_scale,
     )
-  
-  ### Make the margins ###
-  # FIXME: REMOVE ALL THIS AND JUST HAVE THE MARGIN SIZES
-  margin_top_px = 0
-  if (title is not None) or (title_subplot_show):
-    margin_top_px = title_height_px
-  
-  margin_bottom_px = 0
-
-  margin_left_px = 0
-
-  margin_right_px = 0
-  if legend_plotly_show or legend_custom_show:
-    margin_right_px += legend_width_px
-  
-  margin_top_px = max(margin_top_px, row_space_px, margin_top_min_px)
-  margin_bottom_px = max(margin_bottom_px, row_space_px, margin_bottom_min_px)
-  margin_left_px = max(margin_left_px, col_space_px, margin_left_min_px)
-  margin_right_px = max(margin_right_px, col_space_px, margin_right_min_px)
-  ###### End Make the Margins ######
 
   figure_size_args = get_figure_size_args(
-    row_heights_px = graph_height_px,
-    col_widths_px = graph_width_px,
-    row_space_px = row_space_px,
-    col_space_px = col_space_px,
+    content_height_px = graph_height_px,
+    content_width_px = graph_width_px,
     margin_top_px = margin_top_px,
     margin_bottom_px = margin_bottom_px,
     margin_left_px = margin_left_px,
@@ -2008,10 +1871,9 @@ def make_graph_figure(
     font_color = 'black',
 
     legend_title_font_size = library_constants.GRAPH_LEGEND_TITLE_FONT_SIZE * font_size_scale,
-    legend_grouptitlefont_size = library_constants.GRAPH_LEGEND_GROUP_TITLE_FONT_SIZE * font_size_scale,
     legend_font_size = library_constants.GRAPH_LEGEND_FONT_SIZE * font_size_scale,
     legend_itemsizing = 'constant',
-    legend_itemwidth = 100,
+    legend_itemwidth = library_constants.GRAPH_LEGEND_PLOTLY_ITEM_WIDTH_PX,
     legend_yanchor = 'top',
     legend_xanchor = 'left',
 
@@ -2022,9 +1884,9 @@ def make_graph_figure(
     margin_autoexpand = False,
 
     hovermode = 'closest',
-    hoverlabel_font_size = 16,
-    hoverlabel_font_family = 'Courier New, monospace',
-    hoverlabel_bgcolor = 'white',
+    hoverlabel_font_size = library_constants.GRAPH_HOVER_LABEL_FONT_SIZE,
+    hoverlabel_font_family = library_constants.GRAPH_HOVER_LABEL_FONT,
+    hoverlabel_bgcolor = library_constants.GRAPH_HOVER_LABEL_BG_COLOR,
 
     plot_bgcolor = library_constants.GRAPH_BACKGROUND_COLOR,
   )
@@ -2053,8 +1915,7 @@ def make_graph_figure(
     make_custom_legends(
       figure = figure,
       figure_height_px = figure_size_args['total_height_px'],
-      data_info_grid = data_info,
-      node_type = node_type,
+      data_info = data_info,
       node_size_type = node_size_type,
       node_color_type = node_color_type,
       node_filter_variation_types = node_filter_variation_types,
@@ -2071,113 +1932,6 @@ def make_graph_figure(
     )
   
   return figure
-
-
-def get_plot_args(
-  data_dir,
-  data_info,
-  plot_type,
-  title_show = False,
-  sequence_reverse_complement = False,
-  node_subst_type = library_constants.SUBST_WITHOUT,
-  node_size_freq_range = library_constants.GRAPH_NODE_SIZE_FREQ_RANGE,
-  node_size_px_range = library_constants.GRAPH_NODE_SIZE_PX_RANGE,
-  node_outline_width_scale = library_constants.GRAPH_NODE_OUTLINE_WIDTH_SCALE,
-  node_filter_variation_types = library_constants.GRAPH_NODE_FILTER_VARIATION_TYPES,
-  node_comparison_colors = library_constants.DEFAULT_COMPARISON_COLORS,
-  graph_width_px = library_constants.GRAPH_WIDTH_PX,
-  graph_height_px = library_constants.GRAPH_HEIGHT_PX,
-  graph_layout_precomputed_dir = None,
-  graph_layout_separate_components = False,
-  margin_top_px = library_constants.GRAPH_MARGIN_TOP_MIN_PX,
-  margin_bottom_px = library_constants.GRAPH_MARGIN_BOTTOM_MIN_PX,
-  margin_left_px = library_constants.GRAPH_MARGIN_LEFT_MIN_PX,
-  margin_right_px = library_constants.GRAPH_MARGIN_RIGHT_MIN_PX,
-  edge_width_scale = library_constants.GRAPH_EDGE_WIDTH_SCALE,
-  line_width_scale = library_constants.GRAPH_LINE_WIDTH_SCALE,
-  font_size_scale = library_constants.GRAPH_FONT_SIZE_SCALE,
-  legend_show = False,
-  legend_colorbar_scale = library_constants.GRAPH_LEGEND_COLORBAR_SCALE,
-  plot_range_x = None,
-  plot_range_y = None,
-  edge_show = library_constants.GRAPH_EDGE_SHOW,
-  edge_show_types = library_constants.GRAPH_EDGE_SHOW_TYPES,
-  universal_layout_x_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
-  universal_layout_y_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
-  universal_layout_x_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
-  universal_layout_y_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
-):
-  if plot_type not in [
-    'kamada_layout',
-    'radial_layout',
-    'mds_layout',
-    'universal_layout',
-    'fractal_layout',
-  ]:
-    raise Exception('Unhandled plot type: ' + str(plot_type))
-
-  plot_args = {}
-  plot_args['data_dir_grid'] = np.array([[data_dir]])
-  plot_args['sequence_reverse_complement'] = sequence_reverse_complement
-  plot_args['node_type'] = 'sequence_data'
-  plot_args['node_subst_type'] = node_subst_type
-  plot_args['node_size_freq_range'] = node_size_freq_range
-  plot_args['node_filter_variation_types'] = node_filter_variation_types
-  plot_args['node_outline_width_scale'] = node_outline_width_scale
-  plot_args['node_comparison_colors'] = node_comparison_colors
-  plot_args['graph_stats_show'] = False
-  plot_args['graph_layout_type'] = plot_type
-  plot_args['graph_layout_precomputed_dir'] = graph_layout_precomputed_dir
-  plot_args['graph_layout_separate_components'] = graph_layout_separate_components
-  plot_args['margin_top_min_px'] = margin_top_px
-  plot_args['margin_bottom_min_px'] = margin_bottom_px
-  plot_args['margin_left_min_px'] = margin_left_px
-  plot_args['margin_right_min_px'] = margin_right_px
-  plot_args['edge_show'] = edge_show
-  plot_args['edge_show_types'] = edge_show_types
-  plot_args['edge_width_scale'] = edge_width_scale
-  plot_args['legend_common'] = True
-  plot_args['node_size_px_range'] = node_size_px_range
-  plot_args['col_widths_px'] = [graph_width_px]
-  plot_args['row_heights_px'] = [graph_height_px]
-  plot_args['title_subplot_show'] = False
-  plot_args['legend_custom_show'] = legend_show
-  plot_args['legend_plotly_show'] = False
-  plot_args['line_width_scale'] = line_width_scale
-  plot_args['font_size_scale'] = font_size_scale
-  plot_args['col_space_px'] = 0
-  plot_args['row_space_px'] = 0
-  plot_args['margin_top_min_px'] = margin_top_px
-  plot_args['margin_bottom_min_px'] = margin_bottom_px
-  plot_args['margin_left_min_px'] = margin_left_px
-  plot_args['margin_right_min_px'] = margin_right_px
-  plot_args['plot_range_x'] = plot_range_x
-  plot_args['plot_range_y'] = plot_range_y
-  plot_args['universal_layout_x_scale_insertion'] = universal_layout_x_scale_insertion
-  plot_args['universal_layout_y_scale_insertion'] = universal_layout_y_scale_insertion
-  plot_args['universal_layout_x_scale_deletion'] = universal_layout_x_scale_deletion
-  plot_args['universal_layout_y_scale_deletion'] = universal_layout_y_scale_deletion
-
-  if title_show:
-    plot_title = library_constants.get_data_label(data_info)
-    plot_title += ' ' + {
-      'kamada_layout': 'Kamada-Kawaii Layout',
-      'radial_layout': 'Radial Layout',
-      'mds_layout': 'MDS Layout',
-      'universal_layout': 'Universal Layout',
-      'fractal_layout': 'Fractal Layout',
-    }[plot_type]
-    plot_args['title'] = plot_title
-  
-  if data_info['format'] == library_constants.DATA_COMPARISON:
-    plot_args['node_color_type'] = 'freq_ratio'
-    plot_args['legend_colorbar_scale'] = legend_colorbar_scale
-  elif data_info['format'] == library_constants.DATA_INDIVIDUAL:
-    plot_args['node_color_type'] = 'variation_type'
-  else:
-    raise Exception('Unknown data format: ' + str(data_info['format']))
-
-  return plot_args
 
 def parse_args():
   parser = argparse.ArgumentParser(
@@ -2200,11 +1954,8 @@ def parse_args():
   )
   parser.add_argument(
     '--title',
-    action = 'store_true',
-    help = (
-      'If present, adds a title to the plot showing the type of'
-      ' layout and the label of the data.'
-    ),
+    type = str,
+    help = 'If present, adds a title to the plot with this value.',
   )
   parser.add_argument(
     '--layout',
@@ -2383,43 +2134,48 @@ def parse_args():
     help = (
       'How much to scale the edges width (thickness).' +
       ' Values > 1 increase the width; values < 1 decrease the width.'
-    )
+    ),
+  )
+  parser.add_argument(
+    '--stats',
+    action = 'store_true',
+    help = 'If present, show graph summary statistics in the left margin.',
   )
   parser.add_argument(
     '--width_px',
     type = int,
     default = library_constants.GRAPH_WIDTH_PX,
-    help = 'The width of the plot in pixels.'
+    help = 'The width of the plot in pixels.',
   )
   parser.add_argument(
     '--height_px',
     type = int,
     default = library_constants.GRAPH_HEIGHT_PX,
-    help = 'The height of the plot in pixels.'
+    help = 'The height of the plot in pixels.',
   )
   parser.add_argument(
     '--margin_top_px',
     type = int,
     default = library_constants.GRAPH_MARGIN_TOP_MIN_PX,
-    help = 'The size of the top margin in pixels.'
+    help = 'The size of the top margin in pixels.',
   )
   parser.add_argument(
     '--margin_bottom_px',
     type = int,
     default = library_constants.GRAPH_MARGIN_BOTTOM_MIN_PX,
-    help = 'The size of the bottom margin in pixels.'
+    help = 'The size of the bottom margin in pixels.',
   )
   parser.add_argument(
     '--margin_left_px',
     type = int,
     default = library_constants.GRAPH_MARGIN_LEFT_MIN_PX,
-    help = 'The size of the left margin in pixels.'
+    help = 'The size of the left margin in pixels.',
   )
   parser.add_argument(
     '--margin_right_px',
     type = int,
     default = library_constants.GRAPH_MARGIN_RIGHT_MIN_PX,
-    help = 'The size of the right margin in pixels.'
+    help = 'The size of the right margin in pixels.',
   )
   parser.add_argument(
     '--line_width_scale',
@@ -2505,7 +2261,7 @@ def parse_args():
     help = 'Whether to show a legend on the figure.'
   )
   parser.add_argument(
-    '--legend_color_bar_scale',
+    '--legend_colorbar_scale',
     type = float,
     default = library_constants.GRAPH_LEGEND_COLORBAR_SCALE,
     help = 'How much to scale the legend color bar (for freq ratio coloring).'
@@ -2523,7 +2279,9 @@ def parse_args():
       ' Uses the Ploty library figure.show() function to do so.'
     ),
   )
-  return vars(parser.parse_args())
+  args = vars(parser.parse_args())
+  args['layout'] += '_layout'
+  return args
 
 def main(
   input,
@@ -2544,12 +2302,13 @@ def main(
   margin_bottom_px,
   margin_left_px,
   margin_right_px,
+  stats,
   precomputed_layout_dir,
   separate_components,
   line_width_scale,
   font_size_scale,
   legend,
-  legend_color_bar_scale,
+  legend_colorbar_scale,
   range_x,
   range_y,
   universal_layout_y_axis_insertion_max_tick,
@@ -2571,31 +2330,41 @@ def main(
   log_utils.log_input(input)
   data_dir = input
   data_info = file_utils.read_tsv_dict(file_names.data_info(input))
-  plot_args = get_plot_args(
+
+  if data_info['format'] == library_constants.DATA_COMPARISON:
+    node_color_type = 'freq_ratio'
+  elif data_info['format'] == library_constants.DATA_INDIVIDUAL:
+    node_color_type = 'variation_type'
+  else:
+    raise Exception('Unknown data format: ' + str(data_info['format']))
+
+  figure = make_graph_figure(
     data_dir = data_dir,
-    data_info = data_info,
-    plot_type = layout + '_layout',
-    title_show = title,
+    title = title,
     sequence_reverse_complement = reverse_complement,
     node_subst_type = subst_type,
-    node_size_freq_range = node_freq_range,
     node_size_px_range = node_px_range,
+    node_size_freq_range = node_freq_range,
     node_filter_variation_types = variation_types,
     node_outline_width_scale = node_outline_scale,
+    node_color_type = node_color_type,
     node_comparison_colors = node_comparison_colors,
-    edge_width_scale = edge_scale,
     graph_width_px = width_px,
     graph_height_px = height_px,
+    graph_stats_show = stats,
+    graph_layout_type = layout,
     graph_layout_precomputed_dir = precomputed_layout_dir,
     graph_layout_separate_components = separate_components,
     margin_top_px = margin_top_px,
     margin_bottom_px = margin_bottom_px,
     margin_left_px = margin_left_px,
     margin_right_px = margin_right_px,
+    edge_width_scale = edge_scale,
+    legend_custom_show = legend,
+    legend_plotly_show = False,
+    legend_colorbar_scale = legend_colorbar_scale,
     line_width_scale = line_width_scale,
     font_size_scale = font_size_scale,
-    legend_show = legend,
-    legend_colorbar_scale = legend_color_bar_scale,
     plot_range_x = range_x,
     plot_range_y = range_y,
     universal_layout_x_scale_insertion = universal_layout_x_scale_insertion,
@@ -2603,8 +2372,6 @@ def main(
     universal_layout_x_scale_deletion = universal_layout_x_scale_deletion,
     universal_layout_y_scale_deletion = universal_layout_y_scale_deletion,
   )
-  
-  figure = make_graph_figure(**plot_args)
 
   sequence_data = file_utils.read_tsv(
     file_names.sequence_data(data_dir, subst_type)
@@ -2637,8 +2404,6 @@ def main(
     make_universal_layout_y_axis(
       figure = figure,
       x_pos = universal_layout_y_axis_x_pos,
-      row = 1,
-      col = 1,
       ref_length = len(data_info['ref_seq_window']),
       cut_pos_ref = len(data_info['ref_seq_window']) // 2,
       y_range = universal_layout_y_axis_y_range,
@@ -2654,8 +2419,6 @@ def main(
       figure = figure,
       var_type = 'deletion',
       y_pos = universal_layout_x_axis_deletion_y_pos,
-      row = 1,
-      col = 1,
       ref_length = len(data_info['ref_seq_window']),
       cut_pos_ref = len(data_info['ref_seq_window']) // 2,
       x_range = universal_layout_x_axis_x_range,
@@ -2670,8 +2433,6 @@ def main(
       figure = figure,
       var_type = 'insertion',
       y_pos = universal_layout_x_axis_insertion_y_pos,
-      row = 1,
-      col = 1,
       ref_length = len(data_info['ref_seq_window']),
       cut_pos_ref = len(data_info['ref_seq_window']) // 2,
       x_range = universal_layout_x_axis_x_range,

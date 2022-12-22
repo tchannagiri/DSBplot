@@ -34,7 +34,7 @@ def format_hover_html(data_info, the_dict, format_type, reverse_complement=False
     return ref_html, read_html
   
   title = None
-  if format_type in ['sequence_data']:
+  if format_type == 'node':
     column_names = [
       'id',
       *library_constants.FREQ_COLUMNS[data_info['format']],
@@ -47,34 +47,6 @@ def format_hover_html(data_info, the_dict, format_type, reverse_complement=False
       'alignments',
     ]
     title = 'Sequence'
-  elif format_type == 'variation':
-    column_names = [
-      'id',
-      'sequence',
-      *library_constants.FREQ_COLUMNS[data_info['format']],
-      *library_constants.FREQ_RANK_COLUMNS[data_info['format']],
-      'variation_type',
-      'variation_pos',
-      'variation_letter',
-      'dist_ref',
-      'substitutions',
-      'insertions',
-      'deletions',
-      'alignments',
-    ]
-    title = 'Sequence Variation'
-  elif format_type == 'variation_grouped':
-    column_names = [
-      'id',
-      'var_id',
-      'dist_ref',
-      'variation_pos',
-      'variation_type',
-      'variation_letter',
-      *library_constants.FREQ_COLUMNS[data_info['format']],
-      *library_constants.FREQ_RANK_COLUMNS[data_info['format']],
-    ]
-    title = 'Sequence Variation'
   elif format_type == 'edge':
     column_names = [
       'id_a',
@@ -92,7 +64,7 @@ def format_hover_html(data_info, the_dict, format_type, reverse_complement=False
     format.append(f'<b>{title}</b><br>')
   for name in column_names:
     if name == 'alignments':
-      if format_type in ['sequence_data', 'variation']:
+      if format_type == 'node':
         ref_align, read_align = create_mismatch_htmls(
           the_dict['ref_align'],
           the_dict['read_align'],
@@ -102,7 +74,7 @@ def format_hover_html(data_info, the_dict, format_type, reverse_complement=False
           format_name_value('Read align', read_align) + '<br>'
         )
         format.append(align_html)
-      elif format_type in ['edges']:
+      elif format_type == 'edge':
         for suffix in ['a', 'b']:
           ref_align, read_align = create_mismatch_htmls(
             the_dict['ref_align_' + suffix],
@@ -123,33 +95,32 @@ def format_hover_html(data_info, the_dict, format_type, reverse_complement=False
 
 def format_hover_html_all(
   data_info,
-  sequence_data,
+  data,
   format_type,
   reverse_complement = False,
 ):
   return pd.Series(
     [
       format_hover_html(
-        data_info,
-        x,
-        format_type,
+        data_info = data_info,
+        the_dict = x,
+        format_type = format_type,
         reverse_complement = reverse_complement
       )
-      for x in sequence_data.to_dict('records')
+      for x in data.to_dict('records')
     ],
-    index = sequence_data.index
+    index = data.index
   )
 
 def get_node_label_text(
-  data_info,
   node_data,
-  node_label_fields,
+  node_label_columns,
   reverse_complement = False,
 ):
   node_labels = {}
   for id, row_data in node_data.to_dict('index').items():
     node_label_row = []
-    for label_type in node_label_fields:
+    for label_type in node_label_columns:
       if label_type in row_data:
         if label_type == 'variation_type':
           label = library_constants.VARIATION_TYPES[row_data[label_type]]['short_label']
@@ -262,11 +233,11 @@ def get_node_color(
     return node_color
   elif node_color_type == 'freq':
      scaled_freq = log_transform_scale(
-       get_max_freq(data_info, node_data),
-       node_color_freq_range[0],
-       node_color_freq_range[1],
-       0,
-       1,
+       x = get_max_freq(data_info, node_data),
+       min_x = node_color_freq_range[0],
+       max_x = node_color_freq_range[1],
+       min_out = 0,
+       max_out = 1,
      )
      return pd.Series(
       pc.sample_colorscale(
@@ -294,27 +265,9 @@ def get_node_color(
   else:
     return pd.Series(library_constants.DEFAULT_NODE_COLOR, index=node_data.index)
 
-def get_node_hover_text(
-  data_info,
-  node_data,
-  node_type,
-  reverse_complement = False,
-):
-  return format_hover_html_all(
-    data_info,
-    node_data,
-    node_type,
-    reverse_complement =  reverse_complement,
-  )
-
-def get_node_trace_group(node_type, node_data, node_group_type):
+def get_node_trace_group(node_data, node_group_type):
   group_key_lists = []
-  if node_type in ['sequence_data', 'variation']:
-    group_key_lists.append(node_data['is_ref'])
-  elif node_type in ['variation_grouped']:
-    group_key_lists.append(pd.Series(False, index=node_data.index))
-  else:
-    raise Exception('Unknown node_type: ' + str(node_type))
+  group_key_lists.append(node_data['is_ref'])
   if node_group_type == 'freq_group':
     group_key_lists.append(get_node_freq_group(node_data))
   elif node_group_type == 'variation_type':
@@ -391,7 +344,6 @@ def make_point_traces(
   node_label_columns,
   node_label_position,
   node_label_font_size,
-  node_type,
   node_color_type,
   node_comparison_colors,
   node_size_type,
@@ -402,18 +354,16 @@ def make_point_traces(
 ):
   if show_node_labels:
     node_label = get_node_label_text(
-      data_info,
-      node_data,
-      node_type,
-      node_label_columns,
+      node_data = node_data,
+      node_label_columns = node_label_columns,
       reverse_complement = reverse_complement,
     )
   else:
     node_label = pd.Series('', index=node_data.index)
-  hover_text = get_node_hover_text(
-    data_info,
-    node_data,
-    node_type,
+  hover_text = format_hover_html_all(
+    data_info = data_info,
+    data = node_data,
+    format_type = 'node',
     reverse_complement =  reverse_complement,
   )
 
@@ -435,7 +385,6 @@ def make_point_traces(
 
   node_group = get_node_trace_group(
     node_data = node_data,
-    node_type = node_type,
     node_group_type = node_color_type,
   )
   
@@ -453,6 +402,7 @@ def make_point_traces(
     node_group_type = node_color_type,
     line_width_scale = node_outline_width_scale,
   )
+
   return traces
 
 def make_edges_traces(
@@ -461,7 +411,7 @@ def make_edges_traces(
   layout,
   show_edge_labels,
   show_edge_types,
-  edge_width_scale = 1,
+  edge_width_scale = library_constants.GRAPH_EDGE_WIDTH_SCALE,
   reverse_complement = False,
 ):
   edge_args = {}

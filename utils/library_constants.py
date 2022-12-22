@@ -104,46 +104,6 @@ DEFAULT_NODE_COLOR = '#FFFFFF'
 REFERENCE_DESCRIPTION = 'Reference'
 NON_REFERENCE_DESCRIPTION = 'Non-reference'
 
-### Controls ###
-# CONTROL_NOT = 'notControl'
-# CONTROL_NODSB = 'noDSB'
-# CONTROL_30BPDOWN = '30bpDown'
-# CONTROLS = [CONTROL_NOT, CONTROL_NODSB, CONTROL_30BPDOWN]
-
-# ### DSB types ###
-# DSB_TYPE_1 = '1DSB'
-# DSB_TYPE_2 = '2DSB'
-# DSB_TYPE_2anti = '2DSBanti'
-# DSB_TYPES = [DSB_TYPE_1, DSB_TYPE_2, DSB_TYPE_2anti]
-
-# ### Hguide types ###
-# GUIDE_RNA_A = 'sgA'
-# GUIDE_RNA_B = 'sgB'
-# GUIDE_RNA_AB = 'sgAB'
-# GUIDE_RNA_CD = 'sgCD'
-# GUIDE_RNAS = [GUIDE_RNA_A, GUIDE_RNA_B, GUIDE_RNA_AB, GUIDE_RNA_CD]
-
-# ### Strand type ###
-# STRAND_R1 = 'R1'
-# STRAND_R2 = 'R2'
-# STRANDS = [STRAND_R1, STRAND_R2]
-
-# ### Cell line ###
-# CELL_LINE_WT = 'WT'
-# CELL_LINE_KO = 'KO'
-# CELL_LINES = [CELL_LINE_WT, CELL_LINE_KO]
-
-# CONSTRUCT_COLOR = {
-#   'sense': '#CF191B', 
-#   'branch': '#33A02C',
-#   'cmv': '#FFE669',
-#   'antisense': '#CF191B',
-#   'splicing': '#33A02C',
-#   'sense_branch': '#ffffff',
-#   'sense_cmv': '#ffffff',
-#   'antisense_splicing': '#ffffff',
-# }
-
 DEFAULT_VARIATION_TYPES = ['insertion', 'deletion', 'none']
 DEFAULT_COMPARISON_COLORS = ['#ff0000', '#0000ff']
 SIMILAR_FREQ_COLOR = '#ffffff'
@@ -207,87 +167,16 @@ FREQ_COLUMNS = {
   DATA_COMPARISON: ['freq_mean_1', 'freq_mean_2'],
 }
 
+def is_freq_column(x):
+  return (
+    (x in FREQ_COLUMNS[DATA_INDIVIDUAL]) or
+    (x in FREQ_COLUMNS[DATA_COMPARISON])
+  )
+
 FREQ_RANK_COLUMNS = {
   DATA_INDIVIDUAL: ['freq_mean_rank'],
   DATA_COMPARISON: ['freq_mean_rank_1', 'freq_mean_rank_2'],
 }
-
-### Constructs ###
-
-## Individual ##
-# CONSTRUCT_SENSE = 'sense'
-# CONSTRUCT_BRANCH = 'branch'
-# CONSTRUCT_CMV = 'cmv'
-# CONSTRUCT_ANTISENSE = 'antisense'
-# CONSTRUCT_SPLICING = 'splicing'
-# CONSTRUCTS_INDIVIDUAL = [
-#   CONSTRUCT_SENSE,
-#   CONSTRUCT_BRANCH,
-#   CONSTRUCT_CMV,
-#   CONSTRUCT_ANTISENSE,
-#   CONSTRUCT_SPLICING,
-# ]
-# CONSTRUCTS_INDIVIDUAL_SENSE = [
-#   CONSTRUCT_SENSE,
-#   CONSTRUCT_BRANCH,
-#   CONSTRUCT_CMV,
-# ]
-# CONSTRUCTS_INDIVIDUAL_ANTISENSE = [
-#   CONSTRUCT_ANTISENSE,
-#   CONSTRUCT_SPLICING,
-# ]
-
-# ## Comparisons ##
-# CONSTRUCT_SENSE_BRANCH = CONSTRUCT_SENSE + '_' + CONSTRUCT_BRANCH
-# CONSTRUCT_SENSE_CMV = CONSTRUCT_SENSE + '_' + CONSTRUCT_CMV
-# CONSTRUCT_ANTISENSE_SPLICING = CONSTRUCT_ANTISENSE + '_' + CONSTRUCT_SPLICING
-# CONSTRUCTS_COMPARISON_SENSE = [
-#   CONSTRUCT_SENSE_BRANCH,
-#   CONSTRUCT_SENSE_CMV,
-# ]
-# CONSTRUCTS_COMPARISON_ANTISENSE = [
-#   CONSTRUCT_ANTISENSE_SPLICING
-# ]
-# CONSTRUCTS_COMPARISON = [
-#   CONSTRUCT_SENSE_BRANCH,
-#   CONSTRUCT_SENSE_CMV,
-#   CONSTRUCT_ANTISENSE_SPLICING,
-# ]
-
-# ### Labels ###
-# LABELS = {
-#   '1DSB': '1 DSB',
-#   '2DSB': '2 DSB',
-#   '2DSBanti': '2 DSB (antisense)',
-#   'sgA': 'sgRNA A',
-#   'sgB': 'sgRNA B',
-#   'sgC': 'sgRNA C/C\'',
-#   'sgD': 'sgRNA D',
-#   'sgAB': 'sgRNA A & B',
-#   'sgCD': 'sgRNA C/C\' & D',
-#   'KO': 'KO',
-#   'WT': 'WT',
-#   'R1': 'Forward strand',
-#   'R2': 'Reverse strand',
-#   'NHEJ': 'NHEJ',
-#   'MMEJ': 'MMEJ',
-#   'sense': 'Sense',
-#   'branch': 'Branch∆',
-#   'cmv': 'pCMV∆',
-#   'splicing': '5\'-Splicing∆',
-#   'antisense': 'Antisense',
-#   'sense_branch': 'Sense & Branch∆',
-#   'sense_cmv': 'Sense & pCMV∆',
-#   'antisense_splicing': 'Antisense & 5\'-Splicing∆',
-#   'noDSB': 'No DSB',
-#   '30bpDown': '30bp Down',
-#   'notControl': '',
-#   'ref_pos': 'Reference sequence position',
-#   'ref_cut_pos_offset': 'Reference sequence position (from cut)',
-#   'substitution': 'Substitution',
-#   'insertion': 'Insertion',
-#   'deletion': 'Deletion',
-# }
 
 def get_data_label(data_info):
   if data_info['format'] == DATA_INDIVIDUAL:
@@ -314,47 +203,58 @@ HISTOGRAM_FREQ_RANGE = [1e-5, 1]
 BASE_FIG_SIZE = 12
 
 ### Constants for graphs ###
-GRAPH_LAYOUT = 'univeral_layout'
+GRAPH_LAYOUT_TYPE = 'universal_layout'
 GRAPH_LAYOUT_SEPARATE_COMPONENTS = False
 GRAPH_WIDTH_PX = 2400
 GRAPH_HEIGHT_PX = 2400
+GRAPH_NODE_SUBST_TYPE = SUBST_WITHOUT
 GRAPH_NODE_SIZE_FREQ_RANGE = [1e-5, 1]
-GRAPH_NODE_FILTER_VARIATION_TYPES = ['insertion', 'deletion', 'none']
 GRAPH_NODE_SIZE_PX_RANGE = [10, 120]
+GRAPH_NODE_FILTER_VARIATION_TYPES = ['insertion', 'deletion', 'none']
+GRAPH_NODE_FILTER_FREQ_RANGE = [0, np.inf]
+GRAPH_NODE_FILTER_DIST_RANGE = [0, np.inf]
 GRAPH_NODE_OUTLINE_WIDTH_SCALE = 4
-GRAPH_NODE_LABEL_SHOW = 4
+GRAPH_NODE_LABEL_SHOW = False
 GRAPH_NODE_LABEL_COLUMNS = ['id']
-GRAPH_NODE_LABEL_POSITION = 'bottom_center'
-GRAPH_NODE_TYPE = 'sequence_data'
+GRAPH_NODE_LABEL_POSITION = 'bottom center'
 GRAPH_NODE_SIZE_TYPE = 'freq'
 GRAPH_NODE_COLOR_TYPE = 'freq_group'
 GRAPH_EDGE_SHOW = True
+GRAPH_EDGE_SHOW_LABELS = False
 GRAPH_EDGE_SHOW_TYPES = ['indel']
 GRAPH_EDGE_LABELS_SHOW = True
 GRAPH_EDGE_WIDTH_SCALE = 8
 GRAPH_LINE_WIDTH_SCALE = 8
 GRAPH_FONT_SIZE_SCALE = 2
-GRAPH_SUBPLOT_WIDTH_PX = 1600
-GRAPH_SUBPLOT_HEIGHT_PX = 1000
-GRAPH_SUBPLOT_ROW_SPACE_PX = 100
-GRAPH_SUBPLOT_COL_SPACE_PX = 100
-GRAPH_SUBPLOT_TITLE_FONT_SIZE = 24
-GRAPH_STATS_SUBPLOT_WIDTH_PX = 800
-GRAPH_TITLE_HEIGHT_PX = 200
+GRAPH_STATS_SHOW = False
+GRAPH_STATS_SEPARATE = False
+GRAPH_STATS_WIDTH_PX = 800
+GRAPH_STATS_X_FRAC = 0
+GRAPH_STATS_Y_FRAC = 1
+GRAPH_STATS_X_SHIFT = 20
+GRAPH_STATS_Y_SHIFT = -20
+GRAPH_STATS_X_ANCHOR = 'left'
+GRAPH_STATS_Y_ANCHOR = 'top'
+GRAPH_TITLE = None
+GRAPH_TITLE_Y_SHIFT_PX = 100
 GRAPH_TITLE_FONT_SIZE = 30
 GRAPH_AXES_TITLE_FONT_SIZE = 20
 GRAPH_AXES_TICK_FONT_SIZE = 16
 GRAPH_AXES_SHOW = False
-GRAPH_LEGEND_SHOW = False
-GRAPH_LEGEND_WIDTH_PX = 400
+GRAPH_LEGEND_CUSTOM_SHOW = True
+GRAPH_LEGEND_CUSTOM_X_ANCHOR_FRAC = 1
+GRAPH_LEGEND_CUSTOM_Y_ANCHOR_FRAC = 1
+GRAPH_LEGEND_PLOTLY_SHOW = False
+GRAPH_LEGEND_X_SHIFT_PX = 0
 GRAPH_LEGEND_VERTICAL_SPACE_PX = 100
+GRAPH_LEGEND_ITEM_SCALE = 1
 GRAPH_LEGEND_TITLE_FONT_SIZE = 24
 GRAPH_LEGEND_GROUP_TITLE_FONT_SIZE = 20
 GRAPH_LEGEND_FONT_SIZE = 18
 GRAPH_LEGEND_COLORBAR_SCALE = 8
 GRAPH_LEGEND_COLORBAR_HEIGHT_PX = 500
-GRAPH_EDGE_LEGEND_ITEM_LINE_SIZE_PX = 100
-GRAPH_EDGE_LEGEND_ITEM_LINE_WIDTH_PX = 2.5
+GRAPH_LEGEND_EDGE_ITEM_LINE_SIZE_PX = 100
+GRAPH_LEGEND_EDGE_ITEM_LINE_WIDTH_PX = 2.5
 GRAPH_LEGEND_COLORBAR_WIDTH_PX = 50
 GRAPH_BACKGROUND_COLOR = 'white'
 GRAPH_LABEL_FONT_SIZE = 16
@@ -362,8 +262,16 @@ GRAPH_MARGIN_TOP_MIN_PX = 300
 GRAPH_MARGIN_BOTTOM_MIN_PX = 300
 GRAPH_MARGIN_LEFT_MIN_PX = 300
 GRAPH_MARGIN_RIGHT_MIN_PX = 300
+GRAPH_HOVER_LABEL_FONT = 'Courier New, monospace'
+GRAPH_HOVER_LABEL_FONT_SIZE = 16
+GRAPH_HOVER_LABEL_BG_COLOR = 'white'
+GRAPH_LEGEND_PLOTLY_ITEM_WIDTH_PX = 100
+GRAPH_PLOT_RANGE_X = [float('nan'), float('nan')]
+GRAPH_PLOT_RANGE_Y = [float('nan'), float('nan')]
+GRAPH_LAYOUT_PRECOMPUTED_DIR = None
+GRAPH_SEQUENCE_REVERSE_COMPLEMENT = False
 
-# Universal layout constants
+### Universal layout constants ###
 GRAPH_UNIVERSAL_LAYOUT_INSERTION_ROW_SPEC = {
   1: {'rows': 1, 'cols': 4, 'row_space': 2},
   2: {'rows': 1, 'cols': 16, 'row_space': 2},
