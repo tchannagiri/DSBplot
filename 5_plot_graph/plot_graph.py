@@ -6,7 +6,7 @@ import argparse
 
 import networkx as nx
 
-import plotly.subplots as ps
+import plotly.graph_objects
 
 import pandas as pd
 import numpy as np
@@ -1626,40 +1626,37 @@ def make_graph_stats_ref_component(
   )
 
 
-def make_graph_single_panel(
+def make_graph_figure_helper(
   figure,
-  row,
-  col,
   data_dir,
   data_info,
   sequence_reverse_complement = False,
-  node_type = 'sequence_data',
+  node_type = library_constants.GRAPH_NODE_TYPE,
   node_subst_type = library_constants.SUBST_WITHOUT,
   node_filter_freq_range = [0, np.inf],
   node_filter_dist_range = [0, np.inf],
-  edge_show = True,
-  edge_types_show = None,
-  edge_labels_show = False,
-  edge_width_scale = 1,
-  graph_layout_type = 'kamada_layout',
+  edge_show = library_constants.GRAPH_EDGE_SHOW,
+  edge_types_show = library_constants.GRAPH_EDGE_SHOW_TYPES,
+  edge_labels_show = library_constants.GRAPH_EDGE_LABELS_SHOW,
+  edge_width_scale = library_constants.GRAPH_EDGE_WIDTH_SCALE,
+  graph_layout_type = library_constants.GRAPH_LAYOUT,
   graph_layout_precomputed_dir = None,
-  graph_layout_separate_components = True,
-  node_labels_show = False,
-  node_label_columns = ['id'],
-  node_label_position = 'bottom center',
-  node_color_type = 'freq_group',
+  graph_layout_separate_components = library_constants.GRAPH_LAYOUT_SEPARATE_COMPONENTS,
+  node_labels_show = library_constants.GRAPH_NODE_LABEL_SHOW,
+  node_label_columns = library_constants.GRAPH_NODE_LABEL_COLUMNS,
+  node_label_position = library_constants.GRAPH_NODE_LABEL_POSITION,
+  node_color_type = library_constants.GRAPH_NODE_COLOR_TYPE,
   node_comparison_colors = library_constants.DEFAULT_COMPARISON_COLORS,
-  node_size_type = 'freq',
-  node_size_px_range = [5, 50],
-  node_size_freq_range = [1e-6, 1e-1],
-  node_filter_variation_types = None,
-  node_outline_width_scale = 1,
+  node_size_type = library_constants.GRAPH_NODE_SIZE_TYPE,
+  node_size_px_range = library_constants.GRAPH_NODE_SIZE_PX_RANGE,
+  node_size_freq_range = library_constants.GRAPH_NODE_SIZE_FREQ_RANGE,
+  node_filter_variation_types = library_constants.GRAPH_NODE_FILTER_VARIATION_TYPES,
+  node_outline_width_scale = library_constants.GRAPH_NODE_OUTLINE_WIDTH_SCALE,
   plot_range_x = [float('nan'), float('nan')],
   plot_range_y = [float('nan'), float('nan')],
-  legend_show = True,
-  legend_group_title_show = False,
-  axis_show = False,
-  font_size_scale = 1,
+  legend_plotly_show = library_constants.GRAPH_LEGEND_SHOW,
+  axes_show = library_constants.GRAPH_AXES_SHOW,
+  font_size_scale = library_constants.GRAPH_FONT_SIZE_SCALE,
   universal_layout_x_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
   universal_layout_y_scale_insertion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
   universal_layout_x_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
@@ -1690,8 +1687,11 @@ def make_graph_single_panel(
 
   if node_type in ['sequence_data', 'variation']:
     node_data = node_data.loc[
-      node_data['dist_ref']
-        .between(node_filter_dist_range[0], node_filter_dist_range[1], inclusive='both')
+      node_data['dist_ref'].between(
+        node_filter_dist_range[0],
+        node_filter_dist_range[1],
+        inclusive = 'both'
+      )
     ]
 
   graph = graph.subgraph(node_data.index)
@@ -1750,55 +1750,21 @@ def make_graph_single_panel(
     reverse_complement = sequence_reverse_complement,
   )
 
-  for trace in edge_traces + node_traces:
-    figure.add_trace(
-      trace,
-      row = row,
-      col = col,
-    )
+  for trace in (edge_traces + node_traces):
+    figure.add_trace(trace)
 
   ### Format axes ###
-  if not axis_show:
-    figure.update_xaxes(
-      visible = False,
-      row = row,
-      col = col,
-    )
-    figure.update_yaxes(
-      visible = False,
-      row = row,
-      col = col,
-    )
+  if not axes_show:
+    figure.update_xaxes(visible = False)
+    figure.update_yaxes(visible = False)
   
   if not np.isnan(plot_range_x[0]):
-    figure.update_xaxes(
-      range = plot_range_x,
-      row = row,
-      col = row,
-    )
+    figure.update_xaxes(range = plot_range_x)
   if not np.isnan(plot_range_y[0]):
-    figure.update_yaxes(
-      range = plot_range_y,
-      row = row,
-      col = row,
-    )
+    figure.update_yaxes(range = plot_range_y)
 
   ### Enable/disable legend ###
-  figure.update_traces(
-    showlegend = legend_show,
-    row = row,
-    col = col,
-  )
-
-  if legend_group_title_show:
-    figure.update_traces(
-      {
-        'legendgroup': data_info['label'],
-        'legendgrouptitle_text': data_info['label'],
-      },
-      row = row,
-      col = col,
-    )
+  figure.update_traces(showlegend = legend_plotly_show)
 
   ### Format for freq ratio colors ###
   if node_color_type == 'freq_ratio':
@@ -1810,75 +1776,28 @@ def make_graph_single_panel(
         ),
         'cmin': library_constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[0],
         'cmax': library_constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[1],
-      },
-      row = row,
-      col = col,
+      }
     )
 
 def get_figure_size_args(
-  row_heights_px,
-  col_widths_px,
-  row_space_px,
-  col_space_px,
+  content_height_px,
+  content_width_px,
   margin_top_px,
   margin_bottom_px,
   margin_left_px,
   margin_right_px,
 ):
-  content_height_px = sum(row_heights_px) + (len(row_heights_px) - 1) * row_space_px
-  content_width_px = sum(col_widths_px) + (len(col_widths_px) - 1) * col_space_px
-  row_space_frac = row_space_px / content_height_px
-  col_space_frac = col_space_px / content_width_px
   total_height_px = content_height_px + margin_top_px + margin_bottom_px
   total_width_px = content_width_px + margin_left_px + margin_right_px
   return {
     'content_height_px': content_height_px,
     'content_width_px': content_width_px,
-    'row_space_frac': row_space_frac,
-    'col_space_frac': col_space_frac,
     'total_height_px': total_height_px,
     'total_width_px': total_width_px,
   }
 
-def make_subplots_plotly(
-  row_heights_px,
-  col_widths_px,
-  row_space_px,
-  col_space_px,
-  shared_x_axes,
-  shared_y_axes,
-  subplot_titles = None,
-):
-  size_args = get_figure_size_args(
-    row_heights_px = row_heights_px,
-    col_widths_px = col_widths_px,
-    row_space_px = row_space_px,
-    col_space_px = col_space_px,
-    margin_top_px = 0,
-    margin_bottom_px = 0,
-    margin_left_px = 0,
-    margin_right_px = 0,
-  )
-  
-  if subplot_titles is not None:
-    subplot_titles = list(subplot_titles.ravel())
-  figure = ps.make_subplots(
-    rows = len(row_heights_px),
-    cols = len(col_widths_px),
-    shared_xaxes = shared_x_axes,
-    shared_yaxes = shared_y_axes,
-    vertical_spacing = size_args['row_space_frac'],
-    horizontal_spacing = size_args['col_space_frac'],
-    subplot_titles = subplot_titles,
-    row_heights = row_heights_px,
-    column_widths = col_widths_px,
-    # print_grid = True,
-  )
-
-  return figure
-
 def make_graph_figure(
-  data_dir_grid,
+  data_dir,
   graph_layout_type = 'kamada_layout',
   graph_layout_precomputed_dir = None,
   graph_layout_separate_components = True,
@@ -1900,17 +1819,14 @@ def make_graph_figure(
   edge_show_labels = False,
   edge_show_types = list(library_constants.EDGE_TYPES),
   edge_width_scale = 1,
-  col_widths_px = None,
-  row_heights_px = None,
-  row_space_px = library_constants.GRAPH_SUBPLOT_ROW_SPACE_PX,
-  col_space_px = library_constants.GRAPH_SUBPLOT_COL_SPACE_PX,
+  graph_width_px = None,
+  graph_height_px = None,
   title = None,
   title_height_px = library_constants.GRAPH_TITLE_HEIGHT_PX,
   title_y_shift_px = library_constants.GRAPH_TITLE_HEIGHT_PX / 2,
   title_subplot_show = True,
   legend_plotly_show = False,
   legend_custom_show = True,
-  legend_common = False,
   legend_width_px = library_constants.GRAPH_LEGEND_WIDTH_PX,
   legend_x_shift_px = 0,
   legend_vertical_space_px = library_constants.GRAPH_LEGEND_VERTICAL_SPACE_PX,
@@ -1921,8 +1837,8 @@ def make_graph_figure(
   plot_range_x = [float('nan'), float('nan')],
   plot_range_y = [float('nan'), float('nan')],
   graph_stats_show = False,
-  graph_stats_separate = True,
-  graph_stats_subplot_px = library_constants.GRAPH_STATS_SUBPLOT_PX,
+  graph_stats_subplot_width_px = library_constants.GRAPH_STATS_SUBPLOT_WIDTH_PX,
+  graph_stats_separate = False,
   graph_stats_x = 0,
   graph_stats_y = 1,
   graph_stats_x_shift = 20,
@@ -1940,12 +1856,7 @@ def make_graph_figure(
   universal_layout_x_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
   universal_layout_y_scale_deletion = library_constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
-  data_info_grid = np.full_like(data_dir_grid, None)
-  for row in range(data_dir_grid.shape[0]):
-    for col in range(data_dir_grid.shape[1]):
-      data_info_grid[row, col] = file_utils.read_tsv_dict(
-        file_names.data_info(data_dir_grid[row, col])
-      )
+  data_info = file_utils.read_tsv_dict(file_names.data_info(data_dir))
 
   if node_filter_variation_types is None:
     node_filter_variation_types = list(library_constants.VARIATION_TYPES)
@@ -1967,136 +1878,97 @@ def make_graph_figure(
       plot_range_y = (0, 1)
 
   edge_show = edge_show and LAYOUT_PROPERTIES[graph_layout_type]['has_edges']
-    
-  num_rows_total = data_dir_grid.shape[0]
-  num_cols_total = data_dir_grid.shape[1]
 
-  if title_subplot_show:
-    subplot_titles = np.full_like(data_info_grid, None)
-    for row in range(num_rows_total):
-      for col in range(num_cols_total):
-        subplot_titles[row, col] = library_constants.get_data_label(data_info_grid[row, col])
-  else:
-    subplot_titles = None
-
-  shared_x_axes = 'all'
-  shared_y_axes = 'all'
-
-  if row_heights_px is None:
-    row_heights_px = [library_constants.GRAPH_SUBPLOT_HEIGHT_PX] * num_rows_total
-  if col_widths_px is None:
-    col_widths_px = [library_constants.GRAPH_SUBPLOT_WIDTH_PX] * num_cols_total
-
-  content_col_widths_with_stats_px = col_widths_px.copy()
   if graph_stats_separate:
-    content_col_widths_with_stats_px = [
-      width_px + graph_stats_subplot_px
-      for width_px in content_col_widths_with_stats_px
-    ]
+    graph_width_px += graph_stats_subplot_width_px
+  figure_size_args = get_figure_size_args(
+    content_width_px = graph_width_px,
+    content_height_px = graph_height_px,
+    margin_top_px = margin_top_min_px,
+    margin_bottom_px = margin_bottom_min_px,
+    margin_left_px = margin_left_min_px,
+    margin_right_px = margin_right_min_px,
+  )
+  # CONTINUE HERE!!!! WORKING ON REMOVING THE SUBPLOT FUNCTIONALITY
+  # HOW DO THE MARGINS WORK AGAIN? SHOULD THE MEASUREMENTS BE
+  # SUPPLIED IN THE update_layout() COMMAND OR IN THE BELOW FIGURE()
+  # CONSTRUCTOR?
+  figure = plotly.graph_objects.Figure()
 
-  figure = make_subplots_plotly(
-    row_heights_px = row_heights_px,
-    col_widths_px = content_col_widths_with_stats_px,
-    row_space_px = row_space_px,
-    col_space_px = col_space_px,
-    shared_x_axes = shared_x_axes,
-    shared_y_axes = shared_y_axes,
-    subplot_titles = subplot_titles,
+  make_graph_figure_helper(
+    figure = figure,
+    data_dir = data_dir,
+    data_info = data_info,
+    node_type = node_type,
+    node_subst_type = node_subst_type,
+    node_filter_freq_range = node_filter_freq_range,
+    node_filter_dist_range = node_filter_dist_range,
+    edge_show = edge_show,
+    edge_types_show = edge_show_types,
+    edge_labels_show = edge_show_labels,
+    edge_width_scale = edge_width_scale,
+    graph_layout_type = graph_layout_type,
+    graph_layout_precomputed_dir = graph_layout_precomputed_dir,
+    graph_layout_separate_components = graph_layout_separate_components,
+    sequence_reverse_complement = sequence_reverse_complement,
+    node_labels_show = node_labels_show,
+    node_label_columns = node_label_columns,
+    node_label_position = node_label_position,
+    node_color_type = node_color_type,
+    node_comparison_colors = node_comparison_colors,
+    node_size_type = node_size_type,
+    node_size_px_range = node_size_px_range,
+    node_size_freq_range = node_size_freq_range,
+    node_filter_variation_types = node_filter_variation_types,
+    node_outline_width_scale = node_outline_width_scale,
+    plot_range_x = plot_range_x,
+    plot_range_y = plot_range_y,
+    legend_plotly_show = legend_plotly_show,
+    font_size_scale = font_size_scale,
+    axes_show = axis_show,
+    universal_layout_x_scale_insertion = universal_layout_x_scale_insertion,
+    universal_layout_y_scale_insertion = universal_layout_y_scale_insertion,
+    universal_layout_x_scale_deletion = universal_layout_x_scale_deletion,
+    universal_layout_y_scale_deletion = universal_layout_y_scale_deletion,
   )
 
-  # For setting the subplot title font size
-  figure.update_annotations(
-    font_size = library_constants.GRAPH_SUBPLOT_TITLE_FONT_SIZE * font_size_scale,
-  )
-
-  for row in range(1, data_dir_grid.shape[0] + 1):
-    for col in range(1, data_dir_grid.shape[1] + 1):
-      legend_show = True
-      if not legend_plotly_show:
-        legend_show = False
-      elif legend_common:
-        legend_show = (row == 1) and (col == 1)
-
-      data_dir = data_dir_grid[row - 1, col - 1]
-      data_info = file_utils.read_tsv_dict(file_names.data_info(data_dir))
-
-      make_graph_single_panel(
-        figure = figure,
-        row = row,
-        col = col,
-        data_dir = data_dir,
-        data_info = data_info,
-        node_type = node_type,
-        node_subst_type = node_subst_type,
-        node_filter_freq_range = node_filter_freq_range,
-        node_filter_dist_range = node_filter_dist_range,
-        edge_show = edge_show,
-        edge_types_show = edge_show_types,
-        edge_labels_show = edge_show_labels,
-        edge_width_scale = edge_width_scale,
-        graph_layout_type = graph_layout_type,
-        graph_layout_precomputed_dir = graph_layout_precomputed_dir,
-        graph_layout_separate_components = graph_layout_separate_components,
-        sequence_reverse_complement = sequence_reverse_complement,
-        node_labels_show = node_labels_show,
-        node_label_columns = node_label_columns,
-        node_label_position = node_label_position,
-        node_color_type = node_color_type,
-        node_comparison_colors = node_comparison_colors,
-        node_size_type = node_size_type,
-        node_size_px_range = node_size_px_range,
-        node_size_freq_range = node_size_freq_range,
-        node_filter_variation_types = node_filter_variation_types,
-        node_outline_width_scale = node_outline_width_scale,
-        plot_range_x = plot_range_x,
-        plot_range_y = plot_range_y,
-        legend_show = legend_show,
-        legend_group_title_show = legend_plotly_show and (not legend_common),
-        font_size_scale = font_size_scale,
-        axis_show = axis_show,
-        universal_layout_x_scale_insertion = universal_layout_x_scale_insertion,
-        universal_layout_y_scale_insertion = universal_layout_y_scale_insertion,
-        universal_layout_x_scale_deletion = universal_layout_x_scale_deletion,
-        universal_layout_y_scale_deletion = universal_layout_y_scale_deletion,
-      )
-
-      if (
-        graph_stats_show and
-        graph_stats_separate and
-        LAYOUT_PROPERTIES[graph_layout_type]['normalize']
-      ):
-        def shift_content(trace):
-          trace['x'] = [
-            None
-            if x is None else
-            (
-              (graph_stats_subplot_px + col_widths_px[col - 1] * x) /
-              content_col_widths_with_stats_px[col - 1]
-            )
-            for x in trace['x']
-          ]
-        figure.for_each_trace(
-          shift_content,
-          selector = {'type': 'scatter'},
-          row = row,
-          col = col,
+  if (
+    graph_stats_show and
+    graph_stats_separate and
+    LAYOUT_PROPERTIES[graph_layout_type]['normalize']
+  ):
+    def shift_content(trace):
+      trace['x'] = [
+        None
+        if x is None else
+        (
+          (graph_stats_subplot_width_px + graph_width_px[col - 1] * x) /
+          content_col_widths_with_stats_px[col - 1]
         )
+        for x in trace['x']
+      ]
+    figure.for_each_trace(
+      shift_content,
+      selector = {'type': 'scatter'},
+      row = row,
+      col = col,
+    )
 
-      if graph_stats_show:
-        make_graph_stats_ref_component(
-          figure = figure,
-          data_dir = data_dir,
-          data_info = data_info,
-          row = row,
-          col = col,
-          x = graph_stats_x,
-          y = graph_stats_y,
-          x_shift = graph_stats_x_shift,
-          y_shift = graph_stats_y_shift,
-          x_anchor = graph_stats_x_anchor,
-          y_anchor = graph_stats_y_anchor,
-          font_size_scale = font_size_scale,
-        )
+  if graph_stats_show:
+    make_graph_stats_ref_component(
+      figure = figure,
+      data_dir = data_dir,
+      data_info = data_info,
+      row = row,
+      col = col,
+      x = graph_stats_x,
+      y = graph_stats_y,
+      x_shift = graph_stats_x_shift,
+      y_shift = graph_stats_y_shift,
+      x_anchor = graph_stats_x_anchor,
+      y_anchor = graph_stats_y_anchor,
+      font_size_scale = font_size_scale,
+    )
   
   ### Make the margins ###
   # FIXME: REMOVE ALL THIS AND JUST HAVE THE MARGIN SIZES
@@ -2119,8 +1991,8 @@ def make_graph_figure(
   ###### End Make the Margins ######
 
   figure_size_args = get_figure_size_args(
-    row_heights_px = row_heights_px,
-    col_widths_px = col_widths_px,
+    row_heights_px = graph_height_px,
+    col_widths_px = graph_width_px,
     row_space_px = row_space_px,
     col_space_px = col_space_px,
     margin_top_px = margin_top_px,
@@ -2181,7 +2053,7 @@ def make_graph_figure(
     make_custom_legends(
       figure = figure,
       figure_height_px = figure_size_args['total_height_px'],
-      data_info_grid = data_info_grid,
+      data_info_grid = data_info,
       node_type = node_type,
       node_size_type = node_size_type,
       node_color_type = node_color_type,
