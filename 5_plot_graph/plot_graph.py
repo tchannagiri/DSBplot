@@ -1169,7 +1169,7 @@ def make_size_legend(
   font_size_scale = 1,
   line_width_scale = 1,
 ):
-  node_size_freq_range_log10 = int(np.round(np.log10(node_size_freq_range)))
+  node_size_freq_range_log10 = np.round(np.log10(node_size_freq_range)).astype(int)
 
   num_legend_items = node_size_freq_range_log10[1] - node_size_freq_range_log10[0] + 1
 
@@ -1434,8 +1434,8 @@ def make_custom_legends(
     y_shift_curr_px = make_edge_legend(
       figure = figure,
       edge_type_list = edge_show_types,
-      line_size_px = library_constants.EDGE_LEGEND_ITEM_LINE_SIZE_PX,
-      line_width_px = library_constants.EDGE_LEGEND_ITEM_LINE_WIDTH_PX,
+      line_size_px = library_constants.GRAPH_EDGE_LEGEND_ITEM_LINE_SIZE_PX,
+      line_width_px = library_constants.GRAPH_EDGE_LEGEND_ITEM_LINE_WIDTH_PX,
       x_anchor = 1,
       y_anchor = 1,
       x_shift = legend_x_shift_px,
@@ -2099,6 +2099,7 @@ def make_graph_figure(
         )
   
   ### Make the margins ###
+  # FIXME: REMOVE ALL THIS AND JUST HAVE THE MARGIN SIZES
   margin_top_px = 0
   if (title is not None) or (title_subplot_show):
     margin_top_px = title_height_px
@@ -2115,6 +2116,7 @@ def make_graph_figure(
   margin_bottom_px = max(margin_bottom_px, row_space_px, margin_bottom_min_px)
   margin_left_px = max(margin_left_px, col_space_px, margin_left_min_px)
   margin_right_px = max(margin_right_px, col_space_px, margin_right_min_px)
+  ###### End Make the Margins ######
 
   figure_size_args = get_figure_size_args(
     row_heights_px = row_heights_px,
@@ -2215,6 +2217,10 @@ def get_plot_args(
   graph_height_px = library_constants.GRAPH_HEIGHT_PX,
   graph_layout_precomputed_dir = None,
   graph_layout_separate_components = False,
+  margin_top_px = library_constants.GRAPH_MARGIN_TOP_MIN_PX,
+  margin_bottom_px = library_constants.GRAPH_MARGIN_BOTTOM_MIN_PX,
+  margin_left_px = library_constants.GRAPH_MARGIN_LEFT_MIN_PX,
+  margin_right_px = library_constants.GRAPH_MARGIN_RIGHT_MIN_PX,
   edge_width_scale = library_constants.GRAPH_EDGE_WIDTH_SCALE,
   line_width_scale = library_constants.GRAPH_LINE_WIDTH_SCALE,
   font_size_scale = library_constants.GRAPH_FONT_SIZE_SCALE,
@@ -2251,6 +2257,10 @@ def get_plot_args(
   plot_args['graph_layout_type'] = plot_type
   plot_args['graph_layout_precomputed_dir'] = graph_layout_precomputed_dir
   plot_args['graph_layout_separate_components'] = graph_layout_separate_components
+  plot_args['margin_top_min_px'] = margin_top_px
+  plot_args['margin_bottom_min_px'] = margin_bottom_px
+  plot_args['margin_left_min_px'] = margin_left_px
+  plot_args['margin_right_min_px'] = margin_right_px
   plot_args['edge_show'] = edge_show
   plot_args['edge_show_types'] = edge_show_types
   plot_args['edge_width_scale'] = edge_width_scale
@@ -2265,10 +2275,10 @@ def get_plot_args(
   plot_args['font_size_scale'] = font_size_scale
   plot_args['col_space_px'] = 0
   plot_args['row_space_px'] = 0
-  plot_args['margin_top_min_px'] = 0
-  plot_args['margin_bottom_min_px'] = 0
-  plot_args['margin_left_min_px'] = 0
-  plot_args['margin_right_min_px'] = 0
+  plot_args['margin_top_min_px'] = margin_top_px
+  plot_args['margin_bottom_min_px'] = margin_bottom_px
+  plot_args['margin_left_min_px'] = margin_left_px
+  plot_args['margin_right_min_px'] = margin_right_px
   plot_args['plot_range_x'] = plot_range_x
   plot_args['plot_range_y'] = plot_range_y
   plot_args['universal_layout_x_scale_insertion'] = universal_layout_x_scale_insertion
@@ -2516,6 +2526,30 @@ def parse_args():
     help = 'The height of the plot in pixels.'
   )
   parser.add_argument(
+    '--margin_top_px',
+    type = int,
+    default = library_constants.GRAPH_MARGIN_TOP_MIN_PX,
+    help = 'The size of the top margin in pixels.'
+  )
+  parser.add_argument(
+    '--margin_bottom_px',
+    type = int,
+    default = library_constants.GRAPH_MARGIN_BOTTOM_MIN_PX,
+    help = 'The size of the bottom margin in pixels.'
+  )
+  parser.add_argument(
+    '--margin_left_px',
+    type = int,
+    default = library_constants.GRAPH_MARGIN_LEFT_MIN_PX,
+    help = 'The size of the left margin in pixels.'
+  )
+  parser.add_argument(
+    '--margin_right_px',
+    type = int,
+    default = library_constants.GRAPH_MARGIN_RIGHT_MIN_PX,
+    help = 'The size of the right margin in pixels.'
+  )
+  parser.add_argument(
     '--line_width_scale',
     type = float,
     default = library_constants.GRAPH_LINE_WIDTH_SCALE,
@@ -2634,6 +2668,10 @@ def main(
   edge_scale,
   width_px,
   height_px,
+  margin_top_px,
+  margin_bottom_px,
+  margin_left_px,
+  margin_right_px,
   precomputed_layout_dir,
   separate_components,
   line_width_scale,
@@ -2678,6 +2716,10 @@ def main(
     graph_height_px = height_px,
     graph_layout_precomputed_dir = precomputed_layout_dir,
     graph_layout_separate_components = separate_components,
+    margin_top_px = margin_top_px,
+    margin_bottom_px = margin_bottom_px,
+    margin_left_px = margin_left_px,
+    margin_right_px = margin_right_px,
     line_width_scale = line_width_scale,
     font_size_scale = font_size_scale,
     legend_show = legend,
