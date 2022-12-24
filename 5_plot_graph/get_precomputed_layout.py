@@ -59,12 +59,11 @@ def parse_args():
   )
   parser.add_argument(
     '--layout',
-    default = 'radial',
-    choices = ['radial', 'mds', 'kamada', 'universal'],
-    help = 'Type of layout to use.',
+    choices = list(plot_graph.LAYOUT_PROPERTIES),
+    default = 'universal_layout',
+    help = 'The algorithm to use for laying out the graph.',
   )
   args = vars(parser.parse_args())
-  args['layout'] += '_layout'
   if args['reverse_complement'] is None:
     args['reverse_complement'] = ['0'] * len(args['input'])
   if len(args['reverse_complement']) != len(args['input']):

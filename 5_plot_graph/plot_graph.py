@@ -99,7 +99,7 @@ LAYOUT_PROPERTIES = {
 }
 
 def group_graph_nodes_by(graph, data_name):
-  data = pd.series(dict(graph.nodes(data_name)))
+  data = pd.Series(dict(graph.nodes(data_name)))
   return list(data.groupby(data).groups.values())
 
 def make_radial_layout(data_info, graph):
@@ -1539,7 +1539,7 @@ def make_graph_figure_helper(
   node_label_columns = constants.GRAPH_NODE_LABEL_COLUMNS,
   node_label_position = constants.GRAPH_NODE_LABEL_POSITION,
   node_color_type = constants.GRAPH_NODE_COLOR_TYPE,
-  node_comparison_colors = constants.DEFAULT_COMPARISON_COLORS,
+  node_comparison_colors = constants.GRAPH_NODE_COMPARISON_COLORS,
   node_size_type = constants.GRAPH_NODE_SIZE_TYPE,
   node_size_px_range = constants.GRAPH_NODE_SIZE_PX_RANGE,
   node_size_freq_range = constants.GRAPH_NODE_SIZE_FREQ_RANGE,
@@ -1693,7 +1693,7 @@ def make_graph_figure(
   node_label_columns = constants.GRAPH_NODE_LABEL_COLUMNS,
   node_label_position = constants.GRAPH_NODE_LABEL_POSITION,
   node_color_type = constants.GRAPH_NODE_COLOR_TYPE,
-  node_comparison_colors = constants.DEFAULT_COMPARISON_COLORS,
+  node_comparison_colors = constants.GRAPH_NODE_COMPARISON_COLORS,
   node_size_type = constants.GRAPH_NODE_SIZE_TYPE,
   node_size_px_range = constants.GRAPH_NODE_SIZE_PX_RANGE,
   node_size_freq_range = constants.GRAPH_NODE_SIZE_FREQ_RANGE,
@@ -1908,8 +1908,8 @@ def parse_args():
   )
   parser.add_argument(
     '--layout',
-    choices = ['kamada', 'radial', 'mds', 'universal', 'fractal'],
-    default = 'radial',
+    choices = list(LAYOUT_PROPERTIES),
+    default = 'universal_layout',
     help = 'The algorithm to use for laying out the graph.',
   )
   parser.add_argument(
@@ -2057,7 +2057,7 @@ def parse_args():
   parser.add_argument(
     '--node_comparison_colors',
     type = str,
-    default = constants.DEFAULT_COMPARISON_COLORS,
+    default = constants.GRAPH_NODE_COMPARISON_COLORS,
     nargs = 2,
     help = (
       'The colors to use in the gradient when the node colors' +
@@ -2069,7 +2069,7 @@ def parse_args():
   parser.add_argument(
     '--variation_types',
     nargs = '+',
-    default = constants.DEFAULT_VARIATION_TYPES,
+    default = constants.GRAPH_NODE_FILTER_VARIATION_TYPES,
     choices = list(constants.VARIATION_TYPES),
     help = (
       'The variation types that should be included in the graph.'
@@ -2078,6 +2078,20 @@ def parse_args():
       ' Default value: "insertion", "deletion", "none".' +
       ' "none" means the reference sequence.',
     ),
+  )
+  parser.add_argument(
+    '--edge_show',
+    type = bool,
+    nargs = '+',
+    default = constants.GRAPH_EDGE_SHOW,
+    help = 'Whether to show edges between nodes.',
+  )
+  parser.add_argument(
+    '--edge_types',
+    type = str,
+    nargs = '+',
+    default = constants.GRAPH_EDGE_SHOW_TYPES,
+    help = 'The edge types to show.',
   )
   parser.add_argument(
     '--edge_scale',
@@ -2168,7 +2182,7 @@ def parse_args():
     '--crop_x',
     nargs = 2,
     type = float,
-    default = [0, 1],
+    default = constants.GRAPH_CROP_X,
     help = (
       'Range of the horizontal dimension to crop.' +
       ' Specified with normalized coords in range [0, 1].'
@@ -2178,7 +2192,7 @@ def parse_args():
     '--crop_y',
     nargs = 2,
     type = float,
-    default = [0, 1],
+    default = constants.GRAPH_CROP_Y,
     help = (
       'Range of the vertical dimension to crop.' +
       ' Specified in normalized coords in range [0, 1].'
@@ -2188,7 +2202,7 @@ def parse_args():
     '--range_x',
     type = float,
     nargs = 2,
-    default = [float('nan'), float('nan')],
+    default = constants.GRAPH_PLOT_RANGE_X,
     help = (
       'Range of x-axis for plotting.'
       'If not specified chosen automatically to either show all nodes or a preset value'
@@ -2199,7 +2213,7 @@ def parse_args():
     '--range_y',
     type = float,
     nargs = 2,
-    default = [float('nan'), float('nan')],
+    default = constants.GRAPH_PLOT_RANGE_Y,
     help = (
       'Range of y-axis for plotting.'
       'If not specified chosen automatically to either show all nodes or a preset value'
@@ -2236,9 +2250,7 @@ def parse_args():
       ' Uses the Ploty library figure.show() function to do so.'
     ),
   )
-  args = vars(parser.parse_args())
-  args['layout'] += '_layout'
-  return args
+  return vars(parser.parse_args())
 
 def main(
   input,
@@ -2252,6 +2264,8 @@ def main(
   node_comparison_colors,
   variation_types,
   node_outline_scale,
+  edge_show,
+  edge_types,
   edge_scale,
   width_px,
   height_px,
@@ -2317,6 +2331,8 @@ def main(
     margin_bottom_px = margin_bottom_px,
     margin_left_px = margin_left_px,
     margin_right_px = margin_right_px,
+    edge_show = edge_show,
+    edge_show_types = edge_types,
     edge_width_scale = edge_scale,
     legend_custom_show = legend,
     legend_plotly_show = False,
@@ -2359,47 +2375,49 @@ def main(
   else:
     max_tick_deletion = universal_layout_y_axis_deletion_max_tick
 
-  if universal_layout_y_axis_x_pos is not None:
-    make_universal_layout_y_axis(
-      figure = figure,
-      x_pos = universal_layout_y_axis_x_pos,
-      ref_length = len(data_info['ref_seq_window']),
-      cut_pos_ref = len(data_info['ref_seq_window']) // 2,
-      y_range = universal_layout_y_axis_y_range,
-      max_tick_deletion = max_tick_deletion,
-      max_tick_insertion = max_tick_insertion,
-      x_scale_insertion = universal_layout_x_scale_insertion,
-      y_scale_insertion = universal_layout_y_scale_insertion,
-      x_scale_deletion = universal_layout_x_scale_deletion,
-      y_scale_deletion = universal_layout_y_scale_deletion,
-    )
-  if universal_layout_x_axis_deletion_y_pos is not None:
-    make_universal_layout_x_axis(
-      figure = figure,
-      var_type = 'deletion',
-      y_pos = universal_layout_x_axis_deletion_y_pos,
-      ref_length = len(data_info['ref_seq_window']),
-      cut_pos_ref = len(data_info['ref_seq_window']) // 2,
-      x_range = universal_layout_x_axis_x_range,
-      deletion_label_type = universal_layout_x_axis_deletion_label_type,
-      x_scale_insertion = universal_layout_x_scale_insertion,
-      y_scale_insertion = universal_layout_y_scale_insertion,
-      x_scale_deletion = universal_layout_x_scale_deletion,
-      y_scale_deletion = universal_layout_y_scale_deletion,
-    )
-  if universal_layout_x_axis_insertion_y_pos is not None:
-    make_universal_layout_x_axis(
-      figure = figure,
-      var_type = 'insertion',
-      y_pos = universal_layout_x_axis_insertion_y_pos,
-      ref_length = len(data_info['ref_seq_window']),
-      cut_pos_ref = len(data_info['ref_seq_window']) // 2,
-      x_range = universal_layout_x_axis_x_range,
-      x_scale_insertion = universal_layout_x_scale_insertion,
-      y_scale_insertion = universal_layout_y_scale_insertion,
-      x_scale_deletion = universal_layout_x_scale_deletion,
-      y_scale_deletion = universal_layout_y_scale_deletion,
-    )
+  if layout == 'universal_layout':
+    if universal_layout_y_axis_x_pos is not None:
+      make_universal_layout_y_axis(
+        figure = figure,
+        x_pos = universal_layout_y_axis_x_pos,
+        ref_length = len(data_info['ref_seq_window']),
+        cut_pos_ref = len(data_info['ref_seq_window']) // 2,
+        y_range = universal_layout_y_axis_y_range,
+        max_tick_deletion = max_tick_deletion,
+        max_tick_insertion = max_tick_insertion,
+        x_scale_insertion = universal_layout_x_scale_insertion,
+        y_scale_insertion = universal_layout_y_scale_insertion,
+        x_scale_deletion = universal_layout_x_scale_deletion,
+        y_scale_deletion = universal_layout_y_scale_deletion,
+      )
+    if universal_layout_x_axis_deletion_y_pos is not None:
+      make_universal_layout_x_axis(
+        figure = figure,
+        var_type = 'deletion',
+        y_pos = universal_layout_x_axis_deletion_y_pos,
+        ref_length = len(data_info['ref_seq_window']),
+        cut_pos_ref = len(data_info['ref_seq_window']) // 2,
+        x_range = universal_layout_x_axis_x_range,
+        deletion_label_type = universal_layout_x_axis_deletion_label_type,
+        x_scale_insertion = universal_layout_x_scale_insertion,
+        y_scale_insertion = universal_layout_y_scale_insertion,
+        x_scale_deletion = universal_layout_x_scale_deletion,
+        y_scale_deletion = universal_layout_y_scale_deletion,
+      )
+    if universal_layout_x_axis_insertion_y_pos is not None:
+      make_universal_layout_x_axis(
+        figure = figure,
+        var_type = 'insertion',
+        y_pos = universal_layout_x_axis_insertion_y_pos,
+        ref_length = len(data_info['ref_seq_window']),
+        cut_pos_ref = len(data_info['ref_seq_window']) // 2,
+        x_range = universal_layout_x_axis_x_range,
+        x_scale_insertion = universal_layout_x_scale_insertion,
+        y_scale_insertion = universal_layout_y_scale_insertion,
+        x_scale_deletion = universal_layout_x_scale_deletion,
+        y_scale_deletion = universal_layout_y_scale_deletion,
+      )
+
   if interactive:
     log_utils.log('Opening interactive version in browser.')
     figure.show()

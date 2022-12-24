@@ -45,18 +45,15 @@ POSITION_TITLE = {
   'absolute': 'Position',
 }
 
-# Substitution edges not being shown
-# indel edges being show solid
 EDGE_TYPES = {
   'substitution': {
     'label': 'Substitution',
-    'line_dash': 'solid',
+    'line_dash': 'dash',
     'legend_color': 'black',
     'plot_color': 'rgba(0,0,0,0.5)',
   },
   'indel': {
     'label': 'In/Del',
-    # 'line_dash': 'dash',
     'line_dash': 'solid',
     'legend_color': 'black',
     'plot_color': 'rgba(0,0,0,0.5)',
@@ -104,8 +101,6 @@ DEFAULT_NODE_COLOR = '#FFFFFF'
 REFERENCE_DESCRIPTION = 'Reference'
 NON_REFERENCE_DESCRIPTION = 'Non-reference'
 
-DEFAULT_VARIATION_TYPES = ['insertion', 'deletion', 'none']
-DEFAULT_COMPARISON_COLORS = ['#ff0000', '#0000ff']
 SIMILAR_FREQ_COLOR = '#ffffff'
 
 FREQ_GROUP_A = 'A'
@@ -210,7 +205,7 @@ GRAPH_HEIGHT_PX = 2400
 GRAPH_NODE_SUBST_TYPE = SUBST_WITHOUT
 GRAPH_NODE_SIZE_FREQ_RANGE = [1e-5, 1]
 GRAPH_NODE_SIZE_PX_RANGE = [10, 120]
-GRAPH_NODE_FILTER_VARIATION_TYPES = ['insertion', 'deletion', 'none']
+GRAPH_NODE_FILTER_VARIATION_TYPES = None
 GRAPH_NODE_FILTER_FREQ_RANGE = [0, np.inf]
 GRAPH_NODE_FILTER_DIST_RANGE = [0, np.inf]
 GRAPH_NODE_OUTLINE_WIDTH_SCALE = 4
@@ -219,6 +214,7 @@ GRAPH_NODE_LABEL_COLUMNS = ['id']
 GRAPH_NODE_LABEL_POSITION = 'bottom center'
 GRAPH_NODE_SIZE_TYPE = 'freq'
 GRAPH_NODE_COLOR_TYPE = 'freq_group'
+GRAPH_NODE_COMPARISON_COLORS = ['#ff0000', '#0000ff']
 GRAPH_EDGE_SHOW = True
 GRAPH_EDGE_SHOW_LABELS = False
 GRAPH_EDGE_SHOW_TYPES = ['indel']
@@ -268,6 +264,8 @@ GRAPH_HOVER_LABEL_BG_COLOR = 'white'
 GRAPH_LEGEND_PLOTLY_ITEM_WIDTH_PX = 100
 GRAPH_PLOT_RANGE_X = [float('nan'), float('nan')]
 GRAPH_PLOT_RANGE_Y = [float('nan'), float('nan')]
+GRAPH_CROP_X = [0, 1]
+GRAPH_CROP_Y = [0, 1]
 GRAPH_LAYOUT_PRECOMPUTED_DIR = None
 GRAPH_SEQUENCE_REVERSE_COMPLEMENT = False
 
