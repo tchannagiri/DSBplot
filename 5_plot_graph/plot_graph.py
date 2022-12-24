@@ -40,7 +40,6 @@ LAYOUT_PROPERTIES = {
     'do_pca': False,
     'normalize': False,
     'has_edges': True,
-    'plot_range': {'x': (-20, 20), 'y': (-20, 16)},
   },
  'universal_layout': {
     'only_2d': True,
@@ -79,12 +78,6 @@ LAYOUT_PROPERTIES = {
     'normalize': False,
     'has_edges': True, 
   },
-  'shell_layout_freq': {
-    'only_2d': True,
-    'do_pca': False,
-    'normalize': False,
-    'has_edges': True, 
-  },
   'spiral_layout': {
     'only_2d': True,
     'do_pca': False,
@@ -98,12 +91,6 @@ LAYOUT_PROPERTIES = {
     'normalize': False,
   },
   'multipartite_layout': {
-    'only_2d': True,
-    'do_pca': False,
-    'normalize': False,
-    'has_edges': True, 
-  },
-  'multipartite_layout_freq': {
     'only_2d': True,
     'do_pca': False,
     'normalize': False,
@@ -632,30 +619,6 @@ def make_universal_layout_x_axis(
     line_color = 'black',
   )
 
-# idea to make the nodes a reasonable distance from the reference
-def get_kamada_initial_layout(graph):
-  bucket_list = {}
-  for id, data in list(graph.nodes(data=True)):
-    x_pos = data['deletion'] - data['insertion']
-    bucket_list.setdefault(x_pos, [])
-    if data['is_ref']:
-      bucket_list[x_pos].insert(0, id)
-    else:
-      bucket_list[x_pos].append(id)
-  layout = {}
-  for x_pos, bucket in bucket_list.items():
-    for i, id in enumerate(bucket):
-      if i == 0:
-        layout[id] = (x_pos, 0)
-      elif (i % 2) == 1:
-        layout[id] = (x_pos, (i + 1) // 2)
-      elif (i % 2) == 0:
-        layout[id] = (x_pos, -(i // 2))
-      else:
-        raise Exception('Impossible')
-  
-  return layout
-
 def make_mds_layout(data_set, graph, distance_matrix):
   seq_ids = list(graph.nodes())
   seq_ids_set = set(seq_ids)
@@ -733,20 +696,12 @@ def make_graph_layout_single(
       dim = 2,
       nlist = group_graph_nodes_by(graph, 'dist_ref'),
     )
-  elif layout_type == 'shell_layout_freq':
-    layout = nx.shell_layout(
-      graph,
-      dim = 2,
-      nlist = group_graph_nodes_by(graph, 'freq_rank_cat'),
-    )
   elif layout_type == 'spiral_layout':
     layout = nx.spiral_layout(graph, dim=2)
   elif layout_type == 'circular_layout':
     layout = nx.circular_layout(graph, dim=2)
   elif layout_type == 'multipartite_layout':
     layout = nx.multipartite_layout(graph, subset_key='dist_ref')
-  elif layout_type == 'multipartite_layout_freq':
-    layout = nx.multipartite_layout(graph, subset_key='freq_rank_cat')
   else:
     raise Exception('Unknown layout type: ' + str(layout_type))
 
@@ -1788,12 +1743,7 @@ def make_graph_figure(
       if x not in ['substitution', 'mixed']
     ]
 
-  if 'plot_range' in LAYOUT_PROPERTIES[graph_layout_type]:
-    if np.isnan(plot_range_x[0]):
-      plot_range_x = LAYOUT_PROPERTIES[graph_layout_type]['plot_range']['x']
-    if np.isnan(plot_range_y[0]):
-      plot_range_y = LAYOUT_PROPERTIES[graph_layout_type]['plot_range']['y']
-  elif LAYOUT_PROPERTIES.get(graph_layout_type, {}).get('normalize'):
+  if LAYOUT_PROPERTIES.get(graph_layout_type, {}).get('normalize', False):
     if np.isnan(plot_range_x[0]):
       plot_range_x = (0, 1)
     if np.isnan(plot_range_y[0]):
