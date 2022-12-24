@@ -1044,7 +1044,7 @@ def make_edge_legend(
     })
   return make_legend(
     figure = figure,
-    legend_title = 'Edge Types',
+    legend_title = 'Edges',
     legend_items = legend_items,
     x_anchor = x_anchor,
     y_anchor = y_anchor,
@@ -1126,7 +1126,7 @@ def make_outline_legend(
   })
   return make_legend(
     figure = figure,
-    legend_title = f'Node Outline',
+    legend_title = f'Vertex Outline',
     legend_items = legend_items,
     x_anchor = x_anchor,
     y_anchor = y_anchor,
@@ -1184,7 +1184,7 @@ def make_size_legend(
   legend_items = legend_items[::-1] # Show largest to smallest
   return make_legend(
     figure = figure,
-    legend_title = 'Frequency Size Scale',
+    legend_title = 'Frequency',
     legend_items = legend_items,
     x_anchor = x_anchor,
     y_anchor = y_anchor,
@@ -1240,7 +1240,7 @@ def make_freq_group_legend(
   })
   return make_legend(
     figure = figure,
-    legend_title = 'Node Fill Color',
+    legend_title = 'Vertex Color',
     legend_items = legend_items,
     x_anchor = x_anchor,
     y_anchor = y_anchor,
@@ -1259,7 +1259,7 @@ def add_plotly_colorbar(
   figure,
   label_1,
   label_2,
-  figure_height_px,
+  content_height_px,
   legend_colorbar_scale = 1,
   legend_x_shift_px = 0,
   legend_y_shift_px = 0,
@@ -1282,7 +1282,7 @@ def add_plotly_colorbar(
     marker = {
       'colorbar': {    
         'x': 1,
-        'y': 1 + legend_y_shift_px / figure_height_px,
+        'y': 1 + legend_y_shift_px / content_height_px,
         'xpad': legend_x_shift_px,
         'ypad': 0,
         'xanchor': 'left',
@@ -1298,8 +1298,7 @@ def add_plotly_colorbar(
         'ticktext': constants.FREQ_RATIO_COLOR_BAR_TICK_TEXT,
         'title': {
           'text': (
-            'Frequency Ratio<br>'
-            'Color Scale<br>'
+            'Frequency Ratio<br>' +
             f'[{label_1} / {label_2}]'
           ),
           'font_size': constants.GRAPH_LEGEND_TITLE_FONT_SIZE * font_size_scale,
@@ -1312,7 +1311,7 @@ def add_plotly_colorbar(
 
 def make_custom_legends(
   figure,
-  figure_height_px,
+  content_height_px,
   data_info,
   node_size_type,
   node_color_type,
@@ -1379,14 +1378,14 @@ def make_custom_legends(
       figure = figure,
       label_1 = data_info['label_1'],
       label_2 = data_info['label_2'],
-      figure_height_px = figure_height_px,
+      content_height_px = content_height_px,
       legend_colorbar_scale = legend_colorbar_scale,
       legend_x_shift_px = legend_x_shift_px,
       legend_y_shift_px = y_shift_curr_px,
       line_width_scale = line_width_scale,
       font_size_scale = font_size_scale,
     )
-    y_shift_curr_px -= legend_vertical_space_px * 2
+    y_shift_curr_px -= legend_vertical_space_px
   else:
     raise Exception('Unknown node color type: ' + str(node_color_type))
   
@@ -1914,7 +1913,7 @@ def make_graph_figure(
   if legend_custom_show:
     make_custom_legends(
       figure = figure,
-      figure_height_px = figure_size_args['total_height_px'],
+      content_height_px = figure_size_args['content_height_px'],
       data_info = data_info,
       node_size_type = node_size_type,
       node_color_type = node_color_type,
@@ -2112,7 +2111,9 @@ def parse_args():
     nargs = 2,
     help = (
       'The colors to use in the gradient when the node colors' +
-      ' show the frequency ratio of two experiments.'
+      ' show the frequency ratio of two experiments.' +
+      ' May be specified in hex (e.g., "#FF0000" for red) or with' +
+      ' recognized keywords such as "red", "blue", "green".'
     ),
   )
   parser.add_argument(
@@ -2258,18 +2259,24 @@ def parse_args():
   parser.add_argument(
     '--legend',
     action = 'store_true',
-    help = 'Whether to show a legend on the figure.'
+    help = 'Whether to show a legend on the figure.',
   )
   parser.add_argument(
     '--legend_colorbar_scale',
     type = float,
     default = constants.GRAPH_LEGEND_COLORBAR_SCALE,
-    help = 'How much to scale the legend color bar (for freq ratio coloring).'
+    help = 'How much to scale the legend color bar (for freq ratio coloring).',
+  )
+  parser.add_argument(
+    '--legend_spacing_px',
+    type = int,
+    default = constants.GRAPH_LEGEND_VERTICAL_SPACE_PX,
+    help = 'Amount of vertical space in pixels between different legends.',
   )
   parser.add_argument(
     '--separate_components',
     action = 'store_true',
-    help = 'If present separate the connected components of the graph.'
+    help = 'If present, separate the connected components of the graph.',
   )
   parser.add_argument(
     '--interactive',
@@ -2309,6 +2316,7 @@ def main(
   font_size_scale,
   legend,
   legend_colorbar_scale,
+  legend_spacing_px,
   range_x,
   range_y,
   universal_layout_y_axis_insertion_max_tick,
@@ -2363,6 +2371,7 @@ def main(
     legend_custom_show = legend,
     legend_plotly_show = False,
     legend_colorbar_scale = legend_colorbar_scale,
+    legend_vertical_space_px = legend_spacing_px,
     line_width_scale = line_width_scale,
     font_size_scale = font_size_scale,
     plot_range_x = range_x,
