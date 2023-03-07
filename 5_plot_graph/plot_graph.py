@@ -1058,6 +1058,9 @@ def make_outline_legend(
   y_anchor,
   x_shift,
   y_shift,
+  node_reference_outline_color,
+  node_outline_color,
+  node_fill_color,
   legend_item_scale = 1,
   font_size_scale = 1,
   line_width_scale = 1,
@@ -1066,18 +1069,18 @@ def make_outline_legend(
   legend_items.append({
     'type': 'circle',
     'size': node_size_px,
-    'text': 'Reference',
-    'color': constants.GRAPH_BACKGROUND_COLOR,
-    'line_color': constants.REFERENCE_OUTLINE_COLOR,
-    'line_width': constants.REFERENCE_OUTLINE_WIDTH,
+    'text': constants.LABEL_REFERENCE,
+    'color': node_fill_color,
+    'line_color': node_reference_outline_color,
+    'line_width': constants.GRAPH_NODE_REFERENCE_OUTLINE_WIDTH,
   })
   legend_items.append({
     'type': 'circle',
     'size': node_size_px,
-    'text': 'Non-reference',
-    'color': constants.GRAPH_BACKGROUND_COLOR,
-    'line_color': constants.DEFAULT_OUTLINE_COLOR,
-    'line_width': constants.DEFAULT_OUTLINE_WIDTH,
+    'text': constants.LABEL_NONREFERENCE,
+    'color': node_fill_color,
+    'line_color': node_outline_color,
+    'line_width': constants.GRAPH_NODE_OUTLINE_WIDTH,
   })
   return make_legend(
     figure = figure,
@@ -1270,6 +1273,9 @@ def make_custom_legends(
   data_info,
   node_size_type,
   node_color_type,
+  node_reference_outline_color,
+  node_outline_color,
+  node_fill_color,
   node_filter_variation_types,
   node_size_freq_range,
   node_size_px_range,
@@ -1293,6 +1299,9 @@ def make_custom_legends(
     y_anchor = y_anchor_frac,
     x_shift = legend_x_shift_px,
     y_shift = y_shift_curr_px,
+    node_reference_outline_color = node_reference_outline_color,
+    node_outline_color = node_outline_color,
+    node_fill_color = node_fill_color,
     legend_item_scale = legend_item_scale,
     font_size_scale = font_size_scale,
     line_width_scale = line_width_scale,
@@ -1540,6 +1549,9 @@ def make_graph_figure_helper(
   node_label_position = constants.GRAPH_NODE_LABEL_POSITION,
   node_color_type = constants.GRAPH_NODE_COLOR_TYPE,
   node_comparison_colors = constants.GRAPH_NODE_COMPARISON_COLORS,
+  node_reference_outline_color = constants.GRAPH_NODE_REFERENCE_OUTLINE_COLOR,
+  node_outline_color = constants.GRAPH_NODE_OUTLINE_COLOR,
+  node_fill_color = constants.GRAPH_NODE_FILL_COLOR,
   node_size_type = constants.GRAPH_NODE_SIZE_TYPE,
   node_size_px_range = constants.GRAPH_NODE_SIZE_PX_RANGE,
   node_size_freq_range = constants.GRAPH_NODE_SIZE_FREQ_RANGE,
@@ -1626,6 +1638,9 @@ def make_graph_figure_helper(
     node_label_font_size = constants.GRAPH_LABEL_FONT_SIZE * font_size_scale,
     node_color_type = node_color_type,
     node_comparison_colors = node_comparison_colors,
+    node_reference_outline_color = node_reference_outline_color,
+    node_outline_color = node_outline_color,
+    node_fill_color = node_fill_color,
     node_size_type = node_size_type,
     node_size_px_range = node_size_px_range,
     node_size_freq_range = node_size_freq_range,
@@ -1694,6 +1709,9 @@ def make_graph_figure(
   node_label_position = constants.GRAPH_NODE_LABEL_POSITION,
   node_color_type = constants.GRAPH_NODE_COLOR_TYPE,
   node_comparison_colors = constants.GRAPH_NODE_COMPARISON_COLORS,
+  node_reference_outline_color = constants.GRAPH_NODE_REFERENCE_OUTLINE_COLOR,
+  node_outline_color = constants.GRAPH_NODE_OUTLINE_COLOR,
+  node_fill_color = constants.GRAPH_NODE_FILL_COLOR,
   node_size_type = constants.GRAPH_NODE_SIZE_TYPE,
   node_size_px_range = constants.GRAPH_NODE_SIZE_PX_RANGE,
   node_size_freq_range = constants.GRAPH_NODE_SIZE_FREQ_RANGE,
@@ -1773,6 +1791,9 @@ def make_graph_figure(
     node_label_position = node_label_position,
     node_color_type = node_color_type,
     node_comparison_colors = node_comparison_colors,
+    node_reference_outline_color = node_reference_outline_color,
+    node_outline_color = node_outline_color,
+    node_fill_color = node_fill_color,
     node_size_type = node_size_type,
     node_size_px_range = node_size_px_range,
     node_size_freq_range = node_size_freq_range,
@@ -1867,6 +1888,9 @@ def make_graph_figure(
       data_info = data_info,
       node_size_type = node_size_type,
       node_color_type = node_color_type,
+      node_reference_outline_color = node_reference_outline_color,
+      node_outline_color = node_outline_color,
+      node_fill_color = node_fill_color,
       node_filter_variation_types = node_filter_variation_types,
       node_size_freq_range = node_size_freq_range,
       node_size_px_range = node_size_px_range,
@@ -2067,6 +2091,36 @@ def parse_args():
     ),
   )
   parser.add_argument(
+    '--node_reference_outline_color',
+    type = str,
+    default = constants.GRAPH_NODE_REFERENCE_OUTLINE_COLOR,
+    help = (
+      'Color to make the reference node outline.' +
+      ' May be specified in hex (e.g., "#FF0000" for red) or with' +
+      ' recognized keywords such as "red", "blue", "green".'
+    )
+  )
+  parser.add_argument(
+    '--node_outline_color',
+    type = str,
+    default = constants.GRAPH_NODE_OUTLINE_COLOR,
+    help = (
+      'Color to make the default node outline.' +
+      ' May be specified in hex (e.g., "#FF0000" for red) or with' +
+      ' recognized keywords such as "red", "blue", "green".'
+    )
+  )
+  parser.add_argument(
+    '--node_fill_color',
+    type = str,
+    default = constants.GRAPH_NODE_FILL_COLOR,
+    help = (
+      'Color to make the default node fill.' +
+      ' May be specified in hex (e.g., "#FF0000" for red) or with' +
+      ' recognized keywords such as "red", "blue", "green".'
+    )
+  )
+  parser.add_argument(
     '--variation_types',
     nargs = '+',
     default = constants.GRAPH_NODE_FILTER_VARIATION_TYPES,
@@ -2262,6 +2316,9 @@ def main(
   node_freq_range,
   node_px_range,
   node_comparison_colors,
+  node_reference_outline_color,
+  node_outline_color,
+  node_fill_color,
   variation_types,
   node_outline_scale,
   edge_show,
@@ -2321,6 +2378,9 @@ def main(
     node_outline_width_scale = node_outline_scale,
     node_color_type = node_color_type,
     node_comparison_colors = node_comparison_colors,
+    node_reference_outline_color = node_reference_outline_color,
+    node_outline_color = node_outline_color,
+    node_fill_color = node_fill_color,
     graph_width_px = width_px,
     graph_height_px = height_px,
     graph_stats_show = stats,
