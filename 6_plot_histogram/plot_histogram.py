@@ -122,6 +122,7 @@ def plot_histogram_impl(
   axis,
   show_title,
   label_type,
+  color,
   tick_modulus = constants.HISTOGRAM_AXIS_TICK_MODULUS,
   axis_label_font_size = constants.HISTOGRAM_AXIS_LABEL_FONT_SIZE,
   axis_tick_font_size = constants.HISTOGRAM_AXIS_TICK_FONT_SIZE,
@@ -145,8 +146,6 @@ def plot_histogram_impl(
     format = 'long',
     reverse_pos = reverse_pos,
   )
-
-  color = constants.VARIATION_TYPES[variation_type]['color_3d']
 
   x = data_sub_long.iloc[:, 0].to_numpy()
   y = data_sub_long.iloc[:, 1].to_numpy()
@@ -250,6 +249,7 @@ def plot_histogram(
   freq_range,
   freq_log,
   label_type,
+  color,
   show_title = False,
   reverse_pos = False,
 ):
@@ -288,6 +288,7 @@ def plot_histogram(
     axis = axis,
     show_title = False,
     label_type = label_type,
+    color = color,
     tick_modulus = constants.HISTOGRAM_AXIS_TICK_MODULUS,
     font_size_scale = font_size_scale,
     reverse_pos = reverse_pos,
@@ -344,9 +345,28 @@ def parse_args():
     ),
     required = True,
   )
-  return vars(parser.parse_args())
+  parser.add_argument(
+    '--color',
+    type = str,
+    default = None,
+    help = (
+      'Color of the bar graph. If not specified,' +
+      ' a default color based on VARIATION_TYPE will be chosen.'
+    ),
+  )
+  args = vars(parser.parse_args())
+  if args['color'] is None:
+    constants.VARIATION_TYPES[args['variation_type']]['color_3d']
+  return args
 
-def main(input, output, variation_type, reverse_pos, label_type):
+def main(
+    input,
+    output,
+    variation_type,
+    reverse_pos,
+    label_type,
+    color,
+  ):
   data_dir = input
   data_info = file_utils.read_tsv_dict(file_names.data_info(input))
   plot_histogram(
@@ -357,6 +377,7 @@ def main(input, output, variation_type, reverse_pos, label_type):
     freq_range = constants.HISTOGRAM_FREQ_RANGE,
     freq_log = True,
     label_type = label_type,
+    color = color,
     show_title = False,
     reverse_pos = reverse_pos,
   )

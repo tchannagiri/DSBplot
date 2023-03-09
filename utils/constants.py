@@ -188,6 +188,11 @@ HISTOGRAM_MARGIN_TOP_PX = 0
 HISTOGRAM_MARGIN_BOTTOM_PX = 100
 HISTOGRAM_DPI = 100
 HISTOGRAM_FREQ_RANGE = [1e-5, 1]
+HISTOGRAM_VARIATION_TYPE_COLORS = [
+  VARIATION_TYPES['insertion']['color_3d'],
+  VARIATION_TYPES['deletion']['color_3d'],
+  VARIATION_TYPES['substitution']['color_3d'],
+]
 BASE_FIG_SIZE = 12
 
 ### Constants for graphs ###

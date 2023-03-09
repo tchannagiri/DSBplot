@@ -2135,7 +2135,9 @@ def parse_args():
       ' "insertion", "deletion", "substitution", "mixed", "none".' +
       ' Default value: "insertion", "deletion", "none".' +
       ' "mixed" means nodes that have multiples variation types (e.g. insertions and substitutions).' +
-      ' "none" means the reference node (no variations).',
+      ' "none" means the reference node (no variations).' +
+      ' May be specified in hex (e.g., "#FF0000" for red) or with' +
+      ' recognized keywords such as "red", "blue", "green".'
     ),
   )
   parser.add_argument(
@@ -2148,7 +2150,9 @@ def parse_args():
       ' They must be specified in the order INSERTION, DELETION, SUBSTITUTION,' +
       ' MIXED, NONE. MIXED is the color for nodes with multiple types of' +
       ' variations (e.g. insertions and substitutions); NONE is the color for' +
-      ' the reference node (no variations).'
+      ' the reference node (no variations).' +
+      ' May be specified in hex (e.g., "#FF0000" for red) or with' +
+      ' recognized keywords such as "red", "blue", "green".'
     ),
   )
   parser.add_argument(
