@@ -182,15 +182,15 @@ def parse_args():
     '--output',
     type = common_utils.check_file_output,
     required = True,
-    help = 'Output file.'
+    help = 'Output TSV file name.'
   )
   parser.add_argument(
     '--dsb_pos',
     type = int,
     required = True,
     help = (
-      'Position on reference sequence immediately left of DSB site.' +
-      ' Ie. the DSB is between position DSB_POS and DSB_POS + 1.'
+      'Position on reference sequence immediately upstream of DSB site.' +
+      ' I.e. the DSB is between 1-based positions DSB_POS and DSB_POS + 1.'
     ),
   )
   parser.add_argument(

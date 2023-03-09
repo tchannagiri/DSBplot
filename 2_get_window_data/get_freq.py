@@ -16,19 +16,19 @@ def parse_args():
     description = (
       f'Convert the raw read counts in the input data into frequencies' +
       f' using the input total reads. Outputs 3 files:' +
-      f' (1) windows_{constants.FREQ}.tsv: contains the all the sequences' +
+      f' (1) "windows_{constants.FREQ}.tsv": contains the all the sequences' +
       f' with the counts converted to frequencies.' +
-      f' (2) windows_{constants.FREQ_FILTER}.tsv:' +
+      f' (2) "windows_{constants.FREQ_FILTER}.tsv":' +
       f' the previous file with the sequences removed whose frequency is <= FREQ_MIN' +
       f' in any of the repeats.' +
-      f' (3) windows_{constants.FREQ_FILTER_MEAN}.tsv: ' +
+      f' (3) "windows_{constants.FREQ_FILTER_MEAN}.tsv": ' +
       f' contains the means of the frequencies in the previous file (over all repeats).'
     )
   )
   parser.add_argument(
     '--input',
     type = common_utils.check_dir,
-    help = 'Directory with output from get_window.py or get_merged.py.',
+    help = 'Directory with output from "get_window.py" or "get_merged.py".',
     required = True,
   )
   parser.add_argument(
@@ -37,7 +37,7 @@ def parse_args():
     help = (
       'Total reads for each file.'
       ' Must be the same number of arguments as the number of ' +
-      ' Count columns in INPUT.'
+      ' "Count" columns in INPUT.'
     ),
     nargs = '+',
     required = True,
@@ -51,7 +51,7 @@ def parse_args():
   parser.add_argument(
     '--subst_type',
     type = str,
-    default = 'without',
+    default = constants.SUBST_WITHOUT,
     choices = [
       constants.SUBST_WITH,
       constants.SUBST_WITHOUT,
@@ -66,7 +66,7 @@ def parse_args():
     help = (
       f'Minimum frequency for output in' +
       f' windows_{constants.FREQ_FILTER_MEAN}.' +
-      f' Sequences with frequences <= this are discarded.'
+      f' Sequences with frequences <= FREQ_MIN are discarded.'
     ),
   )
   return vars(parser.parse_args())

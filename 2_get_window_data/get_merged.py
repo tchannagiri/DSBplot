@@ -15,20 +15,17 @@ import argparse
 def parse_args():
   parser = argparse.ArgumentParser(
     description = (
-      'Merge multiple dsb-sequence-window tables.' +
-      ' Currently only used to merge antisense experiments' +
-      ' which are nearly (but not totally) technical replicates.'
+      'Merge together library files from samples that have been sequenced twice.' +
+      ' Operates on the output of "get_window.py".'
     )
   )
   parser.add_argument(
     '--input',
     type = common_utils.check_dir,
     help = (
-      ' Input directories with "windows_XXX.tsv" output of "get_windows.py".' +
-      ' There must be the same number of columns in all' +
-      ' input data sets.' +
-      ' The count columns must be in the same' +
-      ' order they should be merged in.'
+      ' Input directory, which is the output of "get_windows.py".' +
+      ' There must be the same number of columns in all input data sets.' +
+      ' The count columns must be in the same order they should be merged in.'
     ),
     nargs = 2,
     required = True,
@@ -42,12 +39,12 @@ def parse_args():
   parser.add_argument(
     '--subst_type',
     type = str,
-    default = 'without',
+    default = constants.SUBST_WITHOUT,
     choices = [
       constants.SUBST_WITH,
-      constants.SUBST_WITHOUT
+      constants.SUBST_WITHOUT,
     ],
-    help = 'Whether to keep or ignore substitutions.',
+    help = 'Whether to use files with/without substitutions.',
     required = True,
   )
   parser.add_argument(
@@ -55,7 +52,7 @@ def parse_args():
     type = str,
     help = (
       'Names of the new merged columns.' +
-      ' Must be the same as the number of count columns in the data.'
+      ' Must be the same as the number of "Count" columns in the input.'
     ),
     nargs = '+',
     required = True,

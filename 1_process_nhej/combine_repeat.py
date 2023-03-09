@@ -19,10 +19,7 @@ def parse_args():
   parser.add_argument(
     '--input',
     type = common_utils.check_file,
-    help = (
-      'TSV files output from script "filter_nhej.py".' +
-      ' Must have columns: Sequence, CIGAR, Count, Num_Subst.'
-    ),
+    help = 'TSV files output from script "filter_nhej.py".',
     nargs = '+',
     required = True,
   )
@@ -30,14 +27,14 @@ def parse_args():
     '--column_names',
     nargs = '+',
     help = (
-      'Names to use as suffixes to the Count columns of the output.' +
+      'Names to use as suffixes to the "Count" columns of the output.' +
       ' Number of arguments must match the number of INPUT args.'
     ),
   )
   parser.add_argument(
     '--output',
     type = common_utils.check_file_output,
-    help = 'Output file name',
+    help = 'Output TSV file name.',
     required = True,
   )
   parser.add_argument(

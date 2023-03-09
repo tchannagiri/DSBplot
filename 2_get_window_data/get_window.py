@@ -22,12 +22,7 @@ def parse_args():
   parser.add_argument(
     '--input',
     type = common_utils.check_file,
-    help = (
-      'Table of sequences produced with combine_repeat.py.' +
-      ' Column format: Sequence, CIGAR, Count_<X1>, Count_<X2>, ..., etc.' +
-      ' All the columns after CIGAR should be the counts for each repeat where' +
-      ' <Xi> denotes the name of the library.'
-    ),
+    help = 'Table of sequences produced with "combine_repeat.py".',
     required = True,
   )
   parser.add_argument(
@@ -46,8 +41,8 @@ def parse_args():
     '--dsb_pos',
     type = int,
     help = (
-      'Position on reference sequence immediately upstream of DSB site.\n'
-      'The DSB is between position DSB_POS and DSB_POS + 1.'
+      'Position on reference sequence immediately upstream of DSB site.' +
+      ' I.e. the DSB is between 1-based positions DSB_POS and DSB_POS + 1.'
     ),
     required = True,
   )
@@ -60,25 +55,23 @@ def parse_args():
       ' The nucleotides at the positions' +
       ' {DSB_POS - WINDOW_SIZE + 1, ..., DSB_POS + WINDOW_SIZE} are extracted.' +
       ' The actual number of nucleotides extracted may vary depending' +
-      ' on how many insertions/deletion the alignment of the sequence has.'
+      ' on how many insertions/deletions in the alignment of each sequence.'
     ),
   )
   parser.add_argument(
     '--anchor_size',
     type = int,
     default = 20,
-    help = (
-      'Size of anchor on left/right of the window to check for mismatches.'
-    ),
+    help = 'Size of anchor on left/right of the window to check for mismatches.',
   )
   parser.add_argument(
     '--anchor_mismatches',
     type = int,
     default = 1,
     help = (
-      'Maximum number of mismatches allowed on the left/right anchor sequences.\n'
-      'Reads with more than the allowed number of mismatches on the left/right anchor\n'
-      'will be discarded. This limit is applied to the left/right anchors separately.'
+      'Maximum number of mismatches allowed on the left/right anchor sequences.' +
+      ' Reads with more than the allowed number of mismatches on the left/right anchor' +
+      ' will be discarded. This limit is applied to the left/right anchors separately.'
     ),
   )
   parser.add_argument(
@@ -89,7 +82,11 @@ def parse_args():
       constants.SUBST_WITH,
       constants.SUBST_WITHOUT
     ],
-    help = 'Whether to keep or ignore substitutions.',
+    help = (
+      'Whether to keep or ignore substitutions.' +
+      ' If ignoring alignment substitutions, the corresponding nucleotide on the' +
+      ' read is replaced with the reference sequence nucleotide.'
+    ),
     required = True,
   )
   parser.add_argument(
