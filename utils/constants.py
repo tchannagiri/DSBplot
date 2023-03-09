@@ -61,33 +61,33 @@ EDGE_TYPES = {
 }
 
 VARIATION_TYPES = {
-  'none': {
-    'label': 'None',
-    'short_label': 'N',
-    'color': '#FFFFFF',
+  'insertion': {
+    'label': 'Insertion',
+    'short_label': 'I',
+    'color': '#ffa500',
+    'color_3d': '#ffa500',
   },
-  'mixed': {
-      'label': 'Mixed',
-      'short_label': 'M',
-      'color': '#00FF00',
+  'deletion': {
+    'label': 'Deletion',
+    'short_label': 'D',
+    'color': '#8080ff',
+    'color_3d': '#8080ff',
   },
   'substitution': {
     'label': 'Substitution',
     'short_label': 'S',
     'color': '#808080',
-    'color_3d': '#BFBFBF',
+    'color_3d': '#bfbfbf',
   },
-  'deletion': {
-    'label': 'Deletion',
-    'short_label': 'D',
-    'color': '#8080FF',
-    'color_3d': '#8080FF',
+  'mixed': {
+    'label': 'Mixed',
+    'short_label': 'M',
+    'color': '#00ff00',
   },
-  'insertion': {
-    'label': 'Insertion',
-    'short_label': 'I',
-    'color': '#FFA500',
-    'color_3d': '#FFA500',
+  'none': {
+    'label': 'None',
+    'short_label': 'N',
+    'color': '#ffffff',
   },
 }
 
@@ -198,7 +198,13 @@ GRAPH_HEIGHT_PX = 2400
 GRAPH_NODE_SUBST_TYPE = SUBST_WITHOUT
 GRAPH_NODE_SIZE_FREQ_RANGE = [1e-5, 1]
 GRAPH_NODE_SIZE_PX_RANGE = [10, 120]
-GRAPH_NODE_FILTER_VARIATION_TYPES = None
+GRAPH_NODE_FILTER_VARIATION_TYPES = [
+  'insertion',
+  'deletion',
+  'substitution',
+  'mixed',
+  'none',
+]
 GRAPH_NODE_FILTER_FREQ_RANGE = [0, np.inf]
 GRAPH_NODE_FILTER_DIST_RANGE = [0, np.inf]
 GRAPH_NODE_OUTLINE_WIDTH_SCALE = 4
@@ -213,6 +219,13 @@ GRAPH_NODE_REFERENCE_OUTLINE_WIDTH = 2
 GRAPH_NODE_OUTLINE_COLOR = '#000000'
 GRAPH_NODE_OUTLINE_WIDTH = 1
 GRAPH_NODE_FILL_COLOR = '#ffffff'
+GRAPH_NODE_VARIATION_TYPE_COLORS = [
+  VARIATION_TYPES['insertion']['color'],
+  VARIATION_TYPES['deletion']['color'],
+  VARIATION_TYPES['substitution']['color'],
+  VARIATION_TYPES['mixed']['color'],
+  VARIATION_TYPES['none']['color'],
+]
 GRAPH_EDGE_SHOW = True
 GRAPH_EDGE_SHOW_LABELS = False
 GRAPH_EDGE_SHOW_TYPES = ['indel']

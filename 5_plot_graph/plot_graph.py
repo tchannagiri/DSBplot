@@ -1084,7 +1084,7 @@ def make_outline_legend(
   })
   return make_legend(
     figure = figure,
-    legend_title = f'Vertex Outline',
+    legend_title = 'Vertex Outline',
     legend_items = legend_items,
     x_anchor = x_anchor,
     y_anchor = y_anchor,
@@ -1552,6 +1552,7 @@ def make_graph_figure_helper(
   node_reference_outline_color = constants.GRAPH_NODE_REFERENCE_OUTLINE_COLOR,
   node_outline_color = constants.GRAPH_NODE_OUTLINE_COLOR,
   node_fill_color = constants.GRAPH_NODE_FILL_COLOR,
+  node_variation_type_colors = constants.GRAPH_NODE_VARIATION_TYPE_COLORS,
   node_size_type = constants.GRAPH_NODE_SIZE_TYPE,
   node_size_px_range = constants.GRAPH_NODE_SIZE_PX_RANGE,
   node_size_freq_range = constants.GRAPH_NODE_SIZE_FREQ_RANGE,
@@ -1641,6 +1642,7 @@ def make_graph_figure_helper(
     node_reference_outline_color = node_reference_outline_color,
     node_outline_color = node_outline_color,
     node_fill_color = node_fill_color,
+    node_variation_type_colors = node_variation_type_colors,
     node_size_type = node_size_type,
     node_size_px_range = node_size_px_range,
     node_size_freq_range = node_size_freq_range,
@@ -1712,6 +1714,7 @@ def make_graph_figure(
   node_reference_outline_color = constants.GRAPH_NODE_REFERENCE_OUTLINE_COLOR,
   node_outline_color = constants.GRAPH_NODE_OUTLINE_COLOR,
   node_fill_color = constants.GRAPH_NODE_FILL_COLOR,
+  node_variation_type_colors = constants.GRAPH_NODE_VARIATION_TYPE_COLORS,
   node_size_type = constants.GRAPH_NODE_SIZE_TYPE,
   node_size_px_range = constants.GRAPH_NODE_SIZE_PX_RANGE,
   node_size_freq_range = constants.GRAPH_NODE_SIZE_FREQ_RANGE,
@@ -1794,6 +1797,7 @@ def make_graph_figure(
     node_reference_outline_color = node_reference_outline_color,
     node_outline_color = node_outline_color,
     node_fill_color = node_fill_color,
+    node_variation_type_colors = node_variation_type_colors,
     node_size_type = node_size_type,
     node_size_px_range = node_size_px_range,
     node_size_freq_range = node_size_freq_range,
@@ -1996,7 +2000,7 @@ def parse_args():
     type = int,
     help = (
       'If showing an y-axis for the universal layout,' +
-        ' the max tick value for the deletion side.'
+      ' the max tick value for the deletion side.'
     )
   )
   parser.add_argument(
@@ -2004,7 +2008,7 @@ def parse_args():
     type = int,
     help = (
       'If showing an y-axis for the universal layout,' +
-        ' the max tick value for the insertion side.'
+      ' the max tick value for the insertion side.'
     )
   )
   parser.add_argument(
@@ -2126,11 +2130,25 @@ def parse_args():
     default = constants.GRAPH_NODE_FILTER_VARIATION_TYPES,
     choices = list(constants.VARIATION_TYPES),
     help = (
-      'The variation types that should be included in the graph.'
-      ' This should be a list of the types:'
-      ' "insertion", "deletion", "substitution", "none".' +
+      'The variation types that should be included in the graph.' +
+      ' This should be a list of the types:' +
+      ' "insertion", "deletion", "substitution", "mixed", "none".' +
       ' Default value: "insertion", "deletion", "none".' +
-      ' "none" means the reference sequence.',
+      ' "mixed" means nodes that have multiples variation types (e.g. insertions and substitutions).' +
+      ' "none" means the reference node (no variations).',
+    ),
+  )
+  parser.add_argument(
+    '--variation_type_colors',
+    type = str,
+    nargs = 5,
+    default = constants.GRAPH_NODE_VARIATION_TYPE_COLORS,
+    help = (
+      'The colors for the different variations types.' +
+      ' They must be specified in the order INSERTION, DELETION, SUBSTITUTION,' +
+      ' MIXED, NONE. MIXED is the color for nodes with multiple types of' +
+      ' variations (e.g. insertions and substitutions); NONE is the color for' +
+      ' the reference node (no variations).'
     ),
   )
   parser.add_argument(
@@ -2319,6 +2337,7 @@ def main(
   node_reference_outline_color,
   node_outline_color,
   node_fill_color,
+  variation_type_colors,
   variation_types,
   node_outline_scale,
   edge_show,
@@ -2381,6 +2400,7 @@ def main(
     node_reference_outline_color = node_reference_outline_color,
     node_outline_color = node_outline_color,
     node_fill_color = node_fill_color,
+    node_variation_type_colors = variation_type_colors,
     graph_width_px = width_px,
     graph_height_px = height_px,
     graph_stats_show = stats,
