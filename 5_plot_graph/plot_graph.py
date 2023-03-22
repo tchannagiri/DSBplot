@@ -1912,19 +1912,24 @@ def make_graph_figure(
 
 def parse_args():
   parser = argparse.ArgumentParser(
-    description = 'Plot variation-distance graphs.'
+    description = (
+      'Lay out and plot variation-distance graphs.' +
+      ' Uses the output from "get_graph_data" as input.' +
+      ' For more information about the layouts please see the publication FIXME.'
+    )
   )
   parser.add_argument(
     '--input',
     type = common_utils.check_dir,
-    help = 'Directory with the data files produced with get_graph_data.py.',
+    help = 'Directory with the data files produced with "get_graph_data.py".',
     required = True,
   )
   parser.add_argument(
     '--output',
     type = common_utils.check_file_output,
     help = (
-      'Output file. If not given no output will be written.' +
+      'Output file. If not given no output will be written' +
+      ' (useful only when using "--interactive").' +
       ' The file extension should be either ".png" or ".html"' +
       ' for a static PNG or interactive HTML output respectively.'
     ),
@@ -1945,15 +1950,17 @@ def parse_args():
     type = float,
     help = (
       'If present, shows a y-axis at the given x position' +
-      ' on the universal layout showing the distances to the reference.'
+      ' showing the distances to the reference.' +
+      ' Univeral layout only.'
     )
   )
   parser.add_argument(
     '--universal_layout_x_axis_deletion_y_pos',
     type = float,
     help = (
-      'If present, shows an x-axis for deletions at the given y position on' +
-      ' the universal layout showing the approximate position of the deleted ranges.'
+      'If present, shows an x-axis for deletions at the given y position' +
+      ' showing the approximate position of the deleted ranges.' +
+      ' Univeral layout only.'
     )
   )
   parser.add_argument(
@@ -1963,8 +1970,8 @@ def parse_args():
     default = 'relative',
     help = (
       'The type of labeling to use for the universal layout deletion x-axis (if present).' +
-      ' Relative labels have 0 in the middle with negative/positive values on the left/right.' +
-      ' Absolute labels have 1 on the left and the length of the reference sequence on the right.'
+      ' "relative" labels have 0 in the middle with negative/positive values on the left/right.' +
+      ' "absolute" labels have 1 on the left and the length of the reference sequence on the right.'
     )
   )
   parser.add_argument(
@@ -1972,7 +1979,8 @@ def parse_args():
     type = float,
     help = (
       'If present, shows a x-axis for insertions at the given y position' +
-      ' on the universal layout showing the first nucleotide of inserted sequences.'
+      ' showing the first nucleotide of inserted sequences.' +
+      ' Univeral layout only.'
     )
   )
   parser.add_argument(

@@ -15,12 +15,15 @@ import constants
 
 def parse_args():
   parser = argparse.ArgumentParser(
-    description = 'Process data for the histogram analysis.'
+    description = (
+      'Precomputes the necessary data for the variation-position histograms.' +
+      ' Uses as input the output of the "get_graph_data" stage.'
+    )
   )
   parser.add_argument(
     '--input',
     type = common_utils.check_dir,
-    help = 'Directory where output of graph data stage is located.',
+    help = 'Directory where output of "get_graph_data" stage is located.',
     required = True,
   )
   parser.add_argument(

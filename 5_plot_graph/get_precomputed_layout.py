@@ -27,8 +27,8 @@ def parse_args():
     type = common_utils.check_dir,
     nargs = '+',
     help = (
-      'List of data directories created with "get_graph_data".py.\n'
-      'All data sets should have the same window reference sequence and\n'
+      'List of data directories created with "get_graph_data.py".' +
+      ' All datasets should have the same window reference sequence and' +
       ' be individual (not comparison) experiments.'
     ),
     required = True,

@@ -16,12 +16,15 @@ import graph_utils
 
 def parse_args():
   parser = argparse.ArgumentParser(
-    description = 'Process data for the graph analysis.'
+    description = (
+      'Precompute the necessary data for the variation-distance graphs.' +
+      ' Uses as input the output of the "get_window_data" stage.'
+    )
   )
   parser.add_argument(
     '--input',
     type = common_utils.check_dir,
-    help = 'Directory where output from "windows" stage is located.',
+    help = 'Directory where output from "get_window_data" stage is located.',
     required = True,
   )
   parser.add_argument(

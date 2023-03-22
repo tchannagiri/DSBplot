@@ -339,9 +339,9 @@ def parse_args():
     '--label_type',
     choices = ['relative', 'absolute'],
     help = (
-      'Whether to index the x-axis by absolute positions on the reference sequence'
-      ' from 1 to ref_length, or relative positions from -ref_length / 2 to ref_length / 2'
-      ' (skipping 0).'
+      'Whether to index the x-axis by "absolute" positions on the' +
+      ' reference sequence from 1 to ref_length, or "relative" positions' +
+      ' from -(reference length)/2 to (reference length)/2 (skipping 0).'
     ),
     required = True,
   )
