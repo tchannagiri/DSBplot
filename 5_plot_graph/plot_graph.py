@@ -149,7 +149,6 @@ def make_radial_layout(data_info, graph):
         reverse = True,
       ))
 
-
       delta_angle = dist_ref + zig_zag_angle * (-1)**dist_ref / dist_ref
       delta_dist = 0
       angle_list = np.linspace(((180 - delta_angle) / 180) * np.pi, (delta_angle / 180) * np.pi, len(bucket))
@@ -330,14 +329,12 @@ def make_universal_layout(
     xy_dict[data['id']] = (0, 0)
   for var_type in bucket_dict:
     for dist_ref in bucket_dict[var_type]:
-      bucket = list(sorted(
-        bucket_dict[var_type][dist_ref],
-        key = lambda x: max(x[col] for col in constants.FREQ_COLUMNS[data_info['format']]),
-        reverse = True,
-      ))
-
-      
-      for data in bucket:
+      # bucket = list(sorted(
+      #   bucket_dict[var_type][dist_ref],
+      #   key = lambda x: max(x[col] for col in constants.FREQ_COLUMNS[data_info['format']]),
+      #   reverse = True,
+      # )) FIXME DOES THIS MAKE A DIFFERENCE?
+      for data in bucket_dict[var_type][dist_ref]:
         ref_align = data['ref_align']
         read_align = data['read_align']
 
@@ -619,7 +616,7 @@ def make_universal_layout_x_axis(
     line_color = 'black',
   )
 
-def make_mds_layout(data_set, graph, distance_matrix):
+def make_mds_layout(data_info, graph, distance_matrix):
   seq_ids = list(graph.nodes())
   seq_ids_set = set(seq_ids)
   distance_matrix = distance_matrix.loc[
@@ -1530,10 +1527,10 @@ def make_graph_stats_ref_component(
   )
 
 def make_graph_figure_helper(
-  figure,
-  data_dir,
-  data_info,
-  sequence_reverse_complement = constants.GRAPH_SEQUENCE_REVERSE_COMPLEMENT,
+  figure_list,
+  data_dir_list,
+  data_info_list,
+  sequence_reverse_complement_list = None,
   node_subst_type = constants.SUBST_WITHOUT,
   node_filter_freq_range = constants.GRAPH_NODE_FILTER_FREQ_RANGE,
   node_filter_dist_range = constants.GRAPH_NODE_FILTER_DIST_RANGE,
@@ -1568,38 +1565,115 @@ def make_graph_figure_helper(
   universal_layout_x_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
   universal_layout_y_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
+  if sequence_reverse_complement_list is None:
+    sequence_reverse_complement_list = (
+      [constants.GRAPH_SEQUENCE_REVERSE_COMPLEMENT] * len(data_dir_list)
+    )
+
   ### Load node data ###
-  node_data = file_utils.read_tsv(file_names.sequence_data(data_dir, node_subst_type))
-  node_data = node_data.set_index('id', drop=False)
+  node_data_list = [
+    file_utils.read_tsv(file_names.sequence_data(data_dir, node_subst_type))
+      .set_index('id', drop=False)
+    for data_dir in data_dir_list
+  ]
 
   ### Load graph ###
-  graph = graph_utils.load_graph(data_dir, node_subst_type)
+  graph_list = [
+    graph_utils.load_graph(data_dir, node_subst_type)
+    for data_dir in data_dir_list
+  ]
 
   ### Node filtering / subgraph ###
-  if node_filter_variation_types is not None:
-    node_data = node_data.loc[node_data['variation_type'].isin(node_filter_variation_types)]
-  freq_rank_columns = constants.FREQ_RANK_COLUMNS[data_info['format']]
-  node_data = node_data.loc[
-    node_data[freq_rank_columns].min(axis='columns')
-      .between(node_filter_freq_range[0], node_filter_freq_range[1], inclusive='both')
-  ]
+  for i in range(len(data_dir_list)):
+    if node_filter_variation_types is not None:
+      node_data_list[i] = node_data_list[i].loc[
+        node_data_list[i]['variation_type'].isin(node_filter_variation_types)
+      ]
+    freq_rank_columns = constants.FREQ_RANK_COLUMNS[data_info_list[i]['format']]
+    node_data_list[i] = node_data_list[i].loc[
+      node_data_list[i][freq_rank_columns].min(axis='columns')
+        .between(node_filter_freq_range[0], node_filter_freq_range[1], inclusive='both')
+    ]
 
-  node_data = node_data.loc[
-    node_data['dist_ref'].between(
-      node_filter_dist_range[0],
-      node_filter_dist_range[1],
-      inclusive = 'both'
+    node_data_list[i] = node_data_list[i].loc[
+      node_data_list[i]['dist_ref'].between(
+        node_filter_dist_range[0],
+        node_filter_dist_range[1],
+        inclusive = 'both'
+      )
+    ]
+
+    graph_list[i] = graph_list[i].subgraph(node_data_list[i].index)
+
+  ### Combine the nodes/edges ###
+
+  # Combine node data #
+  node_data_list_copy = [node_data.copy() for node_data in node_data_list]
+  for i in range(len(data_dir_list)):
+    if sequence_reverse_complement_list[i]:
+      node_data_list_copy[i] = node_data_list_copy[i].assign(
+        ref_align = node_data_list_copy[i]['ref_align'].apply(kmer_utils.reverse_complement),
+        read_align = node_data_list_copy[i]['read_align'].apply(kmer_utils.reverse_complement),
+      )
+    if data_info_list[i]['format'] == constants.DATA_COMPARISON:
+      node_data_list_copy[i] = node_data_list_copy[i].assign(
+        freq_mean = node_data_list_copy[i][['freq_mean_1', 'freq_mean_2']].max(axis='columns')
+      )
+  node_data = pd.concat(node_data_list_copy, axis='index', ignore_index=True)
+  node_data = node_data.groupby(['ref_align', 'read_align'])
+  freq_mean_max = node_data['freq_mean'].max()
+  node_data = node_data.first()
+  node_data['freq_mean'] = freq_mean_max
+  node_data = node_data.sort_values('freq_mean', ascending=False).reset_index(drop=True)
+  node_data['id'] = 'S' + pd.Series(range(1, node_data.shape[0] + 1), dtype=str)
+  node_data = node_data.set_index('id', drop=False)
+
+  # Combine edge data #
+  edge_data_list = [
+    file_utils.read_tsv(file_names.edge_data(data_dir, node_subst_type))
+      .drop(['id_a', 'id_b'], axis='columns')
+    for data_dir in data_dir_list
+  ]
+  edge_data = pd.concat(edge_data_list, axis='index', ignore_index=True)
+  edge_data = edge_data.groupby(list(edge_data.columns)).first().reset_index()
+  # Get the new id's for the edges #
+  for suffix in ['_a', '_b']:
+    edge_data = pd.merge(
+      edge_data,
+      node_data[['id', 'ref_align', 'read_align']].rename(
+        {
+          'id': 'id' + suffix,
+          'ref_align': 'ref_align' + suffix,
+          'read_align': 'read_align' + suffix,
+        },
+        axis = 'columns',
+      ),
+      on = ['ref_align' + suffix, 'read_align' + suffix],
+      how = 'inner',
     )
-  ]
+  # CONTINUE FIXING HERE!!! WE NEED TO FIGURE OUT HOW TO PASS
+  # THE FREQUENCY INFORMATION TO THE LAYOUT ALGORITHM
+  # CAN WE JUST HAVE A FREQ_ORDER COLUMN THAT IS COMMON TO
+  # BOTH INDIV AND COMPA DATA SETS?
 
-  graph = graph.subgraph(node_data.index)
+  ### Make the combined graph ###
+  graph = nx.Graph()
+  graph.add_nodes_from(node_data.index)
+  nx.set_node_attributes(graph, node_data.to_dict('index'))
 
+  graph.add_edges_from(
+    zip(
+      edge_data['id_a'],
+      edge_data['id_b'],
+      edge_data.to_dict('records')
+    ),
+  )
   ### Make graph layout ###
 
-  graph_layout_separate_components = (
-    graph_layout_separate_components and
-    (len(graph.nodes()) > 10)
-  )
+  # graph_layout_separate_components = (
+  #   graph_layout_separate_components and
+  #   (len(graph.nodes()) > 10)
+  # )
   
   graph_layout = make_graph_layout(
     data_dir = data_dir,
@@ -1697,11 +1771,11 @@ def get_figure_size_args(
   }
 
 def make_graph_figure(
-  data_dir,
+  data_dir_list,
   graph_layout_type = constants.GRAPH_LAYOUT_TYPE,
   graph_layout_precomputed_dir = constants.GRAPH_LAYOUT_PRECOMPUTED_DIR,
   graph_layout_separate_components = constants.GRAPH_LAYOUT_SEPARATE_COMPONENTS,
-  sequence_reverse_complement = constants.GRAPH_SEQUENCE_REVERSE_COMPLEMENT,
+  sequence_reverse_complement_list = None,
   node_subst_type = constants.GRAPH_NODE_SUBST_TYPE,
   node_filter_variation_types = constants.GRAPH_NODE_FILTER_VARIATION_TYPES,
   node_filter_freq_range = constants.GRAPH_NODE_FILTER_FREQ_RANGE,
@@ -1724,7 +1798,7 @@ def make_graph_figure(
   edge_width_scale = constants.GRAPH_EDGE_WIDTH_SCALE,
   graph_width_px = constants.GRAPH_WIDTH_PX,
   graph_height_px = constants.GRAPH_HEIGHT_PX,
-  title = constants.GRAPH_TITLE,
+  title_list = None,
   title_y_shift_px = constants.GRAPH_TITLE_Y_SHIFT_PX,
   legend_plotly_show = constants.GRAPH_LEGEND_PLOTLY_SHOW,
   legend_custom_show = constants.GRAPH_LEGEND_CUSTOM_SHOW,
@@ -1754,7 +1828,14 @@ def make_graph_figure(
   universal_layout_x_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
   universal_layout_y_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
-  data_info = file_utils.read_tsv_dict(file_names.data_info(data_dir))
+  if sequence_reverse_complement_list is None:
+    sequence_reverse_complement_list = [constants.GRAPH_SEQUENCE_REVERSE_COMPLEMENT] * len(data_dir_list)
+  if title_list is None:
+    title_list = [constants.GRAPH_TITLE] * len(data_dir_list)
+  data_info_list = [
+    file_utils.read_tsv_dict(file_names.data_info(data_dir))
+    for data_dir in data_dir_list
+  ]
 
   if node_filter_variation_types is None:
     node_filter_variation_types = list(constants.VARIATION_TYPES)
@@ -1772,12 +1853,12 @@ def make_graph_figure(
 
   edge_show = edge_show and LAYOUT_PROPERTIES[graph_layout_type]['has_edges']
 
-  figure = plotly.graph_objects.Figure()
+  figure_list = [plotly.graph_objects.Figure() for _ in range(len(data_dir_list))]
 
   make_graph_figure_helper(
-    figure = figure,
-    data_dir = data_dir,
-    data_info = data_info,
+    figure_list = figure_list,
+    data_dir_list = data_dir_list,
+    data_info_list = data_info_list,
     node_subst_type = node_subst_type,
     node_filter_freq_range = node_filter_freq_range,
     node_filter_dist_range = node_filter_dist_range,
@@ -1788,7 +1869,7 @@ def make_graph_figure(
     graph_layout_type = graph_layout_type,
     graph_layout_precomputed_dir = graph_layout_precomputed_dir,
     graph_layout_separate_components = graph_layout_separate_components,
-    sequence_reverse_complement = sequence_reverse_complement,
+    sequence_reverse_complement_list = sequence_reverse_complement_list,
     node_labels_show = node_label_show,
     node_label_columns = node_label_columns,
     node_label_position = node_label_position,
@@ -1921,23 +2002,38 @@ def parse_args():
   parser.add_argument(
     '--input',
     type = common_utils.check_dir,
-    help = 'Directory with the data files produced with "get_graph_data.py".',
+    nargs = '+',
+    help = (
+      'List of directories with the data files produced with "get_graph_data.py".' +
+      ' All libraries specified here must have the same windowed reference sequence' +
+      ' (i.e., the 20bp section of the reference around the DSB site should be the same' +
+      ' in all libraries). All the libraries will be laid out using common x/y-coordinate' +
+      ' assignments to the vertices.'
+    ),
     required = True,
   )
   parser.add_argument(
     '--output',
     type = common_utils.check_file_output,
+    nargs = '+',
     help = (
       'Output file. If not given no output will be written' +
       ' (useful only when using "--interactive").' +
       ' The file extension should be either ".png" or ".html"' +
-      ' for a static PNG or interactive HTML output respectively.'
+      ' for a static PNG or interactive HTML output respectively.' +
+      ' Should be either 0 arguments or the number of arguments' +
+      ' should match the number of input directories.'
     ),
   )
   parser.add_argument(
     '--title',
     type = str,
-    help = 'If present, adds a title to the plot with this value.',
+    nargs = '+',
+    help = (
+    'If present, adds a title to the plot with this value.' +
+    ' Number of arguments should match the number of input' +
+    ' files.'
+    ),
   )
   parser.add_argument(
     '--layout',
@@ -2245,15 +2341,6 @@ def parse_args():
     ),
   )
   parser.add_argument(
-    '--precomputed_layout_dir',
-    type = common_utils.check_dir,
-    default = None,
-    help = (
-      'If present, gives the directory where the precomputed layouts are.' +
-      ' If not present the layout is computed newly.'
-    )
-  )
-  parser.add_argument(
     '--reverse_complement',
     action = 'store_true',
     help = (
@@ -2334,14 +2421,51 @@ def parse_args():
       ' Uses the Ploty library figure.show() function to do so.'
     ),
   )
-  return vars(parser.parse_args())
+  parser.add_argument(
+    '--reverse_complement',
+    choices = ['0', '1'],
+    nargs = '+',
+    help = (
+      'Whether to reverse complement the sequence in the data sets.' +
+      ' If present, the number of values must be the same as the number of input directories.' +
+      ' "1" mean reverse complement the sequence and "0" means do not.'
+      ' Used for making a layout for data sets that have reference sequences'
+      ' that are the reverse complements of each other.'
+    ),
+  )
+  args = vars(parser.parse_args())
+  if len(args['input']) == 0:
+    raise Exception('No input arguments.')
+  if args['output'] is None:
+    args['output'] = [None] * len(args['input'])
+  if len(args['output']) != len(args['input']):
+    raise Exception(
+      'Incorrect number of output args.' +
+      f' Got {len(args["output"])}. Expected {len(args["input"])}.'
+    )
+  if args['title'] is None:
+    args['title'] = [None] * len(args['input'])
+  if len(args['title']) != len(args['input']):
+    raise Exception(
+      'Incorrect number of title args.' +
+      f' Got {len(args["title"])}. Expected {len(args["input"])}.'
+    )
+  if args['reverse_complement'] is None:
+    args['reverse_complement'] = ['0'] * len(args['input'])
+  if len(args['reverse_complement']) != len(args['input']):
+    raise Exception(
+      'Incorrect number of reverse complement flags.'
+      f'Got {len(args["reverse_complement"])}. Expected {len(args["input"])}.'
+    )
+  args['reverse_complement'] = [x == '1' for x in args['reverse_complement']]
+  return args
 
 def main(
   input,
   output,
   layout,
   title,
-  reverse_complement,
+  reverse_complement, # Make this multiple
   subst_type,
   node_freq_range,
   node_px_range,
@@ -2362,7 +2486,6 @@ def main(
   margin_left_px,
   margin_right_px,
   stats,
-  precomputed_layout_dir,
   separate_components,
   line_width_scale,
   font_size_scale,
@@ -2387,27 +2510,46 @@ def main(
   crop_y,
   interactive,
 ):
-  log_utils.log_input(input)
-  data_dir = input
-  data_info = file_utils.read_tsv_dict(file_names.data_info(input))
+  data_dir_list = input
+  for data_dir in data_dir_list:
+    log_utils.log_input(data_dir)
+  data_info_list = [
+    file_utils.read_tsv_dict(file_names.data_info(data_dir))
+    for data_dir in data_dir_list
+  ]
 
-  if data_info['format'] == constants.DATA_COMPARISON:
-    node_color_type = 'freq_ratio'
-  elif data_info['format'] == constants.DATA_INDIVIDUAL:
-    node_color_type = 'variation_type'
-  else:
-    raise Exception('Unknown data format: ' + str(data_info['format']))
+  node_color_type_list = []
+  for i in range(len(data_info_list)):
+    if data_info_list[i]['format'] == constants.DATA_COMPARISON:
+      node_color_type_list.append('freq_ratio')
+    elif data_info_list[i]['format'] == constants.DATA_INDIVIDUAL:
+      node_color_type_list.append('variation_type')
+    else:
+      # impossible
+      raise Exception('Unknown data format: ' + str(data_info_list[i]['format']))
 
-  figure = make_graph_figure(
-    data_dir = data_dir,
-    title = title,
-    sequence_reverse_complement = reverse_complement,
+  ref_seqs = set()
+  for i in range(len(data_info_list)):
+    if reverse_complement[i]:
+      ref_seqs.add(kmer_utils.reverse_complement(data_info_list[i]['ref_seq_window']))
+    else:
+      ref_seqs.add(data_info_list[i]['ref_seq_window'])
+  if len(ref_seqs) > 1:
+    raise Exception(
+      'Not all reference sequences are identical.' +
+      ' Got ' + str(ref_seqs) + '.'
+    )
+
+  figure_list = make_graph_figure(
+    data_dir_list = data_dir_list,
+    title_list = title,
+    sequence_reverse_complement_list = reverse_complement,
     node_subst_type = subst_type,
     node_size_px_range = node_px_range,
     node_size_freq_range = node_freq_range,
     node_filter_variation_types = variation_types,
     node_outline_width_scale = node_outline_scale,
-    node_color_type = node_color_type,
+    node_color_type_list = node_color_type_list,
     node_comparison_colors = node_comparison_colors,
     node_reference_outline_color = node_reference_outline_color,
     node_outline_color = node_outline_color,
@@ -2417,7 +2559,6 @@ def main(
     graph_height_px = height_px,
     graph_stats_show = stats,
     graph_layout_type = layout,
-    graph_layout_precomputed_dir = precomputed_layout_dir,
     graph_layout_separate_components = separate_components,
     margin_top_px = margin_top_px,
     margin_bottom_px = margin_bottom_px,
