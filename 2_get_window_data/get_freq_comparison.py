@@ -64,6 +64,8 @@ def get_comparison_data(data_1, data_2, join_columns, freq_columns):
   data_comparison[freq_columns_comparison] = (
     data_comparison[freq_columns_comparison].fillna(0)
   )
+  for x in freq_columns:
+    data_comparison[x] = data_comparison[[x + '_1', x + '_2']].max(axis='columns')
   return data_comparison
 
 def write_comparison_data(

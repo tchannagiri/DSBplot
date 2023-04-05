@@ -171,9 +171,6 @@ def log_transform_ratio(
   )
   return log_ratios
 
-def get_max_freq(data_info, node_data):
-  return node_data[constants.FREQ_COLUMNS[data_info['format']]].max(axis='columns')
-
 def get_node_size(
   data_info,
   node_data,
@@ -184,7 +181,7 @@ def get_node_size(
   if node_size_type == 'freq':
     return pd.Series(
       log_transform_scale(
-        get_max_freq(data_info, node_data),
+        node_data['freq_mean'],
         node_size_freq_range[0],
         node_size_freq_range[1],
         node_size_px_range[0],
@@ -235,7 +232,7 @@ def get_node_color(
     return node_color
   elif node_color_type == 'freq':
      scaled_freq = log_transform_scale(
-       x = get_max_freq(data_info, node_data),
+       x = node_data['freq_mean'],
        min_x = node_color_freq_range[0],
        max_x = node_color_freq_range[1],
        min_out = 0,

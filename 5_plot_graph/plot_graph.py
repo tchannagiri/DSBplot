@@ -102,7 +102,7 @@ def group_graph_nodes_by(graph, data_name):
   data = pd.Series(dict(graph.nodes(data_name)))
   return list(data.groupby(data).groups.values())
 
-def make_radial_layout(data_info, graph):
+def make_radial_layout(graph):
   node_list = graph.nodes(data=True)
 
   bucket_dict = {
@@ -145,7 +145,7 @@ def make_radial_layout(data_info, graph):
     for dist_ref in bucket_dict[var_type]:
       bucket = list(sorted(
         bucket_dict[var_type][dist_ref],
-        key = lambda x: max(x[col] for col in constants.FREQ_COLUMNS[data_info['format']]),
+        key = lambda x: x['freq_mean'],
         reverse = True,
       ))
 
@@ -294,8 +294,8 @@ def get_pos_universal_layout(
     )
 
 def make_universal_layout(
-  data_info,
   graph,
+  cut_pos_ref,
   reverse_complement = False,
   x_scale_insertion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
   y_scale_insertion = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
@@ -322,19 +322,17 @@ def make_universal_layout(
       bucket_dict[var_type].setdefault(dist_ref, [])
       bucket_dict[var_type][dist_ref].append(data)
 
-  cut_pos_ref = len(data_info['ref_seq_window']) / 2
-
   xy_dict = {}
   for data in ref_nodes:
     xy_dict[data['id']] = (0, 0)
   for var_type in bucket_dict:
     for dist_ref in bucket_dict[var_type]:
-      # bucket = list(sorted(
-      #   bucket_dict[var_type][dist_ref],
-      #   key = lambda x: max(x[col] for col in constants.FREQ_COLUMNS[data_info['format']]),
-      #   reverse = True,
-      # )) FIXME DOES THIS MAKE A DIFFERENCE?
-      for data in bucket_dict[var_type][dist_ref]:
+      bucket = list(sorted(
+        bucket_dict[var_type][dist_ref],
+        key = lambda x: x['freq_mean'],
+        reverse = True,
+      ))
+      for data in bucket:
         ref_align = data['ref_align']
         read_align = data['read_align']
 
@@ -616,7 +614,7 @@ def make_universal_layout_x_axis(
     line_color = 'black',
   )
 
-def make_mds_layout(data_info, graph, distance_matrix):
+def make_mds_layout(graph, distance_matrix):
   seq_ids = list(graph.nodes())
   seq_ids_set = set(seq_ids)
   distance_matrix = distance_matrix.loc[
@@ -662,13 +660,13 @@ def make_graph_layout_single(
   universal_layout_y_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
   if layout_type == 'mds_layout':
-    layout = make_mds_layout(data_info, graph, distance_matrix)
+    layout = make_mds_layout(graph, distance_matrix)
   elif layout_type == 'radial_layout':
-    layout = make_radial_layout(data_info, graph)
+    layout = make_radial_layout(graph)
   elif layout_type == 'universal_layout':
     layout = make_universal_layout(
-      data_info,
       graph,
+      len(data_info['ref_seq_window']) // 2,
       reverse_complement,
       x_scale_insertion = universal_layout_x_scale_insertion,
       y_scale_insertion = universal_layout_y_scale_insertion,
@@ -796,7 +794,7 @@ def make_graph_layout(
   node_subst_type,
   graph,
   layout_type,
-  precomputed_layout_dir = None,
+  graph_layout_common = None,
   separate_components = True,
   reverse_complement = False,
   universal_layout_x_scale_insertion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
@@ -804,21 +802,29 @@ def make_graph_layout(
   universal_layout_x_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
   universal_layout_y_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
-  if precomputed_layout_dir is not None:
+  if graph_layout_common is not None:
     separate_components = False
     node_groups = None
     node_data = pd.DataFrame.from_dict(
       dict(graph.nodes(data=True)),
       orient = 'index',
-    )
-    layout_list = [
-      get_precomputed_layout.get_precomputed_layout(
-        precomputed_layout_dir,
-        node_data = node_data,
-        node_subst_type = node_subst_type,
-        reverse_complement = reverse_complement,
+    ).reset_index().rename({'index': 'id'}, axis='columns')
+    if reverse_complement:
+      node_data = node_data.assign(
+        ref_align = node_data['ref_align'].apply(kmer_utils.reverse_complement),
+        read_align = node_data['read_align'].apply(kmer_utils.reverse_complement),
       )
-    ]
+    node_data = pd.merge(
+      node_data[['id', 'ref_align', 'read_align']],
+      graph_layout_common[['ref_align', 'read_align', 'x', 'y']],
+      on = ['ref_align', 'read_align'],
+      how = 'inner',
+    )[['id', 'x', 'y']]
+    node_data = node_data.set_index('id', drop=True).rename(
+      {'x': 0, 'y': 1},
+      axis = 'columns',
+    )
+    layout_list = [node_data]
   else:
     if separate_components:
       ref_id = next(
@@ -1539,7 +1545,6 @@ def make_graph_figure_helper(
   edge_labels_show = constants.GRAPH_EDGE_LABELS_SHOW,
   edge_width_scale = constants.GRAPH_EDGE_WIDTH_SCALE,
   graph_layout_type = constants.GRAPH_LAYOUT_TYPE,
-  graph_layout_precomputed_dir = constants.GRAPH_LAYOUT_PRECOMPUTED_DIR,
   graph_layout_separate_components = constants.GRAPH_LAYOUT_SEPARATE_COMPONENTS,
   node_labels_show = constants.GRAPH_NODE_LABEL_SHOW,
   node_label_columns = constants.GRAPH_NODE_LABEL_COLUMNS,
@@ -1615,10 +1620,6 @@ def make_graph_figure_helper(
         ref_align = node_data_list_copy[i]['ref_align'].apply(kmer_utils.reverse_complement),
         read_align = node_data_list_copy[i]['read_align'].apply(kmer_utils.reverse_complement),
       )
-    if data_info_list[i]['format'] == constants.DATA_COMPARISON:
-      node_data_list_copy[i] = node_data_list_copy[i].assign(
-        freq_mean = node_data_list_copy[i][['freq_mean_1', 'freq_mean_2']].max(axis='columns')
-      )
   node_data = pd.concat(node_data_list_copy, axis='index', ignore_index=True)
   node_data = node_data.groupby(['ref_align', 'read_align'])
   freq_mean_max = node_data['freq_mean'].max()
@@ -1628,7 +1629,7 @@ def make_graph_figure_helper(
   node_data['id'] = 'S' + pd.Series(range(1, node_data.shape[0] + 1), dtype=str)
   node_data = node_data.set_index('id', drop=False)
 
-  # Combine edge data #
+  # Combine edge data
   edge_data_list = [
     file_utils.read_tsv(file_names.edge_data(data_dir, node_subst_type))
       .drop(['id_a', 'id_b'], axis='columns')
@@ -1636,7 +1637,8 @@ def make_graph_figure_helper(
   ]
   edge_data = pd.concat(edge_data_list, axis='index', ignore_index=True)
   edge_data = edge_data.groupby(list(edge_data.columns)).first().reset_index()
-  # Get the new id's for the edges #
+
+  # Get the new id's for the edges
   for suffix in ['_a', '_b']:
     edge_data = pd.merge(
       edge_data,
@@ -1668,6 +1670,27 @@ def make_graph_figure_helper(
       edge_data.to_dict('records')
     ),
   )
+
+  ### Make the common graph layout ###
+  data_info = file_utils.read_tsv_dict(
+    file_names.data_info(input[0])
+  )
+  graph_layout_common = make_graph_layout(
+    # FIXME: This mean FAIL for MDS layout! Mention in the args strings!
+    data_dir = data_dir_list[0] if (len(data_dir_list) == 0) else None,
+    data_info = data_info_list[0],
+    node_subst_type = node_subst_type,
+    graph = graph,
+    layout_type = graph_layout_type,
+    separate_components = False,
+    precomputed_layout_dir = None,
+  )
+  graph_layout_common.columns = ['x', 'y']
+
+  ### Join layout with alignment string ###
+  graph_layout_common = graph_layout_common.join(node_data[['ref_align', 'read_align']])
+  graph_layout_common = graph_layout_common.reset_index(drop=True)
+
   ### Make graph layout ###
 
   # graph_layout_separate_components = (
@@ -1675,83 +1698,84 @@ def make_graph_figure_helper(
   #   (len(graph.nodes()) > 10)
   # )
   
-  graph_layout = make_graph_layout(
-    data_dir = data_dir,
-    data_info = data_info,
-    node_subst_type = node_subst_type,
-    graph = graph,
-    layout_type = graph_layout_type,
-    precomputed_layout_dir = graph_layout_precomputed_dir,
-    separate_components = graph_layout_separate_components,
-    reverse_complement = sequence_reverse_complement,
-    universal_layout_x_scale_insertion = universal_layout_x_scale_insertion,
-    universal_layout_y_scale_insertion = universal_layout_y_scale_insertion,
-    universal_layout_x_scale_deletion = universal_layout_x_scale_deletion,
-    universal_layout_y_scale_deletion = universal_layout_y_scale_deletion,
-  )
-
-  ### Plot edges and nodes ###
-  edge_traces = []
-  if edge_show:
-    edge_traces = plot_graph_helper.make_edges_traces(
-      data_info = data_info,
-      graph = graph,
-      layout = graph_layout,
-      show_edge_labels = edge_labels_show,
-      show_edge_types = edge_types_show,
-      edge_width_scale = edge_width_scale,
-      reverse_complement = sequence_reverse_complement,
+  for i in range(len(data_info_list)):
+    graph_layout = make_graph_layout(
+      data_dir = data_dir_list[i],
+      data_info = data_info_list[i],
+      node_subst_type = node_subst_type,
+      graph = graph_list[i],
+      layout_type = graph_layout_type,
+      graph_layout_common = graph_layout_common,
+      separate_components = graph_layout_separate_components,
+      reverse_complement = sequence_reverse_complement_list[i],
+      universal_layout_x_scale_insertion = universal_layout_x_scale_insertion,
+      universal_layout_y_scale_insertion = universal_layout_y_scale_insertion,
+      universal_layout_x_scale_deletion = universal_layout_x_scale_deletion,
+      universal_layout_y_scale_deletion = universal_layout_y_scale_deletion,
     )
 
-  node_traces = plot_graph_helper.make_point_traces(
-    data_info = data_info,
-    node_data = node_data,
-    graph_layout = graph_layout,
-    show_node_labels = node_labels_show,
-    node_label_columns = node_label_columns,
-    node_label_position = node_label_position,
-    node_label_font_size = constants.GRAPH_LABEL_FONT_SIZE * font_size_scale,
-    node_color_type = node_color_type,
-    node_comparison_colors = node_comparison_colors,
-    node_reference_outline_color = node_reference_outline_color,
-    node_outline_color = node_outline_color,
-    node_fill_color = node_fill_color,
-    node_variation_type_colors = node_variation_type_colors,
-    node_size_type = node_size_type,
-    node_size_px_range = node_size_px_range,
-    node_size_freq_range = node_size_freq_range,
-    node_outline_width_scale = node_outline_width_scale,
-    reverse_complement = sequence_reverse_complement,
-  )
+    ### Plot edges and nodes ###
+    edge_traces = []
+    if edge_show:
+      edge_traces = plot_graph_helper.make_edges_traces(
+        data_info = data_info,
+        graph = graph_list[i],
+        layout = graph_layout,
+        show_edge_labels = edge_labels_show,
+        show_edge_types = edge_types_show,
+        edge_width_scale = edge_width_scale,
+        reverse_complement = sequence_reverse_complement_list[i],
+      )
 
-  for trace in (edge_traces + node_traces):
-    figure.add_trace(trace)
-
-  ### Format axes ###
-  if not axes_show:
-    figure.update_xaxes(visible = False)
-    figure.update_yaxes(visible = False)
-  
-  if not np.isnan(plot_range_x[0]):
-    figure.update_xaxes(range = plot_range_x)
-  if not np.isnan(plot_range_y[0]):
-    figure.update_yaxes(range = plot_range_y)
-
-  ### Enable/disable legend ###
-  figure.update_traces(showlegend = legend_plotly_show)
-
-  ### Format for freq ratio colors ###
-  if node_color_type == 'freq_ratio':
-    figure.update_traces(
-      marker = {
-        'colorscale': constants.get_freq_ratio_color_scale(
-          node_comparison_colors[0],
-          node_comparison_colors[1],
-        ),
-        'cmin': constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[0],
-        'cmax': constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[1],
-      }
+    node_traces = plot_graph_helper.make_point_traces(
+      data_info = data_info_list[i],
+      node_data = node_data_list[i],
+      graph_layout = graph_layout,
+      show_node_labels = node_labels_show,
+      node_label_columns = node_label_columns,
+      node_label_position = node_label_position,
+      node_label_font_size = constants.GRAPH_LABEL_FONT_SIZE * font_size_scale,
+      node_color_type = node_color_type,
+      node_comparison_colors = node_comparison_colors,
+      node_reference_outline_color = node_reference_outline_color,
+      node_outline_color = node_outline_color,
+      node_fill_color = node_fill_color,
+      node_variation_type_colors = node_variation_type_colors,
+      node_size_type = node_size_type,
+      node_size_px_range = node_size_px_range,
+      node_size_freq_range = node_size_freq_range,
+      node_outline_width_scale = node_outline_width_scale,
+      reverse_complement = sequence_reverse_complement_list[i],
     )
+
+    for trace in (edge_traces + node_traces):
+      figure_list[i].add_trace(trace)
+
+    ### Format axes ###
+    if not axes_show:
+      figure_list[i].update_xaxes(visible = False)
+      figure_list[i].update_yaxes(visible = False)
+    
+    if not np.isnan(plot_range_x[0]):
+      figure_list[i].update_xaxes(range = plot_range_x)
+    if not np.isnan(plot_range_y[0]):
+      figure_list[i].update_yaxes(range = plot_range_y)
+
+    ### Enable/disable legend ###
+    figure_list[i].update_traces(showlegend = legend_plotly_show)
+
+    ### Format for freq ratio colors ###
+    if node_color_type == 'freq_ratio':
+      figure_list[i].update_traces(
+        marker = {
+          'colorscale': constants.get_freq_ratio_color_scale(
+            node_comparison_colors[0],
+            node_comparison_colors[1],
+          ),
+          'cmin': constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[0],
+          'cmax': constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[1],
+        }
+      )
 
 def get_figure_size_args(
   content_height_px,
@@ -1895,21 +1919,6 @@ def make_graph_figure(
     universal_layout_y_scale_deletion = universal_layout_y_scale_deletion,
   )
 
-  if graph_stats_show:
-    make_graph_stats_ref_component(
-      figure = figure,
-      data_dir = data_dir,
-      data_info = data_info,
-      subst_type = node_subst_type,
-      x = graph_stats_x_frac,
-      y = graph_stats_y_frac,
-      x_shift = -margin_left_px + graph_stats_x_shift_px,
-      y_shift = graph_stats_y_shift_px,
-      x_anchor = graph_stats_x_anchor,
-      y_anchor = graph_stats_y_anchor,
-      font_size_scale = font_size_scale,
-    )
-
   figure_size_args = get_figure_size_args(
     content_height_px = graph_height_px,
     content_width_px = graph_width_px,
@@ -1919,77 +1928,90 @@ def make_graph_figure(
     margin_right_px = margin_right_px,
   )
 
-  figure.update_layout(
-    width = figure_size_args['total_width_px'],
-    height = figure_size_args['total_height_px'],
+  for i in range(len(data_info_list)):
+    if graph_stats_show:
+      make_graph_stats_ref_component(
+        figure = figure_list[i],
+        data_dir = data_dir_list[i],
+        data_info = data_info_list[i],
+        subst_type = node_subst_type,
+        x = graph_stats_x_frac,
+        y = graph_stats_y_frac,
+        x_shift = -margin_left_px + graph_stats_x_shift_px,
+        y_shift = graph_stats_y_shift_px,
+        x_anchor = graph_stats_x_anchor,
+        y_anchor = graph_stats_y_anchor,
+        font_size_scale = font_size_scale,
+      )
 
-    font_color = 'black',
+    figure_list[i].update_layout(
+      width = figure_size_args['total_width_px'],
+      height = figure_size_args['total_height_px'],
 
-    legend_title_font_size = constants.GRAPH_LEGEND_TITLE_FONT_SIZE * font_size_scale,
-    legend_font_size = constants.GRAPH_LEGEND_FONT_SIZE * font_size_scale,
-    legend_itemsizing = 'constant',
-    legend_itemwidth = constants.GRAPH_LEGEND_PLOTLY_ITEM_WIDTH_PX,
-    legend_yanchor = 'top',
-    legend_xanchor = 'left',
+      font_color = 'black',
 
-    margin_t = margin_top_px,
-    margin_r = margin_right_px,
-    margin_b = margin_bottom_px,
-    margin_l = margin_left_px,
-    margin_autoexpand = False,
+      legend_title_font_size = constants.GRAPH_LEGEND_TITLE_FONT_SIZE * font_size_scale,
+      legend_font_size = constants.GRAPH_LEGEND_FONT_SIZE * font_size_scale,
+      legend_itemsizing = 'constant',
+      legend_itemwidth = constants.GRAPH_LEGEND_PLOTLY_ITEM_WIDTH_PX,
+      legend_yanchor = 'top',
+      legend_xanchor = 'left',
 
-    hovermode = 'closest',
-    hoverlabel_font_size = constants.GRAPH_HOVER_LABEL_FONT_SIZE,
-    hoverlabel_font_family = constants.GRAPH_HOVER_LABEL_FONT,
-    hoverlabel_bgcolor = constants.GRAPH_HOVER_LABEL_BG_COLOR,
+      margin_t = margin_top_px,
+      margin_r = margin_right_px,
+      margin_b = margin_bottom_px,
+      margin_l = margin_left_px,
+      margin_autoexpand = False,
 
-    plot_bgcolor = constants.GRAPH_BACKGROUND_COLOR,
-  )
+      hovermode = 'closest',
+      hoverlabel_font_size = constants.GRAPH_HOVER_LABEL_FONT_SIZE,
+      hoverlabel_font_family = constants.GRAPH_HOVER_LABEL_FONT,
+      hoverlabel_bgcolor = constants.GRAPH_HOVER_LABEL_BG_COLOR,
 
-  if LAYOUT_PROPERTIES[graph_layout_type].get('preserve_aspect', False):
-    figure.update_yaxes(
-      scaleanchor = 'x',
-      scaleratio = 1,
+      plot_bgcolor = constants.GRAPH_BACKGROUND_COLOR,
     )
 
-  if title is not None:
-    figure.add_annotation(
-      xref = 'paper',
-      yref = 'paper',
-      text = title,
-      x = 0.5,
-      y = 1,
-      xanchor = 'center',
-      yanchor = 'bottom',
-      yshift = title_y_shift_px,
-      font_size = constants.GRAPH_TITLE_FONT_SIZE * font_size_scale,
-      showarrow = False,
-    )
+    if LAYOUT_PROPERTIES[graph_layout_type].get('preserve_aspect', False):
+      figure_list[i].update_yaxes(scaleanchor='x', scaleratio=1)
 
-  if legend_custom_show:
-    make_custom_legends(
-      figure = figure,
-      content_height_px = figure_size_args['content_height_px'],
-      data_info = data_info,
-      node_size_type = node_size_type,
-      node_color_type = node_color_type,
-      node_reference_outline_color = node_reference_outline_color,
-      node_outline_color = node_outline_color,
-      node_fill_color = node_fill_color,
-      node_filter_variation_types = node_filter_variation_types,
-      node_size_freq_range = node_size_freq_range,
-      node_size_px_range = node_size_px_range,
-      edge_show = edge_show,
-      edge_show_types = edge_show_types,
-      legend_x_shift_px = legend_x_shift_px,
-      legend_vertical_space_px = legend_vertical_space_px,
-      legend_item_scale = legend_item_scale,
-      legend_colorbar_scale = legend_colorbar_scale,
-      font_size_scale = font_size_scale,
-      line_width_scale = line_width_scale,
-    )
-  
-  return figure
+    if title_list[i] is not None:
+      figure_list[i].add_annotation(
+        xref = 'paper',
+        yref = 'paper',
+        text = title_list[i],
+        x = 0.5,
+        y = 1,
+        xanchor = 'center',
+        yanchor = 'bottom',
+        yshift = title_y_shift_px,
+        font_size = constants.GRAPH_TITLE_FONT_SIZE * font_size_scale,
+        showarrow = False,
+      )
+
+    if legend_custom_show:
+      make_custom_legends(
+        figure = figure_list[i],
+        content_height_px = figure_size_args['content_height_px'],
+        data_info = data_info_list[i],
+        node_size_type = node_size_type,
+        node_color_type = node_color_type,
+        node_reference_outline_color = node_reference_outline_color,
+        node_outline_color = node_outline_color,
+        node_fill_color = node_fill_color,
+        node_filter_variation_types = node_filter_variation_types,
+        node_size_freq_range = node_size_freq_range,
+        node_size_px_range = node_size_px_range,
+        edge_show = edge_show,
+        edge_show_types = edge_show_types,
+        legend_x_shift_px = legend_x_shift_px,
+        legend_vertical_space_px = legend_vertical_space_px,
+        legend_item_scale = legend_item_scale,
+        legend_colorbar_scale = legend_colorbar_scale,
+        font_size_scale = font_size_scale,
+        line_width_scale = line_width_scale,
+      )
+
+  return figure_list
 
 def parse_args():
   parser = argparse.ArgumentParser(
@@ -2511,6 +2533,7 @@ def main(
   interactive,
 ):
   data_dir_list = input
+  output_list = output
   for data_dir in data_dir_list:
     log_utils.log_input(data_dir)
   data_info_list = [
@@ -2528,16 +2551,16 @@ def main(
       # impossible
       raise Exception('Unknown data format: ' + str(data_info_list[i]['format']))
 
-  ref_seqs = set()
+  ref_seq_set = set()
   for i in range(len(data_info_list)):
     if reverse_complement[i]:
-      ref_seqs.add(kmer_utils.reverse_complement(data_info_list[i]['ref_seq_window']))
+      ref_seq_set.add(kmer_utils.reverse_complement(data_info_list[i]['ref_seq_window']))
     else:
-      ref_seqs.add(data_info_list[i]['ref_seq_window'])
-  if len(ref_seqs) > 1:
+      ref_seq_set.add(data_info_list[i]['ref_seq_window'])
+  if len(ref_seq_set) > 1:
     raise Exception(
       'Not all reference sequences are identical.' +
-      ' Got ' + str(ref_seqs) + '.'
+      ' Got ' + str(ref_seq_set) + '.'
     )
 
   figure_list = make_graph_figure(
@@ -2581,102 +2604,103 @@ def main(
     universal_layout_y_scale_deletion = universal_layout_y_scale_deletion,
   )
 
-  sequence_data = file_utils.read_tsv(
-    file_names.sequence_data(data_dir, subst_type)
-  )
-  if universal_layout_y_axis_insertion_max_tick is None:
-    try:
-      max_tick_insertion = sequence_data.loc[
-        sequence_data['variation_type'] == 'insertion',
-        'dist_ref'
-      ].max()
-    except:
-      # incase no insertions
-      max_tick_insertion = 1
-  else:
-    max_tick_insertion = universal_layout_y_axis_insertion_max_tick
-  
-  if universal_layout_y_axis_deletion_max_tick is None:
-    try:
-      max_tick_deletion = sequence_data.loc[
-        sequence_data['variation_type'] == 'deletion',
-        'dist_ref'
-      ].max()
-    except:
-      # incase no deletions
-      max_tick_deletion = 1
-  else:
-    max_tick_deletion = universal_layout_y_axis_deletion_max_tick
+  for i in range(len(figure_list)):
+    sequence_data = file_utils.read_tsv(
+      file_names.sequence_data(data_dir_list[i], subst_type)
+    )
+    if universal_layout_y_axis_insertion_max_tick is None:
+      try:
+        max_tick_insertion = sequence_data.loc[
+          sequence_data['variation_type'] == 'insertion',
+          'dist_ref'
+        ].max()
+      except:
+        # incase no insertions
+        max_tick_insertion = 1
+    else:
+      max_tick_insertion = universal_layout_y_axis_insertion_max_tick
+    
+    if universal_layout_y_axis_deletion_max_tick is None:
+      try:
+        max_tick_deletion = sequence_data.loc[
+          sequence_data['variation_type'] == 'deletion',
+          'dist_ref'
+        ].max()
+      except:
+        # incase no deletions
+        max_tick_deletion = 1
+    else:
+      max_tick_deletion = universal_layout_y_axis_deletion_max_tick
 
-  if layout == 'universal_layout':
-    if universal_layout_y_axis_x_pos is not None:
-      make_universal_layout_y_axis(
-        figure = figure,
-        x_pos = universal_layout_y_axis_x_pos,
-        ref_length = len(data_info['ref_seq_window']),
-        cut_pos_ref = len(data_info['ref_seq_window']) // 2,
-        y_range = universal_layout_y_axis_y_range,
-        max_tick_deletion = max_tick_deletion,
-        max_tick_insertion = max_tick_insertion,
-        x_scale_insertion = universal_layout_x_scale_insertion,
-        y_scale_insertion = universal_layout_y_scale_insertion,
-        x_scale_deletion = universal_layout_x_scale_deletion,
-        y_scale_deletion = universal_layout_y_scale_deletion,
-      )
-    if universal_layout_x_axis_deletion_y_pos is not None:
-      make_universal_layout_x_axis(
-        figure = figure,
-        var_type = 'deletion',
-        y_pos = universal_layout_x_axis_deletion_y_pos,
-        ref_length = len(data_info['ref_seq_window']),
-        cut_pos_ref = len(data_info['ref_seq_window']) // 2,
-        x_range = universal_layout_x_axis_x_range,
-        deletion_label_type = universal_layout_x_axis_deletion_label_type,
-        x_scale_insertion = universal_layout_x_scale_insertion,
-        y_scale_insertion = universal_layout_y_scale_insertion,
-        x_scale_deletion = universal_layout_x_scale_deletion,
-        y_scale_deletion = universal_layout_y_scale_deletion,
-      )
-    if universal_layout_x_axis_insertion_y_pos is not None:
-      make_universal_layout_x_axis(
-        figure = figure,
-        var_type = 'insertion',
-        y_pos = universal_layout_x_axis_insertion_y_pos,
-        ref_length = len(data_info['ref_seq_window']),
-        cut_pos_ref = len(data_info['ref_seq_window']) // 2,
-        x_range = universal_layout_x_axis_x_range,
-        x_scale_insertion = universal_layout_x_scale_insertion,
-        y_scale_insertion = universal_layout_y_scale_insertion,
-        x_scale_deletion = universal_layout_x_scale_deletion,
-        y_scale_deletion = universal_layout_y_scale_deletion,
-      )
+    if layout == 'universal_layout':
+      if universal_layout_y_axis_x_pos is not None:
+        make_universal_layout_y_axis(
+          figure = figure_list[i],
+          x_pos = universal_layout_y_axis_x_pos,
+          ref_length = len(data_info_list[i]['ref_seq_window']),
+          cut_pos_ref = len(data_info_list[i]['ref_seq_window']) // 2,
+          y_range = universal_layout_y_axis_y_range,
+          max_tick_deletion = max_tick_deletion,
+          max_tick_insertion = max_tick_insertion,
+          x_scale_insertion = universal_layout_x_scale_insertion,
+          y_scale_insertion = universal_layout_y_scale_insertion,
+          x_scale_deletion = universal_layout_x_scale_deletion,
+          y_scale_deletion = universal_layout_y_scale_deletion,
+        )
+      if universal_layout_x_axis_deletion_y_pos is not None:
+        make_universal_layout_x_axis(
+          figure = figure_list[i],
+          var_type = 'deletion',
+          y_pos = universal_layout_x_axis_deletion_y_pos,
+          ref_length = len(data_info_list[i]['ref_seq_window']),
+          cut_pos_ref = len(data_info_list[i]['ref_seq_window']) // 2,
+          x_range = universal_layout_x_axis_x_range,
+          deletion_label_type = universal_layout_x_axis_deletion_label_type,
+          x_scale_insertion = universal_layout_x_scale_insertion,
+          y_scale_insertion = universal_layout_y_scale_insertion,
+          x_scale_deletion = universal_layout_x_scale_deletion,
+          y_scale_deletion = universal_layout_y_scale_deletion,
+        )
+      if universal_layout_x_axis_insertion_y_pos is not None:
+        make_universal_layout_x_axis(
+          figure = figure_list[i],
+          var_type = 'insertion',
+          y_pos = universal_layout_x_axis_insertion_y_pos,
+          ref_length = len(data_info_list[i]['ref_seq_window']),
+          cut_pos_ref = len(data_info_list[i]['ref_seq_window']) // 2,
+          x_range = universal_layout_x_axis_x_range,
+          x_scale_insertion = universal_layout_x_scale_insertion,
+          y_scale_insertion = universal_layout_y_scale_insertion,
+          x_scale_deletion = universal_layout_x_scale_deletion,
+          y_scale_deletion = universal_layout_y_scale_deletion,
+        )
 
-  if interactive:
-    log_utils.log('Opening interactive version in browser.')
-    figure.show()
+    if interactive:
+      log_utils.log('Opening interactive version in browser.')
+      figure_list[i].show()
 
-  if output is not None:
-    ext = os.path.splitext(output)[1]
-    if ext not in ['.png', '.html']:
-      raise Exception('Unknown file extension: ' + str(ext))
-    file_utils.write_plotly(figure, output)
-    log_utils.log_output(output)
+    if output is not None:
+      ext = os.path.splitext(output)[1]
+      if ext not in ['.png', '.html']:
+        raise Exception('Unknown file extension: ' + str(ext))
+      file_utils.write_plotly(figure_list[i], output_list[i])
+      log_utils.log_output(output_list[i])
 
-    crop_x = tuple(crop_x)
-    crop_y = tuple(crop_y)
-    if (crop_x != (0, 1)) or (crop_y != (0, 1)):
-      if ext == '.html':
-        raise Exception('Cannot use crop setting with HTML output')
+      crop_x = tuple(crop_x)
+      crop_y = tuple(crop_y)
+      if (crop_x != (0, 1)) or (crop_y != (0, 1)):
+        if ext == '.html':
+          raise Exception('Cannot use crop setting with HTML output')
 
-      image = PIL.Image.open(output)
-      width_px, height_px = image.size
+        image = PIL.Image.open(output_list[i])
+        width_px, height_px = image.size
 
-      left = crop_x[0] * width_px
-      right = crop_x[1] * width_px
-      top = crop_y[0] * height_px
-      bottom = crop_y[1] * height_px
+        left = crop_x[0] * width_px
+        right = crop_x[1] * width_px
+        top = crop_y[0] * height_px
+        bottom = crop_y[1] * height_px
 
-      image.crop((left, top, right, bottom)).save(output)
+        image.crop((left, top, right, bottom)).save(output_list[i])
   log_utils.new_line()
 
 if __name__ == '__main__':

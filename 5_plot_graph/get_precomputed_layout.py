@@ -192,12 +192,10 @@ def make_precomputed_layout(
   graph.add_nodes_from(seq_data.index)
   nx.set_node_attributes(graph, seq_data.to_dict('index'))
 
-  graph.add_edges_from(
-    zip(
-      edge_data['id_a'],
-      edge_data['id_b'],
-      edge_data.to_dict('records')
-    ),
+  graph.add_edges_from(zip(
+    edge_data['id_a'],
+    edge_data['id_b'],
+    edge_data.to_dict('records')),
   )
 
   ### Make the layout ###
