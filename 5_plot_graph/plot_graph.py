@@ -25,7 +25,6 @@ import kmer_utils
 import alignment_utils
 import file_names
 import plot_graph_helper
-import get_precomputed_layout
 
 LAYOUT_PROPERTIES = {
  'mds_layout': {
@@ -1549,7 +1548,7 @@ def make_graph_figure_helper(
   node_labels_show = constants.GRAPH_NODE_LABEL_SHOW,
   node_label_columns = constants.GRAPH_NODE_LABEL_COLUMNS,
   node_label_position = constants.GRAPH_NODE_LABEL_POSITION,
-  node_color_type = constants.GRAPH_NODE_COLOR_TYPE,
+  node_color_type_list = None,
   node_comparison_colors = constants.GRAPH_NODE_COMPARISON_COLORS,
   node_reference_outline_color = constants.GRAPH_NODE_REFERENCE_OUTLINE_COLOR,
   node_outline_color = constants.GRAPH_NODE_OUTLINE_COLOR,
@@ -1642,7 +1641,7 @@ def make_graph_figure_helper(
   for suffix in ['_a', '_b']:
     edge_data = pd.merge(
       edge_data,
-      node_data[['id', 'ref_align', 'read_align']].rename(
+      node_data[['id', 'ref_align', 'read_align']].rename( # CONTINUE DEBUGGING HERE: "['ref_align', 'read_align'] not in index"
         {
           'id': 'id' + suffix,
           'ref_align': 'ref_align' + suffix,
@@ -1653,10 +1652,6 @@ def make_graph_figure_helper(
       on = ['ref_align' + suffix, 'read_align' + suffix],
       how = 'inner',
     )
-  # CONTINUE FIXING HERE!!! WE NEED TO FIGURE OUT HOW TO PASS
-  # THE FREQUENCY INFORMATION TO THE LAYOUT ALGORITHM
-  # CAN WE JUST HAVE A FREQ_ORDER COLUMN THAT IS COMMON TO
-  # BOTH INDIV AND COMPA DATA SETS?
 
   ### Make the combined graph ###
   graph = nx.Graph()
@@ -1683,7 +1678,7 @@ def make_graph_figure_helper(
     graph = graph,
     layout_type = graph_layout_type,
     separate_components = False,
-    precomputed_layout_dir = None,
+    graph_layout_common = None,
   )
   graph_layout_common.columns = ['x', 'y']
 
@@ -1693,6 +1688,7 @@ def make_graph_figure_helper(
 
   ### Make graph layout ###
 
+  # FIXME: REMOVE LATER
   # graph_layout_separate_components = (
   #   graph_layout_separate_components and
   #   (len(graph.nodes()) > 10)
@@ -1735,7 +1731,7 @@ def make_graph_figure_helper(
       node_label_columns = node_label_columns,
       node_label_position = node_label_position,
       node_label_font_size = constants.GRAPH_LABEL_FONT_SIZE * font_size_scale,
-      node_color_type = node_color_type,
+      node_color_type = node_color_type_list[i],
       node_comparison_colors = node_comparison_colors,
       node_reference_outline_color = node_reference_outline_color,
       node_outline_color = node_outline_color,
@@ -1797,7 +1793,6 @@ def get_figure_size_args(
 def make_graph_figure(
   data_dir_list,
   graph_layout_type = constants.GRAPH_LAYOUT_TYPE,
-  graph_layout_precomputed_dir = constants.GRAPH_LAYOUT_PRECOMPUTED_DIR,
   graph_layout_separate_components = constants.GRAPH_LAYOUT_SEPARATE_COMPONENTS,
   sequence_reverse_complement_list = None,
   node_subst_type = constants.GRAPH_NODE_SUBST_TYPE,
@@ -1807,7 +1802,7 @@ def make_graph_figure(
   node_label_show = constants.GRAPH_NODE_LABEL_SHOW,
   node_label_columns = constants.GRAPH_NODE_LABEL_COLUMNS,
   node_label_position = constants.GRAPH_NODE_LABEL_POSITION,
-  node_color_type = constants.GRAPH_NODE_COLOR_TYPE,
+  node_color_type_list = None,
   node_comparison_colors = constants.GRAPH_NODE_COMPARISON_COLORS,
   node_reference_outline_color = constants.GRAPH_NODE_REFERENCE_OUTLINE_COLOR,
   node_outline_color = constants.GRAPH_NODE_OUTLINE_COLOR,
@@ -1891,13 +1886,12 @@ def make_graph_figure(
     edge_labels_show = edge_show_labels,
     edge_width_scale = edge_width_scale,
     graph_layout_type = graph_layout_type,
-    graph_layout_precomputed_dir = graph_layout_precomputed_dir,
     graph_layout_separate_components = graph_layout_separate_components,
     sequence_reverse_complement_list = sequence_reverse_complement_list,
     node_labels_show = node_label_show,
     node_label_columns = node_label_columns,
     node_label_position = node_label_position,
-    node_color_type = node_color_type,
+    node_color_type_list = node_color_type_list,
     node_comparison_colors = node_comparison_colors,
     node_reference_outline_color = node_reference_outline_color,
     node_outline_color = node_outline_color,
@@ -2363,15 +2357,6 @@ def parse_args():
     ),
   )
   parser.add_argument(
-    '--reverse_complement',
-    action = 'store_true',
-    help = (
-      'If present, uses the reverse complement of sequences when determining the'
-      ' node positions, and displaying labels and hover text.' +
-      ' This affects the precomputed layout, universal layout, and fractal layout.'
-    )
-  )
-  parser.add_argument(
     '--crop_x',
     nargs = 2,
     type = float,
@@ -2448,11 +2433,14 @@ def parse_args():
     choices = ['0', '1'],
     nargs = '+',
     help = (
-      'Whether to reverse complement the sequence in the data sets.' +
+      'Whether to reverse complement the sequences in the data sets.' +
       ' If present, the number of values must be the same as the number of input directories.' +
       ' "1" mean reverse complement the sequence and "0" means do not.'
       ' Used for making a layout for data sets that have reference sequences'
       ' that are the reverse complements of each other.'
+      ' If "1" also uses the reverse complement of sequences when determining the'
+      ' display labels and hover text.' +
+      ' This affects the universal layout and fractal layout.'
     ),
   )
   args = vars(parser.parse_args())
@@ -2544,9 +2532,9 @@ def main(
   node_color_type_list = []
   for i in range(len(data_info_list)):
     if data_info_list[i]['format'] == constants.DATA_COMPARISON:
-      node_color_type_list.append('freq_ratio')
+      node_color_type_list.append(constants.GRAPH_NODE_COLOR_TYPE_INDIVIDUAL)
     elif data_info_list[i]['format'] == constants.DATA_INDIVIDUAL:
-      node_color_type_list.append('variation_type')
+      node_color_type_list.append(constants.GRAPH_NODE_COLOR_TYPE_COMPARISON)
     else:
       # impossible
       raise Exception('Unknown data format: ' + str(data_info_list[i]['format']))
