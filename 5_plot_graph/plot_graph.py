@@ -807,7 +807,7 @@ def make_graph_layout(
     node_data = pd.DataFrame.from_dict(
       dict(graph.nodes(data=True)),
       orient = 'index',
-    ).reset_index().rename({'index': 'id'}, axis='columns')
+    ).reset_index(drop=True)
     if reverse_complement:
       node_data = node_data.assign(
         ref_align = node_data['ref_align'].apply(kmer_utils.reverse_complement),
@@ -1019,6 +1019,7 @@ def make_edge_legend(
 def make_variation_color_legend(
   figure,
   variation_types,
+  variation_type_colors,
   node_size_px,
   x_anchor,
   y_anchor,
@@ -1034,7 +1035,7 @@ def make_variation_color_legend(
       'type': 'circle',
       'size': node_size_px,
       'text': constants.VARIATION_TYPES[var_type]['label'],
-      'color': constants.VARIATION_TYPES[var_type]['color'],
+      'color': variation_type_colors[var_type],
     })
   return make_legend(
     figure = figure,
@@ -1278,6 +1279,7 @@ def make_custom_legends(
   node_reference_outline_color,
   node_outline_color,
   node_fill_color,
+  node_variation_type_colors,
   node_filter_variation_types,
   node_size_freq_range,
   node_size_px_range,
@@ -1314,6 +1316,7 @@ def make_custom_legends(
     y_shift_curr_px = make_variation_color_legend(
       figure = figure,
       variation_types = node_filter_variation_types,
+      variation_type_colors = node_variation_type_colors,
       node_size_px = node_size_px_range[1],
       x_anchor = x_anchor_frac,
       y_anchor = y_anchor_frac,
@@ -1624,7 +1627,7 @@ def make_graph_figure_helper(
   freq_mean_max = node_data['freq_mean'].max()
   node_data = node_data.first()
   node_data['freq_mean'] = freq_mean_max
-  node_data = node_data.sort_values('freq_mean', ascending=False).reset_index(drop=True)
+  node_data = node_data.sort_values('freq_mean', ascending=False).reset_index()
   node_data['id'] = 'S' + pd.Series(range(1, node_data.shape[0] + 1), dtype=str)
   node_data = node_data.set_index('id', drop=False)
 
@@ -1641,7 +1644,7 @@ def make_graph_figure_helper(
   for suffix in ['_a', '_b']:
     edge_data = pd.merge(
       edge_data,
-      node_data[['id', 'ref_align', 'read_align']].rename( # CONTINUE DEBUGGING HERE: "['ref_align', 'read_align'] not in index"
+      node_data[['id', 'ref_align', 'read_align']].rename(
         {
           'id': 'id' + suffix,
           'ref_align': 'ref_align' + suffix,
@@ -1668,7 +1671,7 @@ def make_graph_figure_helper(
 
   ### Make the common graph layout ###
   data_info = file_utils.read_tsv_dict(
-    file_names.data_info(input[0])
+    file_names.data_info(data_dir_list[0])
   )
   graph_layout_common = make_graph_layout(
     # FIXME: This mean FAIL for MDS layout! Mention in the args strings!
@@ -1687,12 +1690,6 @@ def make_graph_figure_helper(
   graph_layout_common = graph_layout_common.reset_index(drop=True)
 
   ### Make graph layout ###
-
-  # FIXME: REMOVE LATER
-  # graph_layout_separate_components = (
-  #   graph_layout_separate_components and
-  #   (len(graph.nodes()) > 10)
-  # )
   
   for i in range(len(data_info_list)):
     graph_layout = make_graph_layout(
@@ -1761,7 +1758,7 @@ def make_graph_figure_helper(
     figure_list[i].update_traces(showlegend = legend_plotly_show)
 
     ### Format for freq ratio colors ###
-    if node_color_type == 'freq_ratio':
+    if node_color_type_list[i] == 'freq_ratio':
       figure_list[i].update_traces(
         marker = {
           'colorscale': constants.get_freq_ratio_color_scale(
@@ -1988,10 +1985,11 @@ def make_graph_figure(
         content_height_px = figure_size_args['content_height_px'],
         data_info = data_info_list[i],
         node_size_type = node_size_type,
-        node_color_type = node_color_type,
+        node_color_type = node_color_type_list[i],
         node_reference_outline_color = node_reference_outline_color,
         node_outline_color = node_outline_color,
         node_fill_color = node_fill_color,
+        node_variation_type_colors = node_variation_type_colors,
         node_filter_variation_types = node_filter_variation_types,
         node_size_freq_range = node_size_freq_range,
         node_size_px_range = node_size_px_range,
@@ -2267,8 +2265,9 @@ def parse_args():
     default = constants.GRAPH_NODE_VARIATION_TYPE_COLORS,
     help = (
       'The colors for the different variations types.' +
-      ' They must be specified in the order INSERTION, DELETION, SUBSTITUTION,' +
-      ' MIXED, NONE. MIXED is the color for nodes with multiple types of' +
+      ' They must be specified in the order: ' +
+      ' '.join([x.upper() for x in constants.VARIATION_TYPES]) + '.' +
+      ' MIXED is the color for nodes with multiple types of' +
       ' variations (e.g. insertions and substitutions); NONE is the color for' +
       ' the reference node (no variations).' +
       ' May be specified in hex (e.g., "#FF0000" for red) or with' +
@@ -2444,8 +2443,10 @@ def parse_args():
     ),
   )
   args = vars(parser.parse_args())
+
   if len(args['input']) == 0:
     raise Exception('No input arguments.')
+
   if args['output'] is None:
     args['output'] = [None] * len(args['input'])
   if len(args['output']) != len(args['input']):
@@ -2453,6 +2454,7 @@ def parse_args():
       'Incorrect number of output args.' +
       f' Got {len(args["output"])}. Expected {len(args["input"])}.'
     )
+
   if args['title'] is None:
     args['title'] = [None] * len(args['input'])
   if len(args['title']) != len(args['input']):
@@ -2460,6 +2462,7 @@ def parse_args():
       'Incorrect number of title args.' +
       f' Got {len(args["title"])}. Expected {len(args["input"])}.'
     )
+
   if args['reverse_complement'] is None:
     args['reverse_complement'] = ['0'] * len(args['input'])
   if len(args['reverse_complement']) != len(args['input']):
@@ -2468,6 +2471,12 @@ def parse_args():
       f'Got {len(args["reverse_complement"])}. Expected {len(args["input"])}.'
     )
   args['reverse_complement'] = [x == '1' for x in args['reverse_complement']]
+
+  args['variation_type_colors'] = dict(zip(
+    ['insertion', 'deletion', 'substitution', 'mixed', 'none'],
+    args['variation_type_colors'],
+  ))
+
   return args
 
 def main(
@@ -2531,9 +2540,9 @@ def main(
 
   node_color_type_list = []
   for i in range(len(data_info_list)):
-    if data_info_list[i]['format'] == constants.DATA_COMPARISON:
+    if data_info_list[i]['format'] == constants.DATA_INDIVIDUAL:
       node_color_type_list.append(constants.GRAPH_NODE_COLOR_TYPE_INDIVIDUAL)
-    elif data_info_list[i]['format'] == constants.DATA_INDIVIDUAL:
+    elif data_info_list[i]['format'] == constants.DATA_COMPARISON:
       node_color_type_list.append(constants.GRAPH_NODE_COLOR_TYPE_COMPARISON)
     else:
       # impossible
@@ -2667,8 +2676,8 @@ def main(
       log_utils.log('Opening interactive version in browser.')
       figure_list[i].show()
 
-    if output is not None:
-      ext = os.path.splitext(output)[1]
+    if output_list[i] is not None:
+      ext = os.path.splitext(output_list[i])[1]
       if ext not in ['.png', '.html']:
         raise Exception('Unknown file extension: ' + str(ext))
       file_utils.write_plotly(figure_list[i], output_list[i])

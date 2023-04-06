@@ -220,7 +220,7 @@ def get_node_color(
   node_color_freq_range,
   node_comparison_colors,
   node_fill_color,
-  node_variation_type_colors
+  node_variation_type_colors,
 ):
   if node_color_type == 'freq_group':
     if data_info['format'] != constants.DATA_COMPARISON:
@@ -258,14 +258,7 @@ def get_node_color(
       index = node_data.index,
     )
   elif node_color_type == 'variation_type':
-    color_lookup = {
-      'insertion': node_variation_type_colors[0],
-      'deletion': node_variation_type_colors[1],
-      'substitution': node_variation_type_colors[2],
-      'mixed': node_variation_type_colors[3],
-      'none': node_variation_type_colors[4],
-    }
-    return node_data['variation_type'].apply(lambda x: color_lookup[x])
+    return node_data['variation_type'].apply(lambda x: node_variation_type_colors[x])
   else:
     return pd.Series(node_fill_color, index=node_data.index)
 
@@ -392,7 +385,7 @@ def make_point_traces(
     node_color_freq_range = node_size_freq_range,
     node_comparison_colors = node_comparison_colors,
     node_fill_color = node_fill_color,
-    node_variation_type_colors = node_variation_type_colors
+    node_variation_type_colors = node_variation_type_colors,
   )
 
   node_group = get_node_trace_group(
