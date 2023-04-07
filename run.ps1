@@ -49,11 +49,17 @@ python histogram.py --input data_output/dcmv_R2 --output plot/histogram/dcmv_R2_
 ### Plot graphs with common Kamada layout ###
 python graph.py `
   --input data_output/db_R1 data_output/db_R2 data_output/sense_R1 data_output/sense_R2 data_output/dcmv_R1 data_output/dcmv_R2 data_output/sense_db_R1 data_output/sense_db_R2 data_output/sense_dcmv_R1 data_output/sense_dcmv_R2 `
-  --output plot/graph/common_kamada/db_R1.png plot/graph/kamada_common/db_R2.png plot/graph/common_kamada/sense_R1.png plot/graph/common_kamada/sense_R2.png plot/graph/common_kamada/dcmv_R1.png plot/graph/common_kamada/dcmv_R2.png plot/graph/common_kamada/sense_db_R1.png plot/graph/common_kamada/sense_db_R2.png plot/graph/common_kamada/sense_dcmv_R1.png plot/graph/common_kamada/sense_dcmv_R2.png `
+  --output plot/graph/kamada_common/db_R1.png plot/graph/kamada_common/db_R2.png plot/graph/kamada_common/sense_R1.png plot/graph/kamada_common/sense_R2.png plot/graph/kamada_common/dcmv_R1.png plot/graph/kamada_common/dcmv_R2.png plot/graph/kamada_common/sense_db_R1.png plot/graph/kamada_common/sense_db_R2.png plot/graph/kamada_common/sense_dcmv_R1.png plot/graph/kamada_common/sense_dcmv_R2.png `
   --reverse_complement 0 1 0 1 0 1 0 1 0 1 --layout kamada_layout --width 2400 --height 1800
 
 ### Plot graphs with common radial layout ###
 python graph.py `
   --input data_output/db_R1 data_output/db_R2 data_output/sense_R1 data_output/sense_R2 data_output/dcmv_R1 data_output/dcmv_R2 data_output/sense_db_R1 data_output/sense_db_R2 data_output/sense_dcmv_R1 data_output/sense_dcmv_R2 `
-  --output plot/graph/common_radial/db_R1.png plot/graph/radial_common/db_R2.png plot/graph/common_radial/sense_R1.png plot/graph/common_radial/sense_R2.png plot/graph/common_radial/dcmv_R1.png plot/graph/common_radial/dcmv_R2.png plot/graph/common_radial/sense_db_R1.png plot/graph/common_radial/sense_db_R2.png plot/graph/common_radial/sense_dcmv_R1.png plot/graph/common_radial/sense_dcmv_R2.png `
-  --reverse_complement 0 1 0 1 0 1 0 1 0 1 --range_x -15 15 --range_y -15 15 --layout radial_layout --width 2400 --height 1800
+  --output plot/graph/radial_common/db_R1.png plot/graph/radial_common/db_R2.png plot/graph/radial_common/sense_R1.png plot/graph/radial_common/sense_R2.png plot/graph/radial_common/dcmv_R1.png plot/graph/radial_common/dcmv_R2.png plot/graph/radial_common/sense_db_R1.png plot/graph/radial_common/sense_db_R2.png plot/graph/radial_common/sense_dcmv_R1.png plot/graph/radial_common/sense_dcmv_R2.png `
+  --reverse_complement 0 1 0 1 0 1 0 1 0 1 --range_x -20 20 --range_y -20 20 --layout radial_layout --width 2400 --height 1800
+
+### Plot graphs with common fractal layout ###
+python graph.py `
+  --input data_output/db_R1 data_output/db_R2 data_output/sense_R1 data_output/sense_R2 data_output/dcmv_R1 data_output/dcmv_R2 data_output/sense_db_R1 data_output/sense_db_R2 data_output/sense_dcmv_R1 data_output/sense_dcmv_R2 `
+  --output plot/graph/fractal_common/db_R1.png plot/graph/fractal_common/db_R2.png plot/graph/fractal_common/sense_R1.png plot/graph/fractal_common/sense_R2.png plot/graph/fractal_common/dcmv_R1.png plot/graph/fractal_common/dcmv_R2.png plot/graph/fractal_common/sense_db_R1.png plot/graph/fractal_common/sense_db_R2.png plot/graph/fractal_common/sense_dcmv_R1.png plot/graph/fractal_common/sense_dcmv_R2.png `
+  --reverse_complement 0 1 0 1 0 1 0 1 0 1 --layout fractal_layout --width 2400 --height 1800

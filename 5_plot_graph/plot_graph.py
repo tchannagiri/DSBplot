@@ -39,6 +39,8 @@ LAYOUT_PROPERTIES = {
     'do_pca': False,
     'normalize': False,
     'has_edges': True,
+    'plot_range_x': (-20, 20),
+    'plot_range_y': (-20, 20),
   },
  'universal_layout': {
     'only_2d': True,
@@ -51,13 +53,16 @@ LAYOUT_PROPERTIES = {
     'do_pca': False,
     'normalize': False,
     'has_edges': True,
-    'radial': False,
+    'plot_range_x': (-1, 1),
+    'plot_range_y': (-1, 1),
   },
  'kamada_layout': {
     'only_2d': False,
     'do_pca': True,
     'normalize': True,
-    'has_edges': True, 
+    'has_edges': True,
+    'plot_range_x': (0, 1),
+    'plot_range_y': (0, 1),
   },
   'spectral_layout': {
     'only_2d': False,
@@ -167,11 +172,18 @@ def get_kmer_fractal_x_y(kmer):
   for letter in kmer:
     x = 2 * x + X_COORD_MAP[letter]
     y = 2 * y + Y_COORD_MAP[letter]
+
+  # Transform to (0, 1)
   x = (x + 0.5) / (2 ** len(kmer))
   y = (y + 0.5) / (2 ** len(kmer))
-  return (x, y)
 
-def make_fractal_layout(data_info, graph, reverse_complement=False):
+  # Transform to (-1, 1)
+  x = 2 * x - 1
+  y = 2 * y - 1
+
+  return (x, y) 
+
+def make_fractal_layout(graph, reverse_complement=False):
   node_list = graph.nodes(data=True)
 
   bucket_dict = {
@@ -197,11 +209,10 @@ def make_fractal_layout(data_info, graph, reverse_complement=False):
     for dist_ref in bucket_dict[var_type]:
       bucket = list(sorted(
         bucket_dict[var_type][dist_ref],
-        key = lambda x: max(x[col] for col in constants.FREQ_COLUMNS[data_info['format']]),
+        key = lambda x: x['freq_mean'],
         reverse = True,
       ))
 
-      cut_pos_ref = len(data_info['ref_seq_window']) / 2
       for data in bucket:
         ref_align = data['ref_align']
         read_align = data['read_align']
@@ -211,28 +222,15 @@ def make_fractal_layout(data_info, graph, reverse_complement=False):
           read_align = kmer_utils.reverse_complement(read_align)
 
         if var_type == 'insertion':
-          x, y = get_kmer_fractal_x_y(
+          xy_dict[data['id']] = get_kmer_fractal_x_y(
             alignment_utils.get_insertion_str(
               ref_align,
               read_align,
             )
           )
-          xy_dict[data['id']] = (10 * (x - 0.5), 10 * (y - 0.5))
         elif var_type == 'deletion':
-          # Place the x coordinate so that the most upstream deletion
-          # is the left most, and most downstream deletion is right most.
-          # A deletion with equal number of deletions on either side of the
-          # cut position should be placed at x = 0.
-          first_del_pos = alignment_utils.get_first_deletion_pos(read_align)
-          last_del_pos = first_del_pos + dist_ref - 1
-          avg_del_pos = (first_del_pos + last_del_pos) / 2
-          x = avg_del_pos - (cut_pos_ref + 0.5)
-          y = dist_ref
-          if LAYOUT_PROPERTIES['fractal_layout']['radial']:
-            angle = np.pi / 2 - 2 * (np.pi / 2) * (x / (dist_ref + 1))
-            xy_dict[data['id']] = (2 * y * np.cos(angle), -0.25 - 0.5 * (y * np.sin(angle)))
-          else:
-            xy_dict[data['id']] = (x * 2, -(y + 1))
+          # We don't plot the deletion nodes in this layout.
+          # We place them all at (0, 0) so they will hopefully be covered by the reference node.
           xy_dict[data['id']] = (0, 0)
         else:
           raise Exception('Impossible.')
@@ -666,20 +664,19 @@ def make_graph_layout_single(
     layout = make_universal_layout(
       graph,
       len(data_info['ref_seq_window']) // 2,
-      reverse_complement,
+      reverse_complement = reverse_complement,
       x_scale_insertion = universal_layout_x_scale_insertion,
       y_scale_insertion = universal_layout_y_scale_insertion,
       x_scale_deletion = universal_layout_x_scale_deletion,
       y_scale_deletion = universal_layout_y_scale_deletion,
     )
   elif layout_type == 'fractal_layout':
-    layout = make_fractal_layout(data_info, graph, reverse_complement)
-  elif layout_type == 'kamada_layout':
-    layout = nx.kamada_kawai_layout(
+    layout = make_fractal_layout(
       graph,
-      # pos = get_kamada_initial_layout(graph),
-      dim = 2,
+      reverse_complement = reverse_complement,
     )
+  elif layout_type == 'kamada_layout':
+    layout = nx.kamada_kawai_layout(graph, dim = 2)
   elif layout_type == 'spectral_layout':
     layout = nx.spectral_layout(graph, dim=2)
   elif layout_type == 'spring_layout':
@@ -1861,11 +1858,13 @@ def make_graph_figure(
       if x not in ['substitution', 'mixed']
     ]
 
-  if LAYOUT_PROPERTIES.get(graph_layout_type, {}).get('normalize', False):
+  if LAYOUT_PROPERTIES.get(graph_layout_type, {}).get('plot_range_x', None) is not None:
+    plot_range_x_default = LAYOUT_PROPERTIES[graph_layout_type]['plot_range_x']
+    plot_range_y_default = LAYOUT_PROPERTIES[graph_layout_type]['plot_range_y']
     if np.isnan(plot_range_x[0]):
-      plot_range_x = (0, 1)
+      plot_range_x = plot_range_x_default
     if np.isnan(plot_range_y[0]):
-      plot_range_y = (0, 1)
+      plot_range_y = plot_range_y_default
 
   edge_show = edge_show and LAYOUT_PROPERTIES[graph_layout_type]['has_edges']
 
