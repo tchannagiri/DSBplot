@@ -21,6 +21,6 @@ Bowtie 2 (version >= XX) should be installed and available on the PATH. Particul
 
 Several example input files are available in the `data_input` directory:
 * `data_input/ref_seq`: reference sequence FASTA files, representing the perfect repaired sequence for different samples.
-* `data_input/fastq`: high-throughput sequencing data for different samples. Note, that the FASTQ samples have been *trimmed*, meaning that we only capture the portion of the read between the primers and low-quality reads have been already filtered out.
+* `data_input/fastq`: high-throughput sequencing data for different samples. Note, the FASTQ samples have been *trimmed*, meaning that we only capture the portion of the read between the primers and low-quality reads have been already filtered out.
 
-The reference sequences must be chose to exactly corresponding with the expected sequence between the primer sites. CONTINUE HERE!
+The alignment done between the reads in the input FASTQ and the reference sequence expects the first base of each read to align with the first base of the reference sequence. Therefore, the reads must be trimmed and the reference sequence selected in such a way that their first base pairs align. In the experiments performed in the study by Jeon et al. (LINK), the primers were designed to be about 50-150 base pairs away from the induced DSB site. In principle, this would allow reads repaired by NHEJ to have variations nears the DSB (within +/- 10 base pairs), and allow them remaining sequence to the primers to otherwise match the reference perfectly (not counting substitution errors due to sequencing or library preparation). See diagram XX for more clarification.
