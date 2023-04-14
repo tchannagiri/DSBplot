@@ -57,7 +57,7 @@ def parse_args():
     required = True,
     help = (
       'Position on reference sequence immediately left of DSB site.' +
-      ' Ie. the DSB is between position DSB_POS and DSB_POS + 1.'
+      ' I.e., the DSB is between position DSB_POS and DSB_POS + 1.'
     ),
   )
   parser.add_argument(
