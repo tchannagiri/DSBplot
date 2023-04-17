@@ -112,18 +112,15 @@ def get_freq_ratio_label(
 ):
   if freq_group == 'A':
     return (
-      f'Higher in {label_1}<br>' +
-      f'(ratio > {freq_ratio_2:0.2f})'
+      f'Higher in {label_1} (ratio > {freq_ratio_2:0.2f})'
     )
   elif freq_group == 'B':
     return (
-      f'Similar in both<br>' + 
-      f'({freq_ratio_1:0.2f} ≤ ratio ≤ {freq_ratio_2:0.2f})'
+      f'Similar in both ({freq_ratio_1:0.2f} ≤ ratio ≤ {freq_ratio_2:0.2f})'
     )
   elif freq_group == 'C':
     return (
-      f'Higher in {label_2}<br>' + 
-      f'(ratio < {freq_ratio_1:0.2f})'
+      f'Higher in {label_2} (ratio < {freq_ratio_1:0.2f})'
     )
   else:
     raise Exception('Unknown freq group: ' + str(freq_group))

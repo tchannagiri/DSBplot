@@ -1175,9 +1175,9 @@ def make_freq_group_legend(
 ):
   legend_items = []
   for group, color in [
-    ('A', color_2),
+    ('A', color_1),
     ('B', constants.SIMILAR_FREQ_COLOR),
-    ('C', color_1),
+    ('C', color_2),
   ]:
     legend_items.append({
       'type': 'circle',
@@ -1402,13 +1402,12 @@ def make_graph_stats(
   font_size_scale = 1,
 ):
   graph_stats = file_utils.read_tsv_dict(file_names.graph_stats(data_dir))
-  graph_stats = graph_stats.applymap(
-    lambda x: (
-      'NA' if pd.isna(x) else
-      str(x) if isinstance(x, int) else
-      f'{x:.2f}'
-    )
-  )
+  graph_stats = {
+    k: 'NA' if pd.isna(v) else
+    str(v) if isinstance(v, int) else
+    f'{v:.2f}'
+    for k, v in graph_stats.items()
+  }
   figure.add_annotation(
     xref = 'x domain',
     yref = 'y domain',
@@ -1452,7 +1451,6 @@ def make_graph_stats_ref_component(
   graph_stats = file_utils.read_tsv_dict(
     file_names.graph_stats(data_dir, subst_type)
   )
-
   stat_lines = [
     ['Num nodes', graph_stats['num_nodes']],
     ['Num edges', graph_stats['num_edges']],
@@ -1501,12 +1499,13 @@ def make_graph_stats_ref_component(
   else:
     raise Exception('Unknown data format: ' + str(data_info['format']))
   for line in stat_lines:
-    if pd.isna(line[1]):
-      line[1] = 'NA'
-    elif isinstance(line[1], int):
-      line[1] = str(line[1])
-    elif isinstance(line[1], float):
-      line[1] = f'{line[1]:.2f}'
+    if not isinstance(line[1], str):
+      if pd.isna(line[1]):
+        line[1] = 'NA'
+      elif line[1] == np.round(line[1]): # integer
+        line[1] = str(line[1])
+      else:
+        line[1] = f'{line[1]:.2f}'
   max_label_len = max(len(line[0]) for line in stat_lines)
   for line in stat_lines:
     line[0] = line[0].ljust(max_label_len) + ': '
@@ -1993,10 +1992,12 @@ def make_graph_figure(
         node_reference_outline_color = node_reference_outline_color,
         node_outline_color = node_outline_color,
         node_fill_color = node_fill_color,
+        node_comparison_colors = node_comparison_colors,
         node_variation_type_colors = node_variation_type_colors,
         node_filter_variation_types = node_filter_variation_types,
         node_size_freq_range = node_size_freq_range,
         node_size_px_range = node_size_px_range,
+        node_freq_ratio_range = node_freq_ratio_range,
         edge_show = edge_show,
         edge_show_types = edge_show_types,
         legend_x_shift_px = legend_x_shift_px,
@@ -2232,11 +2233,11 @@ def parse_args():
   )
   parser.add_argument(
     '--node_freq_ratio_range',
-    type = str,
+    type = float,
     default = constants.GRAPH_NODE_FREQ_RATIO_RANGE,
     nargs = 2,
     help = (
-      ' The two frequencies uses to determine node colors for comparison graphs.' +
+      ' The two frequencies used to determine node colors for comparison graphs.' +
       ' Also controls the range of ratios displayed on the frequency-ratio colorbar legend.' +
       ' Typically, the min value should be < 1 and the max value should be > 1.'
     ),
@@ -2507,9 +2508,9 @@ def parse_args():
   ))
 
   if args['node_comparison_color_type'] == 'continuous':
-    args['node_comparison_colors'] = 'freq_ratio'
+    args['node_comparison_color_type'] = 'freq_ratio'
   elif args['node_comparison_color_type'] == 'discrete':
-    args['node_comparison_colors'] = 'freq_group'
+    args['node_comparison_color_type'] = 'freq_group'
   else:
     raise Exception('Impossible.')
 

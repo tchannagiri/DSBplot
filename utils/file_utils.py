@@ -31,7 +31,8 @@ def read_tsv_dict(file):
   """
     Read a single row tsv as a dict.
   """
-  return read_tsv(file).T[0].to_dict()
+  data = read_tsv(file)
+  return {k: data.loc[0, k] for k in data.columns}
 
 def count_lines(file):
   """Get the number of lines in the file."""

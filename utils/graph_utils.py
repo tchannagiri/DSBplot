@@ -126,7 +126,13 @@ def get_graph_stats_ref_component(data_format, graph):
 
   freq_stats = {}
   if graph.number_of_nodes() > 0:
-    for column in constants.FREQ_COLUMNS[data_format]:
+    if data_format == 'comparison':
+      freq_columns = ['freq_mean_1', 'freq_mean_2']
+    elif data_format == 'individual':
+      freq_columns = ['freq_mean']
+    else:
+      raise Exception('Unknown data format: {}'.format(data_format))
+    for column in freq_columns:
       ref_freq = node_view[ref_id][column] if num_nodes > 0 else 0
       non_ref_freq = sum(x[1][column] for x in node_view if x[0] != ref_id)
       freq_stats['ref_' + column] = ref_freq

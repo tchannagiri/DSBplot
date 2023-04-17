@@ -210,6 +210,7 @@ def get_node_freq_group(node_data, node_freq_ratio_range):
   node_freq_group = pd.Series('B', index=node_data.index)
   node_freq_group.loc[log_ratio > np.log(node_freq_ratio_range[1])] = 'A'
   node_freq_group.loc[log_ratio < np.log(node_freq_ratio_range[0])] = 'C'
+  return node_freq_group
 
 def get_node_color(
   data_info,
@@ -226,8 +227,8 @@ def get_node_color(
       raise Exception('Need a comparison data set: ' + data_info['label'])
     node_freq_group = get_node_freq_group(node_data, node_freq_ratio_range)
     node_color = pd.Series(constants.SIMILAR_FREQ_COLOR, index=node_data.index)
-    node_color.loc[node_freq_group == 'A'] = node_comparison_colors[1]
-    node_color.loc[node_freq_group == 'C'] = node_comparison_colors[0]
+    node_color.loc[node_freq_group == 'A'] = node_comparison_colors[0]
+    node_color.loc[node_freq_group == 'C'] = node_comparison_colors[1]
     return node_color
   elif node_color_type == 'freq':
      scaled_freq = log_transform_scale(
@@ -261,7 +262,7 @@ def get_node_color(
   else:
     return pd.Series(node_fill_color, index=node_data.index)
 
-def get_node_trace_group(node_data, node_group_type, node_freq_ratio_range=None):
+def get_node_trace_group(node_data, node_group_type, node_freq_ratio_range):
   group_key_lists = []
   group_key_lists.append(node_data['is_ref'])
   if node_group_type == 'freq_group':
@@ -395,6 +396,7 @@ def make_point_traces(
   node_group = get_node_trace_group(
     node_data = node_data,
     node_group_type = node_color_type,
+    node_freq_ratio_range = node_freq_ratio_range,
   )
   
   traces = make_node_traces(
