@@ -37,16 +37,3 @@ def check_comma_separated_enum(choices):
 
 def join_with_comma(arr):
   return ','.join([str(x) for x in arr])
-
-def get_freq_ranks(
-  data,
-  freq_column_list,
-  freq_rank_column_list,
-):
-  freq_rank_data = pd.DataFrame(index=data.index)
-  for freq_column, freq_rank_column in zip(freq_column_list, freq_rank_column_list):
-    freq_rank_data[freq_rank_column] = data[freq_column].rank(
-      ascending = False,
-      method = 'first',
-    ).astype(int)
-  return freq_rank_data

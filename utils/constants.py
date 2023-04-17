@@ -96,30 +96,6 @@ LABEL_NONREFERENCE = 'Nonreference'
 
 SIMILAR_FREQ_COLOR = '#ffffff'
 
-FREQ_GROUP_A = 'A'
-FREQ_GROUP_B = 'B'
-FREQ_GROUP_C = 'C'
-FREQ_RATIO_A = 3/2
-FREQ_RATIO_C = 2/3
-FREQ_RATIO_LOG_A = np.log(FREQ_RATIO_A)
-FREQ_RATIO_LOG_C = np.log(FREQ_RATIO_C)
-
-FREQ_RATIO_COLOR_SCALE_LOG_RANGE = [np.log(2/3), np.log(3/2)]
-FREQ_RATIO_COLOR_BAR_TICK_VALS = [
-  np.log(2/3),
-  np.log(4/5),
-  np.log(1),
-  np.log(5/4),
-  np.log(3/2),
-]
-FREQ_RATIO_COLOR_BAR_TICK_TEXT = [
-  '2/3',
-  '4/5',
-  '1',
-  '5/4',
-  '3/2',
-]
-
 def get_freq_ratio_color_scale(color_1, color_2):
   return [
     [0, color_2],
@@ -127,21 +103,27 @@ def get_freq_ratio_color_scale(color_1, color_2):
     [1, color_1],
   ]
 
-def get_freq_ratio_label(freq_group, label_1, label_2):
-  if freq_group == FREQ_GROUP_A:
+def get_freq_ratio_label(
+  freq_group,
+  label_1,
+  label_2,
+  freq_ratio_1,
+  freq_ratio_2,
+):
+  if freq_group == 'A':
     return (
       f'Higher in {label_1}<br>' +
-      f'(ratio > {FREQ_RATIO_A:0.2f})'
+      f'(ratio > {freq_ratio_2:0.2f})'
     )
-  elif freq_group == FREQ_GROUP_B:
+  elif freq_group == 'B':
     return (
       f'Similar in both<br>' + 
-      f'({FREQ_RATIO_C:0.2f} ≤ ratio ≤ {FREQ_RATIO_A:0.2f})'
+      f'({freq_ratio_1:0.2f} ≤ ratio ≤ {freq_ratio_2:0.2f})'
     )
-  elif freq_group == FREQ_GROUP_C:
+  elif freq_group == 'C':
     return (
       f'Higher in {label_2}<br>' + 
-      f'(ratio < {FREQ_RATIO_C:0.2f})'
+      f'(ratio < {freq_ratio_1:0.2f})'
     )
   else:
     raise Exception('Unknown freq group: ' + str(freq_group))
@@ -150,21 +132,8 @@ def get_freq_ratio_label(freq_group, label_1, label_2):
 DATA_INDIVIDUAL = 'individual'
 DATA_COMPARISON = 'comparison'
 
-FREQ_COLUMNS = {
-  DATA_INDIVIDUAL: ['freq_mean'],
-  DATA_COMPARISON: ['freq_mean_1', 'freq_mean_2'],
-}
-
 def is_freq_column(x):
-  return (
-    (x in FREQ_COLUMNS[DATA_INDIVIDUAL]) or
-    (x in FREQ_COLUMNS[DATA_COMPARISON])
-  )
-
-FREQ_RANK_COLUMNS = {
-  DATA_INDIVIDUAL: ['freq_mean_rank'],
-  DATA_COMPARISON: ['freq_mean_rank_1', 'freq_mean_rank_2'],
-}
+  return x.startswith('freq_')
 
 def get_data_label(data_info):
   if data_info['format'] == DATA_INDIVIDUAL:
@@ -220,6 +189,8 @@ GRAPH_NODE_SIZE_TYPE = 'freq'
 GRAPH_NODE_COLOR_TYPE_COMPARISON = 'freq_ratio'
 GRAPH_NODE_COLOR_TYPE_INDIVIDUAL = 'variation_type'
 GRAPH_NODE_COMPARISON_COLORS = ['#ff0000', '#0000ff']
+GRAPH_NODE_COMPARISON_COLOR_TYPE = 'continuous'
+GRAPH_NODE_FREQ_RATIO_RANGE = [2/3, 3/2]
 GRAPH_NODE_REFERENCE_OUTLINE_COLOR = '#32cd32'
 GRAPH_NODE_REFERENCE_OUTLINE_WIDTH = 2
 GRAPH_NODE_OUTLINE_COLOR = '#000000'

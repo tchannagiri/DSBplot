@@ -85,23 +85,9 @@ def get_sequence_data(data, data_format):
   })
 
   all_data = pd.DataFrame(all_data)
-  all_data['freq_max'] = all_data[constants.FREQ_COLUMNS[data_format]].max(axis='columns')
-  all_data = all_data.sort_values('freq_max', ascending=False)
-  all_data = all_data.drop('freq_max', axis='columns')
+  all_data = all_data.sort_values('freq_mean', ascending=False)
   all_data['id'] = 'S' + pd.Series(range(1, all_data.shape[0] + 1), dtype=str)
   all_data = all_data[['id'] + list(all_data.columns[all_data.columns != 'id'])]
-
-  all_data = pd.concat(
-    [
-      all_data,
-      common_utils.get_freq_ranks(
-        all_data,
-        constants.FREQ_COLUMNS[data_format],
-        constants.FREQ_RANK_COLUMNS[data_format],
-      )
-    ],
-    axis = 'columns',
-  )
 
   return pd.DataFrame(all_data)
 

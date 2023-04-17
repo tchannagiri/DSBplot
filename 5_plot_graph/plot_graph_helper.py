@@ -35,10 +35,15 @@ def format_hover_html(data_info, the_dict, format_type, reverse_complement=False
   
   title = None
   if format_type == 'node':
+    if data_info['format'] == 'comparison':
+      freq_columns = ['freq_mean_1', 'freq_mean_2']
+    elif data_info['format'] == 'individual':
+      freq_columns = ['freq_mean']
+    else:
+      raise Exception(f'Invalid format: {data_info["format"]}')
     column_names = [
       'id',
-      *constants.FREQ_COLUMNS[data_info['format']],
-      *constants.FREQ_RANK_COLUMNS[data_info['format']],
+      *freq_columns,
       'variation_type',
       'dist_ref',
       'substitution',
@@ -192,26 +197,19 @@ def get_node_size(
   else:
     return pd.Series(node_size_px_range[0], index=node_data.index)
 
-def get_node_freq_group(node_data):
+def get_node_freq_group(node_data, node_freq_ratio_range):
   log_ratio = pd.Series(
     log_transform_ratio(
       node_data['freq_mean_1'],
       node_data['freq_mean_2'],
-      constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[0],
-      constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[1],
+      node_freq_ratio_range[0],
+      node_freq_ratio_range[1],
     ),
     index = node_data.index,
   )
-  node_freq_group = pd.Series(
-    constants.FREQ_GROUP_B,
-    index = node_data.index
-  )
-  node_freq_group.loc[log_ratio > constants.FREQ_RATIO_LOG_A] = (
-    constants.FREQ_GROUP_A
-  )
-  node_freq_group.loc[log_ratio < constants.FREQ_RATIO_LOG_C] = (
-    constants.FREQ_GROUP_B
-  )
+  node_freq_group = pd.Series('B', index=node_data.index)
+  node_freq_group.loc[log_ratio > np.log(node_freq_ratio_range[1])] = 'A'
+  node_freq_group.loc[log_ratio < np.log(node_freq_ratio_range[0])] = 'C'
 
 def get_node_color(
   data_info,
@@ -219,16 +217,17 @@ def get_node_color(
   node_color_type,
   node_color_freq_range,
   node_comparison_colors,
+  node_freq_ratio_range,
   node_fill_color,
   node_variation_type_colors,
 ):
   if node_color_type == 'freq_group':
-    if data_info['format'] != constants.DATA_COMPARISON:
+    if data_info['format'] != 'comparison':
       raise Exception('Need a comparison data set: ' + data_info['label'])
-    node_freq_group = get_node_freq_group(node_data)
+    node_freq_group = get_node_freq_group(node_data, node_freq_ratio_range)
     node_color = pd.Series(constants.SIMILAR_FREQ_COLOR, index=node_data.index)
-    node_color.loc[node_freq_group == constants.FREQ_GROUP_A] = node_comparison_colors[0]
-    node_color.loc[node_freq_group == constants.FREQ_GROUP_C] = node_comparison_colors[1]
+    node_color.loc[node_freq_group == 'A'] = node_comparison_colors[1]
+    node_color.loc[node_freq_group == 'C'] = node_comparison_colors[0]
     return node_color
   elif node_color_type == 'freq':
      scaled_freq = log_transform_scale(
@@ -246,14 +245,14 @@ def get_node_color(
       index = node_data.index,
     )
   elif node_color_type == 'freq_ratio':
-    if data_info['format'] != constants.DATA_COMPARISON:
+    if data_info['format'] != 'comparison':
       raise Exception('Need a comparison data set: ' + data_info['label'])
     return pd.Series(
       log_transform_ratio(
         node_data['freq_mean_1'],
         node_data['freq_mean_2'],
-        constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[0],
-        constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[1],
+        np.log(node_freq_ratio_range[0]),
+        np.log(node_freq_ratio_range[1]),
       ),
       index = node_data.index,
     )
@@ -262,11 +261,11 @@ def get_node_color(
   else:
     return pd.Series(node_fill_color, index=node_data.index)
 
-def get_node_trace_group(node_data, node_group_type):
+def get_node_trace_group(node_data, node_group_type, node_freq_ratio_range=None):
   group_key_lists = []
   group_key_lists.append(node_data['is_ref'])
   if node_group_type == 'freq_group':
-    group_key_lists.append(get_node_freq_group(node_data))
+    group_key_lists.append(get_node_freq_group(node_data, node_freq_ratio_range))
   elif node_group_type == 'variation_type':
     group_key_lists.append(node_data['variation_type'])
   group_keys = list(zip(*group_key_lists))
@@ -286,6 +285,7 @@ def make_node_traces(
   node_group,
   node_group_type,
   node_label_position,
+  node_freq_ratio_range,
   line_width_scale = 1,
 ):
   traces = []
@@ -306,6 +306,8 @@ def make_node_traces(
           freq_group,
           data_info['label_1'],
           data_info['label_2'],
+          node_freq_ratio_range[0],
+          node_freq_ratio_range[1],
         )
       else:
         trace_name = constants.LABEL_NONREFERENCE
@@ -345,6 +347,7 @@ def make_point_traces(
   node_label_font_size,
   node_color_type,
   node_comparison_colors,
+  node_freq_ratio_range,
   node_reference_outline_color,
   node_outline_color,
   node_fill_color,
@@ -384,6 +387,7 @@ def make_point_traces(
     node_color_type = node_color_type,
     node_color_freq_range = node_size_freq_range,
     node_comparison_colors = node_comparison_colors,
+    node_freq_ratio_range = node_freq_ratio_range,
     node_fill_color = node_fill_color,
     node_variation_type_colors = node_variation_type_colors,
   )
@@ -407,6 +411,7 @@ def make_point_traces(
     node_label_position = node_label_position,
     node_group = node_group,
     node_group_type = node_color_type,
+    node_freq_ratio_range = node_freq_ratio_range,
     line_width_scale = node_outline_width_scale,
   )
 

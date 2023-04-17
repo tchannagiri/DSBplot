@@ -1161,6 +1161,8 @@ def make_freq_group_legend(
   label_2,
   color_1,
   color_2,
+  freq_ratio_1,
+  freq_ratio_2,
   figure,
   node_size_px,
   x_anchor,
@@ -1172,30 +1174,23 @@ def make_freq_group_legend(
   line_width_scale = 1,
 ):
   legend_items = []
-  legend_items.append({
-    'type': 'circle',
-    'size': node_size_px,
-    'text': constants.get_freq_ratio_label(
-      constants.FREQ_GROUP_A, label_1, label_2
-    ),
-    'color': color_1,
-  })
-  legend_items.append({
-    'type': 'circle',
-    'size': node_size_px,
-    'text': constants.get_freq_ratio_label(
-      constants.FREQ_GROUP_B, label_1, label_2
-    ),
-    'color': constants.SIMILAR_FREQ_COLOR,
-  })
-  legend_items.append({
-    'type': 'circle',
-    'size': node_size_px,
-    'text': constants.get_freq_ratio_label(
-      constants.FREQ_GROUP_C, label_1, label_2
-    ),
-    'color': color_2,
-  })
+  for group, color in [
+    ('A', color_2),
+    ('B', constants.SIMILAR_FREQ_COLOR),
+    ('C', color_1),
+  ]:
+    legend_items.append({
+      'type': 'circle',
+      'size': node_size_px,
+      'text': constants.get_freq_ratio_label(
+        group,
+        label_1,
+        label_2,
+        freq_ratio_1,
+        freq_ratio_2,
+      ),
+      'color': color,
+    })
   return make_legend(
     figure = figure,
     legend_title = 'Vertex Color',
@@ -1217,6 +1212,8 @@ def add_plotly_colorbar(
   figure,
   label_1,
   label_2,
+  freq_ratio_1,
+  freq_ratio_2,
   content_height_px,
   legend_colorbar_scale = 1,
   legend_x_shift_px = 0,
@@ -1252,13 +1249,10 @@ def add_plotly_colorbar(
         'outlinewidth': 2 * line_width_scale,
         'outlinecolor': 'black',
         'tickmode': 'array',
-        'tickvals': constants.FREQ_RATIO_COLOR_BAR_TICK_VALS,
-        'ticktext': constants.FREQ_RATIO_COLOR_BAR_TICK_TEXT,
+        'tickvals': [np.log(freq_ratio_1), 0, np.log(freq_ratio_2)],
+        'ticktext': [f'{freq_ratio_1:.2f}', '1', f'{freq_ratio_2:.2f}'],
         'title': {
-          'text': (
-            'Frequency Ratio<br>' +
-            f'[{label_1} / {label_2}]'
-          ),
+          'text': 'Frequency Ratio<br>' + f'[{label_1} / {label_2}]',
           'font_size': constants.GRAPH_LEGEND_TITLE_FONT_SIZE * font_size_scale,
         },
         'tickfont_size': constants.GRAPH_LEGEND_FONT_SIZE * font_size_scale,
@@ -1276,10 +1270,12 @@ def make_custom_legends(
   node_reference_outline_color,
   node_outline_color,
   node_fill_color,
+  node_comparison_colors,
   node_variation_type_colors,
   node_filter_variation_types,
   node_size_freq_range,
   node_size_px_range,
+  node_freq_ratio_range,
   edge_show,
   edge_show_types,
   legend_x_shift_px,
@@ -1328,6 +1324,10 @@ def make_custom_legends(
     y_shift_curr_px = make_freq_group_legend(
       label_1 = data_info['label_1'],
       label_2 = data_info['label_2'],
+      color_1 = node_comparison_colors[0],
+      color_2 = node_comparison_colors[1],
+      freq_ratio_1 = node_freq_ratio_range[0],
+      freq_ratio_2 = node_freq_ratio_range[1],
       figure = figure,
       node_size_px = node_size_px_range[1],
       x_anchor = x_anchor_frac,
@@ -1344,6 +1344,8 @@ def make_custom_legends(
       figure = figure,
       label_1 = data_info['label_1'],
       label_2 = data_info['label_2'],
+      freq_ratio_1 = node_freq_ratio_range[0],
+      freq_ratio_2 = node_freq_ratio_range[1],
       content_height_px = content_height_px,
       legend_colorbar_scale = legend_colorbar_scale,
       legend_x_shift_px = legend_x_shift_px,
@@ -1462,7 +1464,7 @@ def make_graph_stats_ref_component(
     ['Num seq insertion', graph_stats['num_seq_insertion']],
     ['Num seq deletion', graph_stats['num_seq_deletion']],
   ]
-  if data_info['format'] == constants.DATA_COMPARISON:
+  if data_info['format'] == 'comparison':
     stat_lines += [
       [
         'Ref seq freq', '{:.3f} & {:.3f}'.format(
@@ -1489,7 +1491,7 @@ def make_graph_stats_ref_component(
         )
       ],
     ]
-  elif data_info['format'] == constants.DATA_INDIVIDUAL:
+  elif data_info['format'] == 'individual':
     stat_lines += [
       ['Ref seq freq', '{:.3f}'.format(graph_stats['ref_freq_mean'])],
       ['Non-ref seq freq', '{:.5f}'.format(graph_stats['non_ref_freq_mean'])],
@@ -1550,6 +1552,7 @@ def make_graph_figure_helper(
   node_label_position = constants.GRAPH_NODE_LABEL_POSITION,
   node_color_type_list = None,
   node_comparison_colors = constants.GRAPH_NODE_COMPARISON_COLORS,
+  node_freq_ratio_range = constants.GRAPH_NODE_FREQ_RATIO_RANGE,
   node_reference_outline_color = constants.GRAPH_NODE_REFERENCE_OUTLINE_COLOR,
   node_outline_color = constants.GRAPH_NODE_OUTLINE_COLOR,
   node_fill_color = constants.GRAPH_NODE_FILL_COLOR,
@@ -1593,9 +1596,8 @@ def make_graph_figure_helper(
       node_data_list[i] = node_data_list[i].loc[
         node_data_list[i]['variation_type'].isin(node_filter_variation_types)
       ]
-    freq_rank_columns = constants.FREQ_RANK_COLUMNS[data_info_list[i]['format']]
     node_data_list[i] = node_data_list[i].loc[
-      node_data_list[i][freq_rank_columns].min(axis='columns')
+      node_data_list[i]['freq_mean']
         .between(node_filter_freq_range[0], node_filter_freq_range[1], inclusive='both')
     ]
 
@@ -1727,6 +1729,7 @@ def make_graph_figure_helper(
       node_label_font_size = constants.GRAPH_LABEL_FONT_SIZE * font_size_scale,
       node_color_type = node_color_type_list[i],
       node_comparison_colors = node_comparison_colors,
+      node_freq_ratio_range = node_freq_ratio_range,
       node_reference_outline_color = node_reference_outline_color,
       node_outline_color = node_outline_color,
       node_fill_color = node_fill_color,
@@ -1762,8 +1765,8 @@ def make_graph_figure_helper(
             node_comparison_colors[0],
             node_comparison_colors[1],
           ),
-          'cmin': constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[0],
-          'cmax': constants.FREQ_RATIO_COLOR_SCALE_LOG_RANGE[1],
+          'cmin': np.log(node_freq_ratio_range[0]),
+          'cmax': np.log(node_freq_ratio_range[1]),
         }
       )
 
@@ -1798,6 +1801,7 @@ def make_graph_figure(
   node_label_position = constants.GRAPH_NODE_LABEL_POSITION,
   node_color_type_list = None,
   node_comparison_colors = constants.GRAPH_NODE_COMPARISON_COLORS,
+  node_freq_ratio_range = constants.GRAPH_NODE_FREQ_RATIO_RANGE,
   node_reference_outline_color = constants.GRAPH_NODE_REFERENCE_OUTLINE_COLOR,
   node_outline_color = constants.GRAPH_NODE_OUTLINE_COLOR,
   node_fill_color = constants.GRAPH_NODE_FILL_COLOR,
@@ -1889,6 +1893,7 @@ def make_graph_figure(
     node_label_position = node_label_position,
     node_color_type_list = node_color_type_list,
     node_comparison_colors = node_comparison_colors,
+    node_freq_ratio_range = node_freq_ratio_range,
     node_reference_outline_color = node_reference_outline_color,
     node_outline_color = node_outline_color,
     node_fill_color = node_fill_color,
@@ -2061,7 +2066,7 @@ def parse_args():
       'If present, shows a y-axis at the given x position' +
       ' showing the distances to the reference.' +
       ' Univeral layout only.'
-    )
+    ),
   )
   parser.add_argument(
     '--universal_layout_x_axis_deletion_y_pos',
@@ -2070,7 +2075,7 @@ def parse_args():
       'If present, shows an x-axis for deletions at the given y position' +
       ' showing the approximate position of the deleted ranges.' +
       ' Univeral layout only.'
-    )
+    ),
   )
   parser.add_argument(
     '--universal_layout_x_axis_deletion_label_type',
@@ -2081,7 +2086,7 @@ def parse_args():
       'The type of labeling to use for the universal layout deletion x-axis (if present).' +
       ' "relative" labels have 0 in the middle with negative/positive values on the left/right.' +
       ' "absolute" labels have 1 on the left and the length of the reference sequence on the right.'
-    )
+    ),
   )
   parser.add_argument(
     '--universal_layout_x_axis_insertion_y_pos',
@@ -2090,7 +2095,7 @@ def parse_args():
       'If present, shows a x-axis for insertions at the given y position' +
       ' showing the first nucleotide of inserted sequences.' +
       ' Univeral layout only.'
-    )
+    ),
   )
   parser.add_argument(
     '--universal_layout_y_axis_y_range',
@@ -2100,7 +2105,7 @@ def parse_args():
     help = (
       'If showing an y-axis for the universal layout,' +
       ' the min and max y-position of the line.'
-    )
+    ),
   )
   parser.add_argument(
     '--universal_layout_x_axis_x_range',
@@ -2110,7 +2115,7 @@ def parse_args():
     help = (
       'If showing an x-axis for the universal layout,' +
       ' the min and max x-position of the line.'
-    )
+    ),
   )
   parser.add_argument(
     '--universal_layout_y_axis_deletion_max_tick',
@@ -2118,7 +2123,7 @@ def parse_args():
     help = (
       'If showing an y-axis for the universal layout,' +
       ' the max tick value for the deletion side.'
-    )
+    ),
   )
   parser.add_argument(
     '--universal_layout_y_axis_insertion_max_tick',
@@ -2126,7 +2131,7 @@ def parse_args():
     help = (
       'If showing an y-axis for the universal layout,' +
       ' the max tick value for the insertion side.'
-    )
+    ),
   )
   parser.add_argument(
     '--universal_layout_x_scale_insertion',
@@ -2180,7 +2185,7 @@ def parse_args():
     default = constants.GRAPH_NODE_SIZE_FREQ_RANGE,
     help = (
       'Min and max frequency to determine node size.' +
-      'Higher frequencies are clipped to this value.'
+      ' Higher frequencies are clipped to this value.'
     ),
   )
   parser.add_argument(
@@ -2209,6 +2214,31 @@ def parse_args():
       ' show the frequency ratio of two experiments.' +
       ' May be specified in hex (e.g., "#FF0000" for red) or with' +
       ' recognized keywords such as "red", "blue", "green".'
+    ),
+  )
+  parser.add_argument(
+    '--node_comparison_color_type',
+    type = str,
+    default = constants.GRAPH_NODE_COMPARISON_COLOR_TYPE,
+    choices = ['continuous', 'discrete'],
+    help = (
+      'The type of color scheme to use for coloring nodes in a comparison graph.' +
+      ' The "continuous" scheme uses a gradient of colors from the min to max ratio.' +
+      ' The "discrete" schemes uses three colors to indicate that the ratio is <' +
+      ' the min ratio, between the min and max ratio, or > the max ratio.' +
+      ' The min and max ratios are determined by NODE_FREQ_RATIO_RANGE' +
+      ' and the corresponding colors are determined by NODE_COMPARISON_COLORS.'
+    ),
+  )
+  parser.add_argument(
+    '--node_freq_ratio_range',
+    type = str,
+    default = constants.GRAPH_NODE_FREQ_RATIO_RANGE,
+    nargs = 2,
+    help = (
+      ' The two frequencies uses to determine node colors for comparison graphs.' +
+      ' Also controls the range of ratios displayed on the frequency-ratio colorbar legend.' +
+      ' Typically, the min value should be < 1 and the max value should be > 1.'
     ),
   )
   parser.add_argument(
@@ -2405,7 +2435,7 @@ def parse_args():
     '--legend_colorbar_scale',
     type = float,
     default = constants.GRAPH_LEGEND_COLORBAR_SCALE,
-    help = 'How much to scale the legend color bar (for freq ratio coloring).',
+    help = 'How much to scale the colorbar legend (for frequency-ratio coloring).',
   )
   parser.add_argument(
     '--legend_spacing_px',
@@ -2476,6 +2506,13 @@ def parse_args():
     args['variation_type_colors'],
   ))
 
+  if args['node_comparison_color_type'] == 'continuous':
+    args['node_comparison_colors'] = 'freq_ratio'
+  elif args['node_comparison_color_type'] == 'discrete':
+    args['node_comparison_colors'] = 'freq_group'
+  else:
+    raise Exception('Impossible.')
+
   return args
 
 def main(
@@ -2483,11 +2520,13 @@ def main(
   output,
   layout,
   title,
-  reverse_complement, # Make this multiple
+  reverse_complement,
   subst_type,
   node_freq_range,
   node_px_range,
   node_comparison_colors,
+  node_comparison_color_type,
+  node_freq_ratio_range,
   node_reference_outline_color,
   node_outline_color,
   node_fill_color,
@@ -2539,10 +2578,10 @@ def main(
 
   node_color_type_list = []
   for i in range(len(data_info_list)):
-    if data_info_list[i]['format'] == constants.DATA_INDIVIDUAL:
+    if data_info_list[i]['format'] == 'individual':
       node_color_type_list.append(constants.GRAPH_NODE_COLOR_TYPE_INDIVIDUAL)
-    elif data_info_list[i]['format'] == constants.DATA_COMPARISON:
-      node_color_type_list.append(constants.GRAPH_NODE_COLOR_TYPE_COMPARISON)
+    elif data_info_list[i]['format'] == 'comparison':
+      node_color_type_list.append(node_comparison_color_type)
     else:
       # impossible
       raise Exception('Unknown data format: ' + str(data_info_list[i]['format']))
@@ -2570,6 +2609,7 @@ def main(
     node_outline_width_scale = node_outline_scale,
     node_color_type_list = node_color_type_list,
     node_comparison_colors = node_comparison_colors,
+    node_freq_ratio_range = node_freq_ratio_range,
     node_reference_outline_color = node_reference_outline_color,
     node_outline_color = node_outline_color,
     node_fill_color = node_fill_color,

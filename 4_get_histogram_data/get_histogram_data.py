@@ -103,20 +103,8 @@ def write_variation(input_dir, output_dir, subst_type):
     Sequence data should already be created.
   """
   sequence_data = file_utils.read_tsv(file_names.sequence_data(input_dir, subst_type))
-  data_info = file_utils.read_tsv_dict(file_names.data_info(output_dir))
   variation_data = split_seqs_into_variations(sequence_data)
 
-  variation_data = pd.concat(
-    [
-      variation_data,
-      common_utils.get_freq_ranks(
-        variation_data,
-        constants.FREQ_COLUMNS[data_info['format']],
-        constants.FREQ_RANK_COLUMNS[data_info['format']],
-      )
-    ],
-    axis = 'columns',
-  )
   out_file_name = file_names.variation(output_dir, subst_type)
   file_utils.write_tsv(variation_data, out_file_name)
   log_utils.log_output(out_file_name)
@@ -129,7 +117,12 @@ def write_variation_grouped(output_dir, subst_type):
   """
   variation_data = file_utils.read_tsv(file_names.variation(output_dir, subst_type))
   data_info = file_utils.read_tsv_dict(file_names.data_info(output_dir))
-  freq_column_list = constants.FREQ_COLUMNS[data_info['format']]
+  if data_info['format'] == 'comparison':
+    freq_column_list = ['freq_mean_1', 'freq_mean_2']
+  elif data_info['format'] == 'individual':
+    freq_column_list = ['freq_mean']
+  else:
+    raise Exception('Invalid format: ' + data_info['format'])
   variation_data = variation_data[[
     'id',
     *freq_column_list,
@@ -150,23 +143,10 @@ def write_variation_grouped(output_dir, subst_type):
     'variation_letter',
   ]).aggregate(**aggregate_args).reset_index()
 
-  freq_min = variation_data[freq_column_list].min(axis='columns')
-  freq_min = freq_min.sort_values(ascending=False)
-  variation_data = variation_data.loc[freq_min.index]
+  variation_data['freq_mean'] = variation_data[freq_column_list].max(axis='columns')
+  variation_data = variation_data.sort_values('freq_mean', ascending=False)
   variation_data['id'] = (
     'GV' + pd.Series(range(1, variation_data.shape[0] + 1), dtype=str)
-  )
-
-  variation_data = pd.concat(
-    [
-      variation_data,
-      common_utils.get_freq_ranks(
-        variation_data,
-        freq_column_list,
-        constants.FREQ_RANK_COLUMNS[data_info['format']],
-      )
-    ],
-    axis = 'columns',
   )
 
   variation_data = variation_data[

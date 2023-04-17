@@ -188,14 +188,14 @@ def write_data_info(
     'format': format,
     'ref_seq_window': ref_seq_window,
   }
-  if format == constants.DATA_INDIVIDUAL:
+  if format == 'individual':
     if len(labels) != 1:
       raise Exception(f'Expected 1 name for individual format. Got: {len(labels)}')
     if len(ref_seqs) != 1:
       raise Exception(f'Expected 1 reference sequence for individual format. Got: {len(ref_seqs)}')
     data_info['label'] = labels[0]
     data_info['ref_seq'] = ref_seqs[0]
-  elif format == constants.DATA_COMPARISON:
+  elif format == 'comparison':
     if len(labels) != 2:
       raise Exception(f'Expected 2 names for comparison format. Got: {len(labels)}')
     if len(ref_seqs) != 2:
@@ -254,7 +254,7 @@ def main(
   )
   write_data_info(
     dir = output,
-    format = constants.DATA_INDIVIDUAL,
+    format = 'individual',
     labels = [label],
     ref_seqs = [ref_seq],
     ref_seq_window = get_ref_seq_window(

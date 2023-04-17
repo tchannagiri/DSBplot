@@ -25,12 +25,12 @@ import PIL
 PPTX_TEMPLATE_FILE = os.path.join(os.path.dirname(__file__), 'template.pptx') # make this an arg!
 
 FORMAT_LEGENDS = {
-  constants.DATA_COMPARISON: [
+  'comparison': [
     'node_size',
     'node_outline',
     'edge_type',
   ],
-  constants.DATA_INDIVIDUAL: [
+  'individual': [
     'node_size',
     'node_outline',
     'edge_type',
