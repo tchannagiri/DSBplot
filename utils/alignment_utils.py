@@ -57,7 +57,7 @@ def get_alignment(ref_seq, read_seq, ref_pos, cigar):
 
 def count_variations(ref_align, read_align):
   """
-    Return the number of insertions, deletions, and substitions in the alignment.
+    Return the number of insertions, deletions, and substitutions in the alignment.
 
     Parameters
     ----------

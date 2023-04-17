@@ -2016,7 +2016,8 @@ def parse_args():
       'Lay out and plot variation-distance graphs.' +
       ' Uses the output from "get_graph_data" as input.' +
       ' For more information about the layouts please see the publication FIXME.'
-    )
+    ),
+    formatter_class = argparse.ArgumentDefaultsHelpFormatter,
   )
   parser.add_argument(
     '--input',
@@ -2140,7 +2141,7 @@ def parse_args():
     default = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
     help = (
       'The factor for determining the scale on the universal layout insertion x-axis.' +
-      ' X-axis values will be between +/- this value.'
+      ' Insertion vertex x-coordinates will be multiplied by this value.'
     ),
   )
   parser.add_argument(
@@ -2149,8 +2150,7 @@ def parse_args():
     default = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
     help = (
       'The factor for determining the scale on the universal layout insertion y-axis.' +
-      ' Each level of the y-axis (each level has vertices with the same number of insertions)' +
-      ' will be this large.'
+      ' Insertion vertex y-coordinates will be multiplied by this value.'
     ),
   )
   parser.add_argument(
@@ -2159,8 +2159,7 @@ def parse_args():
     default = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
     help = (
       'The factor for determining the scale on the universal layout deletion x-axis.' +
-      ' Shifting a deletion left/right by 1 nucleotide will shift the corresponding' +
-      ' vertex by this much.' 
+      ' Deletion vertex x-coordinates will be multiplied by this value.'
     ),
   )
   parser.add_argument(
@@ -2169,8 +2168,7 @@ def parse_args():
     default = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
     help = (
       'The factor for determining the scale on the universal layout deletion y-axis.' +
-      ' Each level of the y-axis (each level has vertices with the same number of deletions)' +
-      ' will be this large.'
+      ' Deletion vertex y-coordinates will be multiplied by this value.'
     ),
   )
   parser.add_argument(
@@ -2213,7 +2211,7 @@ def parse_args():
     help = (
       'The colors to use in the gradient when the node colors' +
       ' show the frequency ratio of two experiments.' +
-      ' May be specified in hex (e.g., "#FF0000" for red) or with' +
+      ' May be specified in hex (e.g., "#ff0000" for red) or with' +
       ' recognized keywords such as "red", "blue", "green".'
     ),
   )
@@ -2248,7 +2246,7 @@ def parse_args():
     default = constants.GRAPH_NODE_REFERENCE_OUTLINE_COLOR,
     help = (
       'Color to make the reference node outline.' +
-      ' May be specified in hex (e.g., "#FF0000" for red) or with' +
+      ' May be specified in hex (e.g., "#ff0000" for red) or with' +
       ' recognized keywords such as "red", "blue", "green".'
     )
   )
@@ -2258,7 +2256,7 @@ def parse_args():
     default = constants.GRAPH_NODE_OUTLINE_COLOR,
     help = (
       'Color to make the default node outline.' +
-      ' May be specified in hex (e.g., "#FF0000" for red) or with' +
+      ' May be specified in hex (e.g., "#ff0000" for red) or with' +
       ' recognized keywords such as "red", "blue", "green".'
     )
   )
@@ -2268,7 +2266,7 @@ def parse_args():
     default = constants.GRAPH_NODE_FILL_COLOR,
     help = (
       'Color to make the default node fill.' +
-      ' May be specified in hex (e.g., "#FF0000" for red) or with' +
+      ' May be specified in hex (e.g., "#ff0000" for red) or with' +
       ' recognized keywords such as "red", "blue", "green".'
     )
   )
@@ -2284,7 +2282,7 @@ def parse_args():
       ' Default value: "insertion", "deletion", "none".' +
       ' "mixed" means nodes that have multiples variation types (e.g. insertions and substitutions).' +
       ' "none" means the reference node (no variations).' +
-      ' May be specified in hex (e.g., "#FF0000" for red) or with' +
+      ' May be specified in hex (e.g., "#ff0000" for red) or with' +
       ' recognized keywords such as "red", "blue", "green".'
     ),
   )
@@ -2300,14 +2298,14 @@ def parse_args():
       ' MIXED is the color for nodes with multiple types of' +
       ' variations (e.g. insertions and substitutions); NONE is the color for' +
       ' the reference node (no variations).' +
-      ' May be specified in hex (e.g., "#FF0000" for red) or with' +
+      ' May be specified in hex (e.g., "#ff0000" for red) or with' +
       ' recognized keywords such as "red", "blue", "green".'
     ),
   )
   parser.add_argument(
     '--edge_show',
     type = bool,
-    nargs = '+',
+    choices = [True, False],
     default = constants.GRAPH_EDGE_SHOW,
     help = 'Whether to show edges between nodes.',
   )
@@ -2315,12 +2313,14 @@ def parse_args():
     '--edge_types',
     type = str,
     nargs = '+',
+    choices = ['indel', 'substitution'],
     default = constants.GRAPH_EDGE_SHOW_TYPES,
     help = 'The edge types to show.',
   )
   parser.add_argument(
     '--edge_scale',
     type = float,
+    default = constants.GRAPH_EDGE_WIDTH_SCALE,
     help = (
       'How much to scale the edges width (thickness).' +
       ' Values > 1 increase the width; values < 1 decrease the width.'
