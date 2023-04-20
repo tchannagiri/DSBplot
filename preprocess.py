@@ -61,6 +61,16 @@ def parse_args():
     ),
   )
   parser.add_argument(
+    '--min_length',
+    type = int,
+    default = -1,
+    help = (
+      'Minimum length of read sequence to be considered.' +
+      ' Reads shorter than this are discarded.' +
+      ' Forced to be at least DSB_POS + 1.'
+    ),
+  )
+  parser.add_argument(
     '--window_size',
     type = int,
     default = 10,
@@ -122,7 +132,9 @@ def parse_args():
     action = 'store_true',
     help = 'If present, do no output verbose log message.',
   )
-  return vars(parser.parse_args())
+  args = vars(parser.parse_args())
+  args['min_length'] = max(args['dsb_pos'] + 1, args['min_length'])
+  return args
 
 # The alignment, filtering, and combining stages.
 # Everything up to the point of combine samples for comparison.
@@ -131,6 +143,7 @@ def do_stage_1(
   output,
   ref_seq_file,
   dsb_pos,
+  min_length,
   window_size,
   anchor_size,
   anchor_mismatches,
@@ -158,6 +171,7 @@ def do_stage_1(
       sam_file = sam_file,
       output = filter_nhej_file,
       dsb_pos = dsb_pos,
+      min_length = min_length,
       quiet = quiet,
     )
     filter_nhej_file_list.append(filter_nhej_file)
@@ -222,6 +236,7 @@ def main(
   output,
   ref_seq_file,
   dsb_pos,
+  min_length,
   window_size,
   anchor_size,
   anchor_mismatches,
@@ -235,6 +250,7 @@ def main(
     output = output,
     ref_seq_file = ref_seq_file,
     dsb_pos = dsb_pos,
+    min_length = min_length,
     window_size = window_size,
     anchor_size = anchor_size,
     anchor_mismatches = anchor_mismatches,

@@ -194,17 +194,30 @@ def parse_args():
     ),
   )
   parser.add_argument(
+    '--min_length',
+    type = int,
+    default = -1,
+    help = (
+      'Minimum length of read sequence to be considered.' +
+      ' Reads shorter than this are discarded.' +
+      ' Forced to be at least DSB_POS + 1.'
+    ),
+  )
+  parser.add_argument(
     '--quiet',
     help = 'Do not output log messages.',
     action = 'store_true',
   )
-  return vars(parser.parse_args())
+  args = vars(parser.parse_args())
+  args['min_length'] = max(args['dsb_pos'] + 1, args['min_length'])
+  return args
 
 def main(
   ref_seq_file,
   sam_file,
   output,
   dsb_pos,
+  min_length,
   quiet = True,
 ):
   # parse command line arguments
@@ -218,8 +231,8 @@ def main(
   rejected_no_alignment = 0
   rejected_pos_not_1 = 0
   rejected_not_consecutive = 0
-  rejected_too_short = 0
   rejected_dsb_not_touch = 0
+  rejected_too_short = 0
   accepted_new = 0
   accepted_repeat = 0
   accepted_deletion_special = 0
@@ -253,6 +266,10 @@ def main(
       if read_seq in read_data:
         read_data[read_seq]['Count'] += 1
         accepted_repeat += 1
+        continue
+
+      if len(read_seq) < min_length:
+        rejected_too_short += 1
         continue
 
       # XG is the number of gap-extends (aka in/dels). 
@@ -366,6 +383,7 @@ def main(
     log_utils.log(f'        Header: {rejected_header}')
     log_utils.log(f'        No alignment: {rejected_no_alignment}')
     log_utils.log(f'        POS != 1: {rejected_pos_not_1}')
+    log_utils.log(f'        Too short: {rejected_too_short}')
     log_utils.log(f'        DSB not touch: {rejected_dsb_not_touch}')
     log_utils.log(f'        Not consecutive: {rejected_not_consecutive}')
   log_utils.new_line()

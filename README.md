@@ -17,7 +17,7 @@ The required dependencies are
 
 Bowtie 2 (version >= XX) should be installed and available on the PATH. Particularly, the executables `bowtie2-build-s` and `bowtie2-align-s` should be available as commands.
 
-## Usage
+## Commands
 
 This package is based on the following four commands:
 
@@ -29,38 +29,6 @@ This package is based on the following four commands:
 More information about each command is given in the following subsections.
 
 ### `preprocess.py`
-
-The full output of `python preprocess.py --help` is given below.
-
-```
-usage: preprocess.py [-h] --input INPUT [INPUT ...] --output OUTPUT --ref_seq_file REF_SEQ_FILE --dsb_pos DSB_POS [--window_size WINDOW_SIZE]                     [--anchor_size ANCHOR_SIZE] [--anchor_mismatches ANCHOR_MISMATCHES] --total_reads TOTAL_READS [TOTAL_READS ...]
-                     [--freq_min FREQ_MIN] --label LABEL [--quiet]
-
-Perform alignment and preprocessing for raw FASTQ data.
-
-options:
-  -h, --help            show this help message and exit
-  --input INPUT [INPUT ...]
-                        Input FASTQ files of raw reads. Each file is considered a repeat of the same experiment.
-  --output OUTPUT       Output directory.
-  --ref_seq_file REF_SEQ_FILE
-                        FASTA file with a single nucleotide sequence.
-  --dsb_pos DSB_POS     Position on reference sequence immediately left of DSB site. Ie. the DSB is between position DSB_POS and DSB_POS + 1.  
-  --window_size WINDOW_SIZE
-                        Size of window around DSB site to extract. The nucleotides at the positions {DSB_POS - WINDOW_SIZE + 1, ..., DSB_POS   
-                        + WINDOW_SIZE} are extracted. The actual number of nucleotides extracted may vary depending on how many
-                        insertions/deletion the alignment of the sequence has.
-  --anchor_size ANCHOR_SIZE
-                        Size of anchor on left/right of the window to check for mismatches.
-  --anchor_mismatches ANCHOR_MISMATCHES
-                        Maximum number of mismatches allowed on the left/right anchor sequences. Reads with more than the allowed number of    
-                        mismatches on the left/right anchor will be discarded. This limit is applied to the left/right anchors separately.     
-  --total_reads TOTAL_READS [TOTAL_READS ...]
-                        Total reads for each file. Must be the same number of arguments as the number of Count columns in INPUT.
-  --freq_min FREQ_MIN   Minimum frequency for output in windows_freq_filter_mean. Sequences with frequences <= this are discarded.
-  --label LABEL         Label of the experiment to be used in plot titles.
-  --quiet               If present, do no output verbose log message.
-```
 
 #### Input
 
@@ -76,19 +44,51 @@ The preprocessing pipeline produces two different versions of most files: one *i
     * `0_bowtie2_build`: The Bowtie 2 index files built with `bowtie2-build-s`.
     * `0_sam`: The SAM file output from the alignment by `bowtie2-align-s`.
 2. Filter the resulting SAM files for alignments that represent NHEJ repair using various heuristics. This is done independently for each SAM files from stage 1. The stages of the filtering are:
-    a. Discard "alignments" that represent failed aligments in the SAM format.
-    b. Discard alignment where the left-most (5'-most) position of the read does not align with the left-most position of the reference sequence.
-    c. If the in/del positions of the alignment are not adjacent to or around the DSB position, try and shift them towards the DSB position in such a way that remainder of the alignment stays roughly the same (the number of substitutions does not increase). If such a modification of the alignment cannot be found, discard the alignment.
-    d. Finally, if the resulting alignment has in/dels that are not at consecutive positions, discard the alignment.
-   The output are tables (TSV format) that contain the unique alignments and their read counts. If multiple reads have exactly the same nucleotide sequences but had different alignments with the reference, they will be forced to have the same alignment as the first read encountered. The output willbe in the files `1_filter_nhej/[N].tsv`, where `[N]` is replaced with an integer representing the repeat number, in the same order they are specified on the command line.  
+    1. Discard "alignments" that represent a failed aligment in the SAM format.
+    2. Discard alignments where the read sequence has length less than `MIN_LENGTH` (a parameter).
+    3. Discard alignment where the left-most (5'-most) position of the read does not align with the left-most position of the reference sequence.
+    4. If the in/del positions of the alignment are not adjacent to or around the DSB position, try and shift them towards the DSB position in such a way that remainder of the alignment stays roughly the same (the number of substitutions does not increase). If such a modification of the alignment cannot be found, discard the alignment.
+    5. Finally, if the resulting alignment has in/dels that are not at consecutive positions, discard the alignment.
+   
+   If multiple reads have exactly the same nucleotide sequences but had different alignments with the reference, they will be forced to have the same alignment as the first read encountered. Note, that while we require the left-most (5'-most) position on the read to align with the left-most on the reference, the same is not true for the right-most (3'-most) positions. This is because it is possible for reads to be too small and only capture the 5' primer but not the 3' primer. However, we require the read to at least length `DSB_POS + 1` (see parameter `--min_length`). The output will be tables (TSV format) that contain the unique alignments and their read counts. The output will be in the files `1_filter_nhej/[N].tsv`, where `[N]` is replaced with an integer representing the repeat number, in the same order they are specified on the command line.
+  
 3. Combine the (potentially) multiple tables output from stage 2 into a single table (TSV format) with multiple frequency columns, one for each input. The output will be in `2_combine_repeat/out.tsv`.
-4. For each unique alignment in the output table of stage 3, extract the alignment-window around the DSB position. That is, the part of the alignment that corresponds to the positions in `DSB_POS` $\pm$ `WINDOW_SIZE` on the reference sequences, where `DSB_POS` and `WINDOW_SIZE` are parameters. If different alignments become identical after extracting their windows, their read counts will be summed. The output is a table (TSV format).The output will be in directory `3_window`, files `window_count_withoutSubst.tsv` and `window_count_withSubst.tsv`. 
+4. For each unique alignment in the output table of stage 3, extract the alignment-window around the DSB position. That is, the part of the alignment that corresponds to the positions in `DSB_POS - WINDOW_SIZE + 1` to `DSB_POS + WINDOW_SIZE`, where `DSB_POS` and `WINDOW_SIZE` are parameters. If different alignments become identical after extracting their windows, their read counts will be summed. We also require that *anchors* to be present on either side of the extracted windows to make sure that the variations near the DSB do not spill outside the window. Anchors are the parts of the alignment that correspond to the `ANCHOR_SIZE` (a parameter) nucleotides on the left (5') and right (3') of the window region. We require that each anchor have at most `ANCHOR_MISMATCHES` mismatches and no in/dels. The output is a table (TSV format). The output will be in directory `3_window`, in files `window_count_withoutSubst.tsv` and `window_count_withSubst.tsv`. 
 5. Covert the raw read counts into frequencies in the range [0,1]. This is done by dividing the read counts by the total number of reads in the library. Since the total number of reads in each sample might not be exactly the sum of the read counts (e.g., if the trimming process removed some reads), the total reads are input as a parameters. In this stage, the separate frequency columns for each repeat are collapsed into a single column by taking their mean. Also, the alignments whose minimum frequency across the repeats is below a user-defined threshold will be discarded. The output will be in the subdirectory `3_window`, in files:
   * `window_freq_withSubst.tsv`/`window_freq_withoutSubst.tsv`: Frequency tables with separate columns for the separate repeats.
   * `window_freq_filter_withSubst.tsv`/`window_freq_filter_withoutSubst.tsv`: The previous frequency tables with the minimum frequency filter applied.
   * `window_freq_filter_mean_withSubst.tsv`/`window_freq_filter_mean_withoutSubst.tsv`: The previous frequency tables with the separate frequency columns for the repeats collapsed into a single columns by taking their mean.
 6. Precompute data needed to plot the graphs, such as adjacency information and summary statistics of the graphs. Output in the subdirectory `4_graph`.
 7. Precompute data needed to plot the histograms, such as the position and frequency of the different types of variations. Output in the subirectory `5_histogram`.
+
+#### Parameters
+
+FIXME ADDED NEW PARAMETER
+Output of `python preprocess.py --help`:
+```
+usage: preprocess.py [-h] --input INPUT [INPUT ...] --output OUTPUT --ref_seq_file REF_SEQ_FILE --dsb_pos DSB_POS
+                     [--window_size WINDOW_SIZE] [--anchor_size ANCHOR_SIZE] [--anchor_mismatches ANCHOR_MISMATCHES] --total_reads    
+                     TOTAL_READS [TOTAL_READS ...] [--freq_min FREQ_MIN] --label LABEL [--quiet]
+
+Perform alignment and preprocessing for raw FASTQ data.
+
+options:
+  -h, --help            show this help message and exit
+  --input INPUT [INPUT ...]
+                        Input FASTQ files of raw reads. Each file is considered a repeat of the same experiment.
+  --output OUTPUT       Output directory.
+  --ref_seq_file REF_SEQ_FILE
+                        Size of anchor on left/right of the window to check for mismatches.
+  --anchor_mismatches ANCHOR_MISMATCHES
+                        Maximum number of mismatches allowed on the left/right anchor sequences. Reads with more than the allowed     
+                        number of mismatches on the left/right anchor will be discarded. This limit is applied to the left/right      
+                        anchors separately.
+  --total_reads TOTAL_READS [TOTAL_READS ...]
+                        Total reads for each file. Must be the same number of arguments as the number of Count columns in INPUT.      
+  --freq_min FREQ_MIN   Minimum frequency for output in windows_freq_filter_mean. Sequences with frequences <= this are discarded.    
+  --label LABEL         Label of the experiment to be used in plot titles.
+  --quiet               If present, do no output verbose log message.
+```
 
 Please reference to CITATION for more details about the preprocessing.
 
@@ -303,11 +303,38 @@ This commands plots the 3D histograms, which summarize the distribution of the v
 * The $z$-axis indicates the total frequency of the variations with the given $x$- and $y$-coordinates.
 For example, assume that an alignment had one insertion at position 5,  two deletions at positions 6 and 7, and overall frequency 0.1. Assume that the DSB is between positions 5 and 6, and we use relative labelling on the $x$-axis. Then, in the insertion histogram, the alignment would contribute +0.1 to the $z$-value of the bar at $x$-$y$-coordinate (-1, 3). In the deletion histogram the alignment would contribute +0.1 to the $z$-value of the bars at $x$-$y$-coordinates (1, 3) and (2, 3). If we used absolute labelling, then the respective $x$-$y$-coordinates would be (5, 3), (6, 3), and (7, 3).
 
-FIXME: SHOW THE OUTPUT OF `histogram.py --help`.
+Output of `histogram.py --help`:
+```
+usage: histogram.py [-h] --input INPUT --output OUTPUT --variation_type {substitution,insertion,deletion} [--reverse_pos]
+                    --label_type {relative,absolute} [--color COLOR] [--freq_range FREQ_RANGE FREQ_RANGE]
+                    [--freq_scale {linear,log}]
+
+Plot 3d histograms showing variation type/position/frequency.
+
+options:
+  -h, --help            show this help message and exit
+  --input INPUT         Directory with the data files. (default: None)
+  --output OUTPUT       Output image file. Must have extension ".png". (default: None)
+  --variation_type {substitution,insertion,deletion}
+                        Which variation type to show in the histogram. (default: None)
+  --reverse_pos         Whether to reverse the x-axis positions. Useful if comparing reverse strand data with forward strand data.    
+                        (default: False)
+  --label_type {relative,absolute}
+                        Whether to index the x-axis by "absolute" positions on the reference sequence from 1 to [reference length],   
+                        or "relative" positions from -[reference length]/2 to [reference length]/2 (skipping 0). [reference length]   
+                        refers to the length of the reference sequence after extracting the window around the DSB site. (default:     
+                        None)
+  --color COLOR         Color of the bar graph. If not specified, a default color based on VARIATION_TYPE will be chosen. (default:   
+                        None)
+  --freq_range FREQ_RANGE FREQ_RANGE
+                        Range of the z-axis frequency values to show. (default: [1e-05, 1])
+  --freq_scale {linear,log}
+                        Whether to use a linear or log scale for the z-axis frequency values. (default: log)
+```
 
 ## Graphs
 
-Here we describe the visual properties of the output graphs using the `graph.py` command.
+Here we describe the visual properties of the output graphs using the `graph.py` command. Note, when describing the graphs, the terms "sequence" and "vertex" are used interchangeably since there is a one-to-one correspondence between the windowed sequences output from [`preprocess.py`](#preprocesspy) and the vertices of the graph. For example, the phrase "the two vertices differ by a single insertion" actually means "the two sequences corresponding to the two vertices differ by a single insertion".
 
 ### Layouts
 
@@ -318,9 +345,7 @@ Different *layouts*, specified with the XX parameter, are used to position the v
 * Radial: This layout arranges vertices in concentric circles around the reference sequence. The reference vertex is placed at the center of the figure; insertion vertices are placed above the reference; and deletion vertices are placed below the the reference. A vertex's physical distance to the reference is proportional to its Levenshtein distance to the reference. That is, the first concentric circle around the reference is at Levenshtein distance 1, the next is at Levenshtein distance 2, and so on. In each concentric circle, the insertion vertices are arranged clockwise from highest to lowest frequency, and deletion vertices are arranged counterclockwise from highest to lowest frequency. This means that the vertices for both insertions and deletion are placed left to right from highest to lowest frequency. Several heuristics are used to perturb the vertices slightly so that they do not overlap and edges are not collinear. In this layout, the vertex coordinates (with default scaling) usually range between $\pm 4 * window\_size$, where `window_size` is the parameter from [preprocess.py](#preprocesspy) (relevant if setting the `plot_range_x` and `plot_range_y` parameters). However, the scaling on the insertion and deletion, $x$ and $y$-coordinates can be controlled by the FIXME `--universal_layout_x_scale_insertion`, FIXME parameters.
 * Fractal. This layout is intended to display the insertion vertices only. The vertices with a single inserted nucleotide (A, C, G, or T) are placed in the center of the corresponding quadrants shown in Figure XX: A in the top left, C in the top right, G in the bottom left, and T in the bottom right. Vertices with two inserted nucleotides, and placed in the center of the corresponding square shown in Figure XX. Note the pattern, the squares for two nucleotides insertions starting with A are obtained by subdividing the A square into four quadrants and arranging AA, AC, AG, AT based on their second nucleotide in the same order as the original A, C, G, T squares: AA in the top left, AC in the top right, AG in the bottom left, and AT in the bottom right. This pattern can be continued for arbitrarily large kmers. The square for kmer $s_1 s_2 \cdots s_k$ will be obtained by subdividing the the square for $s_1 s_2 \cdots s_{k-1}$ into four quadrants and choosing the quadrant in the same manner as before, based on $s_k$. Note, this is layout is very similar to the insertion of the universal layout, except that the both dimensions are used to order the inserted nucleotides alphabetically instead of linearly from left to right. The final coordinates of the vertices are always in [-1, 1] (relevant if setting the `plot_range_x` and `plot_range_y` parameters).
 
-### Aesthetic parameters
-
-SOME OF THIS MIGHT BE UNNECESSARY! ANYTHING DESCRIBED IN THE ARGPARASE HELP SHOULD NOT BE REPEATED!
+### Graph aesthetics
 
 * Vertices:
   * Size: For an individual graph, the vertex radius is a function of the log-frequency. This is controlled by the parameters FIXME LIST THEM. Vertices with frequencies $\leq$ `MIN_FREQ` get `MIN_RADIUS` and frequencies $\geq$ `MAX_FREQ` get `MAX_RADIUS`. Frequencies in between get a radius that varies linearly with the log-frequency.
@@ -335,13 +360,11 @@ SOME OF THIS MIGHT BE UNNECESSARY! ANYTHING DESCRIBED IN THE ARGPARASE HELP SHOU
 * Universal layout axes: To illustrate the vertex placement for the universal layout, axes can be drawn on the figure. Using the `FIXME` parameter, a horizontal axis can be drawn on the deletion side (below the reference sequence)to show the midpoint position of the range of deletions that lies at that x-coordinate. Using the `FIXME` parameter, a horizontal axis can be drawn on the insertion side (above the reference sequence) to show the alphabetical order of the nucleotides. Using the `FIXME` parameter, a vertical axis can be drawn to show the Levenshtein distance of vertices from the reference vertex. To control the $x$ or $y$-coordinate of the axes, use the `FIXME` parameters.
 * Graph statistics: Use the `--stats` parameter to display summary statistics of the graph in the left margin of the figure. If the graph has more than one connected component, only the component with the reference sequence is used, since otherwise the pairwise distance between vertices is not well-defined. To ensure the margin has enough space, use the `FIXME` parameters.
 
-NEED TO MENTION SOMEWHERE THAT "SEQUENCE" AND "VERTEX" CAN BE USED INTERCHANGEABLY?
-NEED TO DESCRIBE THE WITH AND WITHOUT SUBST PARAMETER.
-
 ## Tutorial
 
 Several example input files are available in the `data_input` directory:
-* `data_input/ref_seq`: reference sequence FASTA files, representing the perfect repaired sequence for different samples.
-* `data_input/fastq`: high-throughput sequencing data for different samples. Note, the FASTQ samples have been *trimmed*, meaning that we only capture the portion of the read between the primers and low-quality reads have been already filtered out.
 
-The alignment done between the reads in the input FASTQ and the reference sequence expects the first base of each read to align with the first base of the reference sequence. Therefore, the reads must be trimmed and the reference sequence selected in such a way that their first base pairs align. In the experiments performed in the study by Jeon et al. (LINK), the primers were designed to be about 50-150 base pairs away from the induced DSB site. In principle, this would allow reads repaired by NHEJ to have variations nears the DSB (within +/- 10 base pairs), and allow them remaining sequence to the primers to otherwise match the reference perfectly (not counting substitution errors due to sequencing or library preparation). See diagram XX for more clarification.
+* `data_input/ref_seq`: reference sequence FASTA files, representing the perfect repaired sequence for different samples.
+* `data_input/fastq`: high-throughput sequencing data for different samples. Note, the FASTQ samples have been *trimmed*, meaning that we only capture the portion of the read between the adaptors, and low-quality reads have been already filtered out.
+
+The alignment done between the reads in the input FASTQ and the reference sequence expects the first base of each read to align with the first nucleotide of the reference sequence. Therefore, the reads must be trimmed and the reference sequence selected in such a way that their left-most (5'-most) base pairs align. In the experiments performed in the study by Jeon et al. (LINK), the primers were designed to be about 50-150 base pairs away from the induced DSB site. In principle, this would mean reads repaired by NHEJ would have variations near the DSB site (say, within $\pm$ nucleotides), and allow the remainder of the read to otherwise match the reference perfectly (not counting substitution errors due to sequencing or library preparation). CONTINUE HERE.
