@@ -307,7 +307,8 @@ def plot_histogram(
 
 def parse_args():
   parser = argparse.ArgumentParser(
-    description = 'Plot 3d histograms showing variation type/position/frequency.'
+    description = 'Plot 3d histograms showing variation type/position/frequency.',
+    formatter_class = argparse.ArgumentDefaultsHelpFormatter,
   )
   parser.add_argument(
     '--input',
@@ -356,6 +357,20 @@ def parse_args():
       ' a default color based on VARIATION_TYPE will be chosen.'
     ),
   )
+  parser.add_argument(
+    '--freq_range',
+    type = float,
+    nargs = 2,
+    default = constants.HISTOGRAM_FREQ_RANGE,
+    help = 'Range of the z-axis frequency values to show.',
+  )
+  parser.add_argument(
+    '--freq_scale',
+    type = str,
+    choices = ['linear', 'log'],
+    default = constants.HISTOGRAM_FREQ_SCALE,
+    help = 'Whether to use a linear or log scale for the z-axis frequency values.',
+  )
   args = vars(parser.parse_args())
   if args['color'] is None:
     constants.VARIATION_TYPES[args['variation_type']]['color_3d']
@@ -368,6 +383,8 @@ def main(
     reverse_pos,
     label_type,
     color,
+    freq_range,
+    freq_scale,
   ):
   data_dir = input
   data_info = file_utils.read_tsv_dict(file_names.data_info(input))
@@ -376,8 +393,8 @@ def main(
     data_dir = data_dir,
     data_info = data_info,
     variation_type = variation_type,
-    freq_range = constants.HISTOGRAM_FREQ_RANGE,
-    freq_log = True,
+    freq_range = freq_range,
+    freq_log = freq_scale == 'log',
     label_type = label_type,
     color = color,
     show_title = False,
