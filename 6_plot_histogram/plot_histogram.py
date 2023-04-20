@@ -340,8 +340,10 @@ def parse_args():
     choices = ['relative', 'absolute'],
     help = (
       'Whether to index the x-axis by "absolute" positions on the' +
-      ' reference sequence from 1 to ref_length, or "relative" positions' +
-      ' from -(reference length)/2 to (reference length)/2 (skipping 0).'
+      ' reference sequence from 1 to [reference length], or "relative" positions' +
+      ' from -[reference length]/2 to [reference length]/2 (skipping 0).' +
+      ' [reference length] refers to the length of the reference sequence' +
+      ' after extracting the window around the DSB site.'
     ),
     required = True,
   )

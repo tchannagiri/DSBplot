@@ -294,6 +294,8 @@ def main(
               num_subst = len(subst_pos)
               dsb_touches = True
               accepted_insertion_special += 1
+            # FIXME: should we also check if the deletion special case applies
+            # if the alignment has both insertions and deletions?
           elif num_del > 0:
             # deletions and no insertions special case
             new_read_align = check_deletion_special_case(
