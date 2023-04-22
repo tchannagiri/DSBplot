@@ -56,7 +56,7 @@ def parse_args():
     type = int,
     required = True,
     help = (
-      'Position on reference sequence immediately left of DSB site.' +
+      'Position on reference sequence immediately left (5'') of DSB site.' +
       ' I.e., the DSB is between position DSB_POS and DSB_POS + 1.'
     ),
   )
@@ -78,8 +78,8 @@ def parse_args():
       'Size of window around DSB site to extract.' +
       ' The nucleotides at the positions' +
       ' {DSB_POS - WINDOW_SIZE + 1, ..., DSB_POS + WINDOW_SIZE} are extracted.' +
-      ' The actual number of nucleotides extracted may vary depending' +
-      ' on how many insertions/deletion the alignment of the sequence has.'
+      ' The actual number of nucleotides extracted from each read may vary depending' +
+      ' on the number of insertions/deletions/substitutions in the alignment.'
     ),
   )
   parser.add_argument(
@@ -87,7 +87,8 @@ def parse_args():
     type = int,
     default = 20,
     help = (
-      'Size of anchor on left/right of the window to check for mismatches.'
+      'Size of the anchor on the left/right of the extracted window' +
+      ' to check for mismatches.'
     ),
   )
   parser.add_argument(
@@ -104,9 +105,11 @@ def parse_args():
     '--total_reads',
     type = int,
     help = (
-      'Total reads for each file.'
-      ' Must be the same number of arguments as the number of ' +
-      ' Count columns in INPUT.'
+      'Total number reads in each experiment.' +
+      ' This may be strictly greater than the number of reads in the input FASTQ' +
+      ' files if some reads were discarded during preprocessing.' +
+      ' The number of arguments must be the same as the number of ' +
+      ' INPUTs.'
     ),
     nargs = '+',
     required = True,
@@ -124,7 +127,7 @@ def parse_args():
   parser.add_argument(
     '--label',
     type = str,
-    help = 'Label of the experiment to be used in plot titles.',
+    help = 'Label of the experiment to be used in plot legends.',
     required = True,
   )
   parser.add_argument(

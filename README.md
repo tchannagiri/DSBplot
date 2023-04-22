@@ -365,6 +365,46 @@ Different *layouts*, specified with the XX parameter, are used to position the v
 Several example input files are available in the `data_input` directory:
 
 * `data_input/ref_seq`: reference sequence FASTA files, representing the perfect repaired sequence for different samples.
-* `data_input/fastq`: high-throughput sequencing data for different samples. Note, the FASTQ samples have been *trimmed*, meaning that we only capture the portion of the read between the adaptors, and low-quality reads have been already filtered out.
+* `data_input/fastq`: high-throughput sequencing data in FASTQ format for different samples. Each FASTQ file corresponds to an independent experiment.
 
-The alignment done between the reads in the input FASTQ and the reference sequence expects the first base of each read to align with the first nucleotide of the reference sequence. Therefore, the reads must be trimmed and the reference sequence selected in such a way that their left-most (5'-most) base pairs align. In the experiments performed in the study by Jeon et al. (LINK), the primers were designed to be about 50-150 base pairs away from the induced DSB site. In principle, this would mean reads repaired by NHEJ would have variations near the DSB site (say, within $\pm$ nucleotides), and allow the remainder of the read to otherwise match the reference perfectly (not counting substitution errors due to sequencing or library preparation). CONTINUE HERE.
+Note, the FASTQ samples have been *trimmed*, meaning that we only capture the portion of the read between the adaptors, and low-quality reads have been already filtered out.
+
+### Preprocessing<a name="tutpreprocessing"></a>
+
+The [`preprocess.py`](#preprocesspy) command must be run before producing any figures. This stage aligns the input FASTQ files against the reference sequences, extracts the part of the alignment around the DSB position, and precomputes data tables describing the unique alignments and their frequencies. The following are examples of using the command:
+
+```
+python preprocess.py --input data_input/fastq/sense1_R1.fq data_input/fastq/sense2_R1.fq data_input/fastq/sense3_R1.fq data_input/fastq/sense4_R1.fq --ref_seq_file data_input/ref_seq/2DSB_R1_sense.fa --dsb_pos 67 --output data_output/sense_R1 --label sense_R1 --total_reads 3000 3000 3000 3000
+python preprocess.py --input data_input/fastq/sense1_R2.fq data_input/fastq/sense2_R2.fq data_input/fastq/sense3_R2.fq data_input/fastq/sense4_R2.fq --ref_seq_file data_input/ref_seq/2DSB_R2_sense.fa --dsb_pos 46 --output data_output/sense_R2 --label sense_R2 --total_reads 3000 3000 3000 3000
+python preprocess.py --input data_input/fastq/db1_R1.fq data_input/fastq/db2_R1.fq data_input/fastq/db3_R1.fq data_input/fastq/db4_R1.fq --ref_seq_file data_input/ref_seq/2DSB_R1_branch.fa --dsb_pos 67 --output data_output/db_R1 --label db_R1 --total_reads 3000 3000 3000 3000
+python preprocess.py --input data_input/fastq/db1_R2.fq data_input/fastq/db2_R2.fq data_input/fastq/db3_R2.fq data_input/fastq/db4_R2.fq --ref_seq_file data_input/ref_seq/2DSB_R2_branch.fa --dsb_pos 46 --output data_output/db_R2 --label db_R2 --total_reads 3000 3000 3000 3000
+python preprocess.py --input data_input/fastq/dcmv1_R1.fq data_input/fastq/dcmv2_R1.fq data_input/fastq/dcmv3_R1.fq data_input/fastq/dcmv4_R1.fq --ref_seq_file data_input/ref_seq/2DSB_R1_cmv.fa --dsb_pos 67 --output data_output/dcmv_R1 --label dcmv_R1 --total_reads 3000 3000 3000 3000
+python preprocess.py --input data_input/fastq/dcmv1_R2.fq data_input/fastq/dcmv2_R2.fq data_input/fastq/dcmv3_R2.fq data_input/fastq/dcmv4_R2.fq --ref_seq_file data_input/ref_seq/2DSB_R2_cmv.fa --dsb_pos 46 --output data_output/dcmv_R2 --label dcmv_R2 --total_reads 3000 3000 3000 3000
+```
+
+Although there are 24 files in `data_input/fastq`, we only run the preprocessing pipeline six times because the biological repeats of each experiment areprocessed together. For example, `sense1_R1.fq`, `sense2_R1.fq`, `sense3_R1.fq`, and `sense4_R1.fq` are biological repeats of the "Sense, 2-DSB" experiment (the `R1` or `R2` indicates whether the forward or reverse strand of the read was sequenced).
+
+All the biological repeats must, of course, use the same reference sequences. For example the four "Sense, 2-DSB" experiments use the `2DSB_R1_sense.fa` reference sequence.
+
+The output will be a bunch to tables in TSV (tab-separated value) format. The most important files are located in the subdirectoreis `4_graph` and `5_histogram`, which are the data used for plotting the graphs and histograms, although other intermediate preprocessing files are stored in other files.
+
+EXPLAIN WITH/WITHOUT SUBST?? MAYBE AT THE PLOTTING.
+
+For more information about the parameters, use `python preprocess.py --help` and see section [`preprocess.py`](#preprocesspy).
+
+### Comparisons<a name="tutcomparison"></a>
+
+The [comparison](#comparisonpy) pipline is used to combine two outputs of the [preprocessing](#preprocesspy) command for plotting [comparison graphs](#XX). The following are examples:
+
+```
+python comparison.py --input data_output/sense_R1 data_output/db_R1 --output data_output/sense_db_R1
+python comparison.py --input data_output/sense_R2 data_output/db_R2 --output data_output/sense_db_R2
+python comparison.py --input data_output/sense_R1 data_output/dcmv_R1 --output data_output/sense_dcmv_R1
+python comparison.py --input data_output/sense_R2 data_output/dcmv_R2 --output data_output/sense_dcmv_R2
+```
+
+Note that both the experiment must have identical reference sequences after extracting its `2 * WINDOW_SIZE` nucleotides around the DSB position. The entire reference sequences input as a FASTA file to `preprocess.py` need not be identical so long as this window is. In our example above, the three reference sequences used for the R1 strand (`2DSB_R1_sense.fa`, `2DSB_R1_branch.fa`, and `2DSB_R1_cmv.fa`) happen to be indentical, though this is not necessary.
+
+The output 
+
+<!-- The alignment done between the reads in the input FASTQ and the reference sequence expects the first base of each read to align with the first nucleotide of the reference sequence. Therefore, the reads must be trimmed and the reference sequence selected in such a way that their left-most (5'-most) base pairs align. In the experiments performed in the study by Jeon et al. (LINK), the primers were designed to be about 50-150 base pairs away from the induced DSB site. In principle, this would mean reads repaired by NHEJ would have variations near the DSB site (say, within $\pm$ nucleotides), and allow the remainder of the read to otherwise match the reference perfectly (not counting substitution errors due to sequencing or library preparation). CONTINUE HERE. -->
