@@ -50,10 +50,10 @@ The preprocessing pipeline produces two different versions of most files: one *i
     4. If the in/del positions of the alignment are not adjacent to or around the DSB position, try and shift them towards the DSB position in such a way that remainder of the alignment stays roughly the same (the number of substitutions does not increase). If such a modification of the alignment cannot be found, discard the alignment.
     5. Finally, if the resulting alignment has in/dels that are not at consecutive positions, discard the alignment.
    
-   If multiple reads have exactly the same nucleotide sequences but had different alignments with the reference, they will be forced to have the same alignment as the first read encountered. Note, that while we require the left-most (5'-most) position on the read to align with the left-most on the reference, the same is not true for the right-most (3'-most) positions. This is because it is possible for reads to be too small and only capture the 5' primer but not the 3' primer. However, we require the read to at least length `DSB_POS + 1` (see parameter `--min_length`). The output will be tables (TSV format) that contain the unique alignments and their read counts. The output will be in the files `1_filter_nhej/[N].tsv`, where `[N]` is replaced with an integer representing the repeat number, in the same order they are specified on the command line.
+   If multiple reads have exactly the same nucleotide sequences but had different alignments with the reference, they will be forced to have the same alignment as the first such read encountered. Note, that while we require the left-most (5'-most) position on the read to align with the left-most on the reference, the same is not true for the right-most (3'-most) positions. This is because it is possible for reads to be too small and only capture the 5' primer but not the 3' primer. However, we require the read to at least length `DSB_POS + 1` (see parameter `--min_length`). The output will be tables (TSV format) that contain the unique alignments and their read counts. The output will be in the files `1_filter_nhej/[N].tsv`, where `[N]` is replaced with an integer representing the repeat number, in the same order they are specified on the command line.
   
 3. Combine the (potentially) multiple tables output from stage 2 into a single table (TSV format) with multiple frequency columns, one for each input. The output will be in `2_combine_repeat/out.tsv`.
-4. For each unique alignment in the output table of stage 3, extract the alignment-window around the DSB position. That is, the part of the alignment that corresponds to the positions in `DSB_POS - WINDOW_SIZE + 1` to `DSB_POS + WINDOW_SIZE`, where `DSB_POS` and `WINDOW_SIZE` are parameters. If different alignments become identical after extracting their windows, their read counts will be summed. We also require that *anchors* to be present on either side of the extracted windows to make sure that the variations near the DSB do not spill outside the window. Anchors are the parts of the alignment that correspond to the `ANCHOR_SIZE` (a parameter) nucleotides on the left (5') and right (3') of the window region. We require that each anchor have at most `ANCHOR_MISMATCHES` mismatches and no in/dels. The output is a table (TSV format). The output will be in directory `3_window`, in files `window_count_withoutSubst.tsv` and `window_count_withSubst.tsv`. 
+4. For each unique alignment in the output table of stage 3, extract the alignment-window around the DSB position. That is, the part of the alignment that corresponds to the positions in `DSB_POS - WINDOW_SIZE + 1` to `DSB_POS + WINDOW_SIZE`, where `DSB_POS` and `WINDOW_SIZE` are parameters. If different alignments become identical after extracting their windows, their read counts will be summed. We also require that *anchors* to be present on either side of the extracted windows to make sure that the variations near the DSB do not spill outside the window. Anchors are the parts of the alignment that correspond to the `ANCHOR_SIZE` (a parameter) nucleotides on the left (5') and right (3') of the window region. We require that each anchor have at most `ANCHOR_MISMATCHES` mismatches and no in/dels. The output is a table (TSV format). The output will be in directory `3_window`, in files `window_count_withoutSubst.tsv` and `window_count_withSubst.tsv`. The "withoutSubst" version of the output has substitutions in the alignment removed by replacing the nucleotide on the read sequence with perfect matches with the reference sequence. See [here](#substitutions-in-bowtie-2) for the justification of ignoring substitutions.
 5. Covert the raw read counts into frequencies in the range [0,1]. This is done by dividing the read counts by the total number of reads in the library. Since the total number of reads in each sample might not be exactly the sum of the read counts (e.g., if the trimming process removed some reads), the total reads are input as a parameters. In this stage, the separate frequency columns for each repeat are collapsed into a single column by taking their mean. Also, the alignments whose minimum frequency across the repeats is below a user-defined threshold will be discarded. The output will be in the subdirectory `3_window`, in files:
   * `window_freq_withSubst.tsv`/`window_freq_withoutSubst.tsv`: Frequency tables with separate columns for the separate repeats.
   * `window_freq_filter_withSubst.tsv`/`window_freq_filter_withoutSubst.tsv`: The previous frequency tables with the minimum frequency filter applied.
@@ -298,12 +298,15 @@ options:
 ### `histogram.py`
 
 This commands plots the 3D histograms, which summarize the distribution of the variations in the windows around the DSB site. Each histogram shows a single type of variation (insertion, deletion, or substitution), which is determined by the `--variation_type` parameter. The axes are described as:
+
 * The $x$-axis indicates the position of the variations relative to the DSB position (or, alternatively, relative to the 5'-end of the window; see parameter `--label_type`). Deletions and substitutions always have an unambiguous position on the reference sequence. However, insertions are always between the two consecutive positions around the DSB on the reference sequence, and are thus assigned the left (5') position.
 * The $y$-axis indicates the total number of in/dels on the sequence that the variation originated from.
 * The $z$-axis indicates the total frequency of the variations with the given $x$- and $y$-coordinates.
+
 For example, assume that an alignment had one insertion at position 5,  two deletions at positions 6 and 7, and overall frequency 0.1. Assume that the DSB is between positions 5 and 6, and we use relative labelling on the $x$-axis. Then, in the insertion histogram, the alignment would contribute +0.1 to the $z$-value of the bar at $x$-$y$-coordinate (-1, 3). In the deletion histogram the alignment would contribute +0.1 to the $z$-value of the bars at $x$-$y$-coordinates (1, 3) and (2, 3). If we used absolute labelling, then the respective $x$-$y$-coordinates would be (5, 3), (6, 3), and (7, 3).
 
 Output of `histogram.py --help`:
+
 ```
 usage: histogram.py [-h] --input INPUT --output OUTPUT --variation_type {substitution,insertion,deletion} [--reverse_pos]
                     --label_type {relative,absolute} [--color COLOR] [--freq_range FREQ_RANGE FREQ_RANGE]
@@ -369,7 +372,7 @@ Several example input files are available in the `data_input` directory:
 
 Note, the FASTQ samples have been *trimmed*, meaning that we only capture the portion of the read between the adaptors, and low-quality reads have been already filtered out.
 
-### Preprocessing<a name="tutpreprocessing"></a>
+### Tutorial: Preprocessing
 
 The [`preprocess.py`](#preprocesspy) command must be run before producing any figures. This stage aligns the input FASTQ files against the reference sequences, extracts the part of the alignment around the DSB position, and precomputes data tables describing the unique alignments and their frequencies. The following are examples of using the command:
 
@@ -386,13 +389,11 @@ Although there are 24 files in `data_input/fastq`, we only run the preprocessing
 
 All the biological repeats must, of course, use the same reference sequences. For example the four "Sense, 2-DSB" experiments use the `2DSB_R1_sense.fa` reference sequence.
 
-The output will be a bunch to tables in TSV (tab-separated value) format. The most important files are located in the subdirectoreis `4_graph` and `5_histogram`, which are the data used for plotting the graphs and histograms, although other intermediate preprocessing files are stored in other files.
-
-EXPLAIN WITH/WITHOUT SUBST?? MAYBE AT THE PLOTTING.
+The output will be a collection of tables in TSV (tab-separated value) format. The most important files are located in the subdirectories `4_graph` and `5_histogram`, which are the data used for plotting the graphs and histograms.  Other intermediate preprocessing files are stored in other files.
 
 For more information about the parameters, use `python preprocess.py --help` and see section [`preprocess.py`](#preprocesspy).
 
-### Comparisons<a name="tutcomparison"></a>
+### Tutorial: Comparisons
 
 The [comparison](#comparisonpy) pipline is used to combine two outputs of the [preprocessing](#preprocesspy) command for plotting [comparison graphs](#XX). The following are examples:
 
@@ -403,8 +404,79 @@ python comparison.py --input data_output/sense_R1 data_output/dcmv_R1 --output d
 python comparison.py --input data_output/sense_R2 data_output/dcmv_R2 --output data_output/sense_dcmv_R2
 ```
 
-Note that both the experiment must have identical reference sequences after extracting its `2 * WINDOW_SIZE` nucleotides around the DSB position. The entire reference sequences input as a FASTA file to `preprocess.py` need not be identical so long as this window is. In our example above, the three reference sequences used for the R1 strand (`2DSB_R1_sense.fa`, `2DSB_R1_branch.fa`, and `2DSB_R1_cmv.fa`) happen to be indentical, though this is not necessary.
+Note, both experiments must have identical reference sequences after extracting its `2 * WINDOW_SIZE` nucleotides around the DSB position. The whole reference sequence of the experiments (i.e., the files in the `--ref_seq` parameter to `preprocess.py`) need not be identical so long as this window is.
 
-The output 
+The output will have a directory structure mirroring the output of `preprocess.py`, except that only the subdirectories `3_window`, `4_graph`, and `5_histogram` will be present (since there is no need to cache the other preprocessing data). The output files contain a combination of the data from both the experiments for creating comparison graphs.
+
+### Tutorial: Graphing
+
+The [`graph.py`](#graphpy) script is used to layout the aligned reads output from the [`preprocess.py`](#preprocesspy) and [`comparison.py`] scripts. The input should be a list of directories created by `preprocess.py`/`comparison.py` and the output will be PNG or HTML files that visually represent the graph of sequences extracted from reads around the DSB position.
+
+Multiple inputs may be specified as long as all the experiments have identical reference sequences within the DSB window (potentially, after reverse complementing; see the `--reverse_complement` parameter). When multiple inputs are specified all sequences in all the inputs (potentially, after reverse complementing) are combined into a single "supergraph", the graph is laid out to determine the coordinates of each vertex, and then each graph is laid out separately according to the coordinates determined by the supergraph. This allows the output figures for each experiment to have the same coordinates for the same sequence, which facilitates visual comparison betwen experiments when when using data-dependent layouts such as the Kamada-Kawaii.
+
+The output may be either PNG or HTML. HTML output may be opened in a browser and allows interactive inspection of the vertices by hovering over them.
+
+To plot individual graphs (graphs with a single experiment), the output directories of `preprocess.py` should be used. To plot comparison graphs (graphs comparing two experiments), the output directories of `comparison.py` should be used.
+
+There are many parameters for customizing the aesthetics of the output graphs, which are covered in more detail in section [Graphs](#graphs).
+
+The following are example commands of using `graph.py` with single inputs with PNG output:
+```
+python graph.py --input data_output/db_R1 --output plot/graph/universal/db_R1.png --legend --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5  --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
+python graph.py --input data_output/db_R2 --output plot/graph/universal/db_R2.png --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
+python graph.py --input data_output/sense_R1 --output plot/graph/universal/sense_R1.png --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
+python graph.py --input data_output/sense_R2 --output plot/graph/universal/sense_R2.png --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
+python graph.py --input data_output/dcmv_R1 --output plot/graph/universal/dcmv_R1.png --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
+python graph.py --input data_output/dcmv_R2 --output plot/graph/universal/dcmv_R2.png --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
+
+```
+
+The following is an example of using multiple inputs with PNG output:
+```
+python graph.py `
+  --input data_output/db_R1 data_output/db_R2 data_output/sense_R1 data_output/sense_R2 data_output/dcmv_R1 data_output/dcmv_R2 data_output/sense_db_R1 data_output/sense_db_R2 data_output/sense_dcmv_R1 data_output/sense_dcmv_R2 `
+  --output plot/graph/kamada_common/db_R1.png plot/graph/kamada_common/db_R2.png plot/graph/kamada_common/sense_R1.png plot/graph/kamada_common/sense_R2.png plot/graph/kamada_common/dcmv_R1.png plot/graph/kamada_common/dcmv_R2.png plot/graph/kamada_common/sense_db_R1.png plot/graph/kamada_common/sense_db_R2.png plot/graph/kamada_common/sense_dcmv_R1.png plot/graph/kamada_common/sense_dcmv_R2.png `
+  --reverse_complement 0 1 0 1 0 1 0 1 0 1 --layout kamada_layout --width 2400 --height 1800
+```
+
+The following are examples of plotting comparison graphs:
+
+```
+python graph.py --input data_output/sense_db_R1 --node_comparison_colors "#cf191b" "#33a02c" --output plot/graph/universal/sense_db_R1.png --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
+python graph.py --input data_output/sense_db_R2 --node_comparison_colors "#cf191b" "#33a02c" --output plot/graph/universal/sense_db_R2.png --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
+python graph.py --input data_output/sense_dcmv_R1 --output plot/graph/universal/sense_dcmv_R1.png --node_comparison_colors "#cf191b" "#ffe669" --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
+python graph.py --input data_output/sense_dcmv_R2 --output plot/graph/universal/sense_dcmv_R2.png --node_comparison_colors "#cf191b" "#ffe669" --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
+```
+
+### Tutorial: Histograms
+
+The [`histogram.py`](#histogrampy) script allows plotting an alternative representation of the variations extracted from the DSB-window. Instead of displaying the distribution of *sequences* in a graph, the distribution of *variations* (insertion, deletion, or substitution) are shown in a histogram. 
+
+Note, the histogram script can only be run on *individual* data (output from `preprocess.py`) rather than *comparison* data (output from `comparison.py`). Moreover, it always uses the data *without substitution* (see [here](#substitutions-in-bowtie-2)), so that the substitution distribution can be visualized also.
+
+The following are examples of using the `histogram.py` command:
+```
+python histogram.py --input data_output/db_R1 --output plot/histogram/db_R1_substitution.png --color "#bfbfbf" --variation_type substitution --label_type relative
+python histogram.py --input data_output/db_R1 --output plot/histogram/db_R1_insertion.png --color "#ffa500" --variation_type insertion --label_type relative
+python histogram.py --input data_output/db_R1 --output plot/histogram/db_R1_deletion.png --color "#8080ff" --variation_type deletion --label_type relative
+python histogram.py --input data_output/db_R2 --output plot/histogram/db_R2_substitution.png --color "#bfbfbf" --variation_type substitution --label_type relative
+python histogram.py --input data_output/db_R2 --output plot/histogram/db_R2_insertion.png --color "#ffa500" --variation_type insertion --label_type relative
+python histogram.py --input data_output/db_R2 --output plot/histogram/db_R2_deletion.png --color "#8080ff" --variation_type deletion --label_type relative
+python histogram.py --input data_output/sense_R1 --output plot/histogram/sense_R1_substitution.png --color "#bfbfbf" --variation_type substitution --label_type relative
+python histogram.py --input data_output/sense_R1 --output plot/histogram/sense_R1_insertion.png --color "#ffa500" --variation_type insertion --label_type relative
+python histogram.py --input data_output/sense_R1 --output plot/histogram/sense_R1_deletion.png --color "#8080ff" --variation_type deletion --label_type relative
+python histogram.py --input data_output/sense_R2 --output plot/histogram/sense_R2_substitution.png --color "#bfbfbf" --variation_type substitution --label_type relative
+python histogram.py --input data_output/sense_R2 --output plot/histogram/sense_R2_insertion.png --color "#ffa500" --variation_type insertion --label_type relative
+python histogram.py --input data_output/sense_R2 --output plot/histogram/sense_R2_deletion.png --color "#8080ff" --variation_type deletion --label_type relative
+python histogram.py --input data_output/dcmv_R1 --output plot/histogram/dcmv_R1_substitution.png --color "#bfbfbf" --variation_type substitution --label_type relative
+python histogram.py --input data_output/dcmv_R1 --output plot/histogram/dcmv_R1_insertion.png --color "#ffa500" --variation_type insertion --label_type relative
+python histogram.py --input data_output/dcmv_R1 --output plot/histogram/dcmv_R1_deletion.png --color "#8080ff" --variation_type deletion --label_type relative
+python histogram.py --input data_output/dcmv_R2 --output plot/histogram/dcmv_R2_substitution.png --color "#bfbfbf" --variation_type substitution --label_type relative
+python histogram.py --input data_output/dcmv_R2 --output plot/histogram/dcmv_R2_insertion.png --color "#ffa500" --variation_type insertion --label_type relative
+python histogram.py --input data_output/dcmv_R2 --output plot/histogram/dcmv_R2_deletion.png --color "#8080ff" --variation_type deletion --label_type relative
+```
 
 <!-- The alignment done between the reads in the input FASTQ and the reference sequence expects the first base of each read to align with the first nucleotide of the reference sequence. Therefore, the reads must be trimmed and the reference sequence selected in such a way that their left-most (5'-most) base pairs align. In the experiments performed in the study by Jeon et al. (LINK), the primers were designed to be about 50-150 base pairs away from the induced DSB site. In principle, this would mean reads repaired by NHEJ would have variations near the DSB site (say, within $\pm$ nucleotides), and allow the remainder of the read to otherwise match the reference perfectly (not counting substitution errors due to sequencing or library preparation). CONTINUE HERE. -->
+
+<!-- SHOULD THE GRAPH DEFINITION BE DESCRIBED EARLIER? -->
+<!-- Define the DSB-window term? -->
