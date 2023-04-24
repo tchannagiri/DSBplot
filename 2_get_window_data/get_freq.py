@@ -66,7 +66,7 @@ def parse_args():
     help = (
       f'Minimum frequency for output in' +
       f' windows_{constants.FREQ_FILTER_MEAN}.' +
-      f' Sequences with frequences <= FREQ_MIN are discarded.'
+      f' Sequences with frequencies <= FREQ_MIN are discarded.'
     ),
   )
   return vars(parser.parse_args())
