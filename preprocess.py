@@ -109,10 +109,9 @@ def parse_args():
       ' This may be strictly greater than the number of reads in the input FASTQ' +
       ' files if some reads were discarded during preprocessing.' +
       ' The number of arguments must be the same as the number of ' +
-      ' INPUTs.'
+      ' INPUTs. If not provided, the total reads remaining after NHEJ filtering are used.'
     ),
     nargs = '+',
-    required = True,
   )
   parser.add_argument(
     '--freq_min',

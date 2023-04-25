@@ -2013,7 +2013,7 @@ def make_graph_figure(
 def parse_args():
   parser = argparse.ArgumentParser(
     description = (
-      'Lay out and plot variation-distance graphs.' +
+      'Layout and plot variation-distance graphs.' +
       ' Uses the output from "get_graph_data" as input.' +
       ' For more information about the layouts please see the publication FIXME.'
     ),
@@ -2472,6 +2472,11 @@ def parse_args():
       ' This affects the universal layout and fractal layout.'
     ),
   )
+  parser.add_argument(
+    '--quiet',
+    action = 'store_true',
+    help = 'If present, do not print extra log messages.',
+  )
   args = vars(parser.parse_args())
 
   if len(args['input']) == 0:
@@ -2567,6 +2572,7 @@ def main(
   crop_x,
   crop_y,
   interactive,
+  quiet,
 ):
   data_dir_list = input
   output_list = output
@@ -2642,6 +2648,18 @@ def main(
   )
 
   for i in range(len(figure_list)):
+    if not quiet:
+      x_min = np.inf
+      x_max = -np.inf
+      y_min = np.inf
+      y_max = -np.inf
+      for trace in figure_list[i].data:
+        x_min = np.min([x_min] + [x for x in trace.x if x is not None])
+        x_max = np.max([x_max] + [x for x in trace.x if x is not None])
+        y_min = np.min([y_min] + [y for y in trace.y if y is not None])
+        y_max = np.max([y_max] + [y for y in trace.y if y is not None])
+      log_utils.log(f'Figure {i} x-range: {x_min} to {x_max}')
+      log_utils.log(f'Figure {i} y-range: {y_min} to {y_max}')
     sequence_data = file_utils.read_tsv(
       file_names.sequence_data(data_dir_list[i], subst_type)
     )

@@ -37,10 +37,10 @@ def parse_args():
     help = (
       'Total reads for each file.'
       ' Must be the same number of arguments as the number of ' +
-      ' "Count" columns in INPUT.'
+      ' "Count" columns in INPUT. If not provided, the total reads are' +
+      ' are calculated by taking the sum of the "Count" columns in INPUT.'
     ),
     nargs = '+',
-    required = True,
   )
   parser.add_argument(
     '--output',
@@ -82,6 +82,9 @@ def main(input, output, subst_type, total_reads, freq_min):
   data = file_utils.read_tsv(input_file)
 
   count_cols = data.columns[data.columns.str.startswith('count_')]
+
+  if total_reads is None:
+    total_reads = data[count_cols].sum(axis='index').to_list()
   if len(count_cols) != len(total_reads):
     raise Exception(
       f'Expected {len(total_reads)} count columns.' +

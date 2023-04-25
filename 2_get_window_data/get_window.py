@@ -17,7 +17,8 @@ import argparse
 
 def parse_args():
   parser = argparse.ArgumentParser(
-    description = 'Process data for downstream graph and histogram analysis.'
+    description = 'Process data for downstream graph and histogram analysis.',
+    formatter_class = argparse.ArgumentDefaultsHelpFormatter,
   )
   parser.add_argument(
     '--input',
