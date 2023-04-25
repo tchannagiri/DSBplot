@@ -161,4 +161,4 @@ cython_debug/
 
 data_output/*
 plot/*
-data_input_yeast/*
+data_input_OX/*

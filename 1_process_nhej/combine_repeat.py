@@ -26,6 +26,7 @@ def parse_args():
   parser.add_argument(
     '--column_names',
     nargs = '+',
+    required = True,
     help = (
       'Names to use as suffixes to the "Count" columns of the output.' +
       ' Number of arguments must match the number of INPUT args.'
