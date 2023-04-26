@@ -99,7 +99,7 @@ foreach ($cell in ("OX", "WT")) {
         }
         python graph.py `
         --input ./data_input_OX/2DSB_${cell}_${construct}_${strand}/ `
-        --output ./plot/OX/2DSB_${cell}_${construct}_${strand}.png `
+        --output ./plot/OX/graph/2DSB_${cell}_${construct}_${strand}.png `
         --layout universal_layout --width 2400 --height 1800 `
         --range_x -13 14 --range_y -19 6 `
         --universal_layout_x_axis_deletion_y_pos -18.5 `
@@ -109,6 +109,32 @@ foreach ($cell in ("OX", "WT")) {
         --universal_layout_y_axis_deletion_max_tick 17 `
         --universal_layout_y_axis_insertion_max_tick 1 `
         --subst_type withoutSubst --quiet
+      }
+    }
+  }
+}
+
+# Plot histograms
+foreach ($cell in ("OX", "WT")) {
+  foreach ($construct in ("Sense", "BranchD", "pCMVD")) {
+    foreach ($strand in ("R1", "R2")) {
+      foreach ($var in ("deletion", "insertion", "substitution")) {
+        if (
+          (($cell -eq "OX") -and ($construct -eq "Sense") -and ($strand -eq "R1")) -or
+          (($cell -eq "WT") -and ($construct -eq "pCMVD") -and ($strand -eq "R1")) -or 
+          (($cell -eq "WT") -and ($construct -eq "BranchD") -and ($strand -eq "R1"))
+        ) {
+          continue
+        }
+        $color = @{
+          "deletion" = "#8080ff"
+          "insertion" = "#ffa500"
+          "substitution" = "#bfbfbf"
+        }[$var]
+        python histogram.py `
+        --input ./data_input_OX/2DSB_${cell}_${construct}_${strand}/ `
+        --output ./plot/OX/histogram/2DSB_${cell}_${construct}_${strand}_${var}.png `
+        --variation_type ${var} --color ${color} --label_type relative
       }
     }
   }
