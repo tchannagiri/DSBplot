@@ -55,6 +55,8 @@ More information about each command is given in the following subsections. The t
 
 #### Input
 
+TODO: DESCRIBE HOW TO RUN THE STAGES SEPARATELY!!
+
 We expect that the input FASTQ files to `preprocess.py` are *trimmed*, meaning that the adaptors have been removed. We also expected that the region of DNA between these adaptors is exactly the region of DNA represented by the reference sequence. This mean that if a given read represents a perfectly repaired DNA strand, it should identical with the reference sequence (assuming no substitution errors due to library preparation or sequencing).
 
 #### Substitutions in Bowtie 2
