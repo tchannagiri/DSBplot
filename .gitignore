@@ -159,6 +159,8 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-data_output/*
-plot/*
-data_input_OX/*
+.vscode/
+data_demo/output/
+plot_demo/
+data_OX/output/
+plot_OX/

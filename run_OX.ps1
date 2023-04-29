@@ -26,11 +26,11 @@ foreach ($lib in $lib_array) {
     continue
   }
   python ./1_process_nhej/combine_repeat.py --input `
-    ./data_input_OX/2DSB_${cell}_${construct}_${strand}/1_filter_nhej/$($names[0])_$strand.tsv `
-    ./data_input_OX/2DSB_${cell}_${construct}_${strand}/1_filter_nhej/$($names[1])_$strand.tsv `
-    ./data_input_OX/2DSB_${cell}_${construct}_${strand}/1_filter_nhej/$($names[2])_$strand.tsv `
-    ./data_input_OX/2DSB_${cell}_${construct}_${strand}/1_filter_nhej/$($names[3])_$strand.tsv `
-    --output ./data_input_OX/2DSB_${cell}_${construct}_${strand}/2_combine_repeat/out.tsv `
+    ./data_OX/output/2DSB_${cell}_${construct}_${strand}/1_filter_nhej/$($names[0])_$strand.tsv `
+    ./data_OX/output/2DSB_${cell}_${construct}_${strand}/1_filter_nhej/$($names[1])_$strand.tsv `
+    ./data_OX/output/2DSB_${cell}_${construct}_${strand}/1_filter_nhej/$($names[2])_$strand.tsv `
+    ./data_OX/output/2DSB_${cell}_${construct}_${strand}/1_filter_nhej/$($names[3])_$strand.tsv `
+    --output ./data_OX/output/2DSB_${cell}_${construct}_${strand}/2_combine_repeat/out.tsv `
     --column_names $($names[0]) $($names[1]) $($names[2]) $($names[3])
   }
 }
@@ -40,6 +40,7 @@ foreach ($cell in ("OX", "WT")) {
   foreach ($construct in ("Sense", "BranchD", "pCMVD")) {
     foreach ($strand in ("R1", "R2")) {
       foreach ($subst in ("withSubst", "withoutSubst")) {
+        # construct2 for the ref_seq_file name
         $construct2 = if ($construct -eq "BranchD") {
           "branch"
         } else {
@@ -63,53 +64,111 @@ foreach ($cell in ("OX", "WT")) {
         } else {
           $dsb_pos = 46
         }
-        # python ./2_get_window_data/get_window.py `
-        #   --input ./data_input_OX/2DSB_${cell}_${construct}_${strand}/2_combine_repeat/out.tsv `
-        #   --output ./data_input_OX/2DSB_${cell}_${construct}_${strand}/3_window/ `
-        #   --ref_seq_file ./data_input/ref_seq/2DSB_${strand}_${construct2}.fa `
-        #   --dsb_pos ${dsb_pos} --subst_type ${subst} --label ${strand}
-        # python ./2_get_window_data/get_freq.py `
-        #   --input ./data_input_OX/2DSB_${cell}_${construct}_${strand}/3_window/ `
-        #   --output ./data_input_OX/2DSB_${cell}_${construct}_${strand}/3_window/ `
-        #   --subst_type ${subst}
+        python ./2_get_window_data/get_window.py `
+          --input ./data_OX/output/2DSB_${cell}_${construct}_${strand}/2_combine_repeat/out.tsv `
+          --output ./data_OX/output/2DSB_${cell}_${construct}_${strand}/3_window/ `
+          --ref_seq_file ./data_input/ref_seq/2DSB_${strand}_${construct2}.fa `
+          --dsb_pos ${dsb_pos} --subst_type ${subst} --label ${strand}
+        python ./2_get_window_data/get_freq.py `
+          --input ./data_OX/output/2DSB_${cell}_${construct}_${strand}/3_window/ `
+          --output ./data_OX/output/2DSB_${cell}_${construct}_${strand}/3_window/ `
+          --subst_type ${subst}
         python ./3_get_graph_data/get_graph_data.py `
-          --input ./data_input_OX/2DSB_${cell}_${construct}_${strand}/3_window/ `
-          --output ./data_input_OX/2DSB_${cell}_${construct}_${strand}/4_graph/ `
+          --input ./data_OX/output/2DSB_${cell}_${construct}_${strand}/3_window/ `
+          --output ./data_OX/output/2DSB_${cell}_${construct}_${strand}/4_graph/ `
           --subst_type ${subst}
         python ./4_get_histogram_data/get_histogram_data.py `
-          --input ./data_input_OX/2DSB_${cell}_${construct}_${strand}/4_graph/ `
-          --output ./data_input_OX/2DSB_${cell}_${construct}_${strand}/5_histogram/ `
+          --input ./data_OX/output/2DSB_${cell}_${construct}_${strand}/4_graph/ `
+          --output ./data_OX/output/2DSB_${cell}_${construct}_${strand}/5_histogram/ `
           --subst_type ${subst}
       }
     }
   }
 }
 
-# Plot graphs
+# Make the comparison data
+foreach ($cell in ("OX", "WT")) {
+  foreach ($construct_pair in (("Sense", "BranchD"), ("Sense", "pCMVD"))) {
+    $construct1 = $construct_pair[0]
+    $construct2 = $construct_pair[1]
+    foreach ($strand in ("R1", "R2")) {
+      if (
+        (($cell -eq "OX") -and (($construct1 -eq "Sense") -or ($construct2 -eq "Sense")) -and ($strand -eq "R1")) -or
+        (($cell -eq "WT") -and (($construct1 -eq "pCMVD") -or ($construct2 -eq "pCMVD")) -and ($strand -eq "R1")) -or 
+        (($cell -eq "WT") -and (($construct1 -eq "BranchD") -or ($construct2 -eq "BranchD")) -and ($strand -eq "R1"))
+      ) {
+        continue
+      }
+      python ./2_get_window_data/get_freq_comparison.py `
+        --input ./data_OX/output/2DSB_${cell}_${construct1}_${strand}/3_window/ ./data_OX/output/2DSB_${cell}_${construct2}_${strand}/3_window/ `
+        --output ./data_OX/output/2DSB_${cell}_${construct1}_${construct2}_${strand}/3_window `
+        --subst_type ${subst}
+      python ./3_get_graph_data/get_graph_data.py `
+        --input ./data_OX/output/2DSB_${cell}_${construct1}_${construct2}_${strand}/3_window/ `
+        --output ./data_OX/output/2DSB_${cell}_${construct1}_${construct2}_${strand}/4_graph/ `
+        --subst_type ${subst}
+      python ./4_get_histogram_data/get_histogram_data.py `
+        --input ./data_OX/output/2DSB_${cell}_${construct1}_${construct2}_${strand}/4_graph/ `
+        --output ./data_OX/output/2DSB_${cell}_${construct1}_${construct2}_${strand}/5_histogram/ `
+        --subst_type ${subst}
+    }
+  }
+}
+
+# Plot graphs for individual data
 foreach ($cell in ("OX", "WT")) {
   foreach ($construct in ("Sense", "BranchD", "pCMVD")) {
+    $construct1 = $construct_pair[0]
+    $construct2 = $construct_pair[1]
     foreach ($strand in ("R1", "R2")) {
-      foreach ($subst in ("withSubst", "withoutSubst")) {
-        if (
-          (($cell -eq "OX") -and ($construct -eq "Sense") -and ($strand -eq "R1")) -or
-          (($cell -eq "WT") -and ($construct -eq "pCMVD") -and ($strand -eq "R1")) -or 
-          (($cell -eq "WT") -and ($construct -eq "BranchD") -and ($strand -eq "R1"))
-        ) {
-          continue
-        }
-        python graph.py `
-        --input ./data_input_OX/2DSB_${cell}_${construct}_${strand}/ `
-        --output ./plot/OX/graph/2DSB_${cell}_${construct}_${strand}.png `
-        --layout universal_layout --width 2400 --height 1800 `
-        --range_x -13 14 --range_y -19 6 `
-        --universal_layout_x_axis_deletion_y_pos -18.5 `
-        --universal_layout_x_axis_insertion_y_pos 5 `
-        --universal_layout_y_axis_x_pos 13 `
-        --universal_layout_y_axis_y_range -17 3 `
-        --universal_layout_y_axis_deletion_max_tick 17 `
-        --universal_layout_y_axis_insertion_max_tick 1 `
-        --subst_type withoutSubst --quiet
+      if (
+        (($cell -eq "OX") -and ($construct -eq "Sense") -and ($strand -eq "R1")) -or
+        (($cell -eq "WT") -and ($construct -eq "pCMVD") -and ($strand -eq "R1")) -or 
+        (($cell -eq "WT") -and ($construct -eq "BranchD") -and ($strand -eq "R1"))
+      ) {
+        continue
       }
+      python graph.py `
+      --input ./data_OX/input/2DSB_${cell}_${construct}_${strand}/ `
+      --output ./plot_OX/graph/2DSB_${cell}_${construct}_${strand}.png `
+      --layout universal_layout --width 2400 --height 1800 `
+      --range_x -13 14 --range_y -19 6 `
+      --universal_layout_x_axis_deletion_y_pos -18.5 `
+      --universal_layout_x_axis_insertion_y_pos 5 `
+      --universal_layout_y_axis_x_pos 13 `
+      --universal_layout_y_axis_y_range -17 3 `
+      --universal_layout_y_axis_deletion_max_tick 17 `
+      --universal_layout_y_axis_insertion_max_tick 1 `
+      --subst_type withoutSubst --quiet
+    }
+  }
+}
+
+# Plot graphs for comparison data
+foreach ($cell in ("OX", "WT")) {
+  foreach ($construct_pair in (("Sense", "BranchD"), ("Sense", "pCMVD"))) {
+    $construct1 = $construct_pair[0]
+    $construct2 = $construct_pair[1]
+    foreach ($strand in ("R1", "R2")) {
+      if (
+        (($cell -eq "OX") -and (($construct1 -eq "Sense") -or ($construct2 -eq "Sense")) -and ($strand -eq "R1")) -or
+        (($cell -eq "WT") -and (($construct1 -eq "pCMVD") -or ($construct2 -eq "pCMVD")) -and ($strand -eq "R1")) -or 
+        (($cell -eq "WT") -and (($construct1 -eq "BranchD") -or ($construct2 -eq "BranchD")) -and ($strand -eq "R1"))
+      ) {
+        continue
+      }
+      python graph.py `
+      --input ./data_OX/output/2DSB_${cell}_${construct1}_${construct2}_${strand}/ `
+      --output ./plot_OX/graph/2DSB_${cell}_${construct1}_${construct2}_${strand}.png `
+      --layout universal_layout --width 2400 --height 1800 `
+      --range_x -13 14 --range_y -19 6 `
+      --universal_layout_x_axis_deletion_y_pos -18.5 `
+      --universal_layout_x_axis_insertion_y_pos 5 `
+      --universal_layout_y_axis_x_pos 13 `
+      --universal_layout_y_axis_y_range -17 3 `
+      --universal_layout_y_axis_deletion_max_tick 17 `
+      --universal_layout_y_axis_insertion_max_tick 1 `
+      --subst_type withoutSubst --quiet
     }
   }
 }
@@ -132,8 +191,8 @@ foreach ($cell in ("OX", "WT")) {
           "substitution" = "#bfbfbf"
         }[$var]
         python histogram.py `
-        --input ./data_input_OX/2DSB_${cell}_${construct}_${strand}/ `
-        --output ./plot/OX/histogram/2DSB_${cell}_${construct}_${strand}_${var}.png `
+        --input ./data_OX/output/2DSB_${cell}_${construct}_${strand}/ `
+        --output ./plot_OX/histogram/2DSB_${cell}_${construct}_${strand}_${var}.png `
         --variation_type ${var} --color ${color} --label_type relative
       }
     }
