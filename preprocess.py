@@ -10,6 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '5_plot_
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '6_plot_histogram'))) # allow importing
 
 import argparse
+import glob
 
 import file_names
 import common_utils
@@ -157,16 +158,13 @@ def parse_args():
     '--label',
     type = str,
     help = 'Label of the experiment to be used in plot legends.',
-    required = True,
   )
   parser.add_argument(
     '--quiet',
     action = 'store_true',
     help = 'If present, do no output verbose log message.',
   )
-  args = vars(parser.parse_args())
-  args['min_length'] = max(args['dsb_pos'] + 1, args['min_length'])
-  return args
+  return vars(parser.parse_args())
 
 def get_sam_file(output, i):
   return os.path.join(file_names.sam_dir(output), f'{i}.sam')
@@ -196,22 +194,23 @@ def do_0_align(
     log_utils.new_line()
 
 def do_1_filter_nhej(
-  input,
   output,
   ref_seq_file,
   dsb_pos,
   min_length,
   quiet,
 ):
-  if input is None:
-    raise Exception('INPUT must be provided for stage 1_filter.')
   if ref_seq_file is None:
     raise Exception('REF_SEQ_FILE must be provided for stage 1_filter.')
   if dsb_pos is None:
     raise Exception('DSB_POS must be provided for stage 1_filter.')
   if min_length is None:
     raise Exception('MIN_LENGTH must be provided for stage 1_filter.')
-  for i in range(1, len(input) + 1):
+
+  min_length = max(dsb_pos + 1, min_length)
+  input_num = len(glob.glob(os.path.join(file_names.sam_dir(output), '*.sam')))
+
+  for i in range(1, input_num + 1):
     filter_nhej.main(
       ref_seq_file = ref_seq_file,
       sam_file = get_sam_file(output, i),
@@ -222,15 +221,14 @@ def do_1_filter_nhej(
     )
 
 def do_2_combine_repeat(
-  input,
   output,
   quiet,
 ):
-  if input is None:
-    raise Exception('INPUT must be provided for stage 2_combine.')
+  input = glob.glob(os.path.join(file_names.filter_nhej_dir(output), '*.tsv'))
+  input = sorted(input, key = lambda x: int(os.path.basename(x).split('.')[0]))
   combine_repeat.main(
-    input = [get_filter_nhej_file(output, i) for i in range(1, len(input) + 1)],
-    column_names = [f'r{i}' for i in range(1, len(input) + 1)],
+    input = input,
+    column_names = [str(i) for i in range(1, len(input) + 1)],
     output = file_names.combine_repeat_file(output),
     quiet = quiet,
   )
@@ -260,6 +258,8 @@ def do_3_window(
     raise Exception('TOTAL_READS must be provided for stage 3_window.')
   if freq_min is None:
     raise Exception('FREQ_MIN must be provided for stage 3_window.')
+  if label is None:
+    raise Exception('LABEL must be provided for stage 3_window.')
 
   combine_repeat_file = file_names.combine_repeat_file(output)
   window_dir = file_names.window_dir(output)
@@ -337,7 +337,6 @@ def do_stages_1(
 
   if '1_filter' in stages:
     do_1_filter_nhej(
-      input = input,
       output = output,
       ref_seq_file = ref_seq_file,
       dsb_pos = dsb_pos,
@@ -347,7 +346,6 @@ def do_stages_1(
 
   if '2_combine' in stages:
     do_2_combine_repeat(
-      input = input,
       output = output,
       quiet = quiet,
     )
@@ -416,6 +414,5 @@ def main(
   )
   do_stages_2(output = output, stages = stages)
  
-
 if __name__ == '__main__':
   main(**parse_args())

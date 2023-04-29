@@ -6,6 +6,14 @@ python preprocess.py --input data_demo/input/fastq/sense1_R2.fq data_demo/input/
 python preprocess.py --input data_demo/input/fastq/dcmv1_R1.fq data_demo/input/fastq/dcmv2_R1.fq data_demo/input/fastq/dcmv3_R1.fq data_demo/input/fastq/dcmv4_R1.fq --ref_seq_file data_demo/input/ref_seq/2DSB_R1_cmv.fa --dsb_pos 67 --output data_demo/output/dcmv_R1 --label dcmv_R1 --total_reads 3000 3000 3000 3000
 python preprocess.py --input data_demo/input/fastq/dcmv1_R2.fq data_demo/input/fastq/dcmv2_R2.fq data_demo/input/fastq/dcmv3_R2.fq data_demo/input/fastq/dcmv4_R2.fq --ref_seq_file data_demo/input/ref_seq/2DSB_R2_cmv.fa --dsb_pos 46 --output data_demo/output/dcmv_R2 --label dcmv_R2 --total_reads 3000 3000 3000 3000
 
+# Example of running preprocessing stages separately for one experiment
+python preprocess.py --input data_demo/input/fastq/db1_R1.fq data_demo/input/fastq/db2_R1.fq data_demo/input/fastq/db3_R1.fq data_demo/input/fastq/db4_R1.fq --ref_seq_file data_demo/input/ref_seq/2DSB_R1_branch.fa --output data_demo/output/db_R1 --stages 0_align
+python preprocess.py --ref_seq_file data_demo/input/ref_seq/2DSB_R1_branch.fa --dsb_pos 67 --output data_demo/output/db_R1 --stages 1_filter
+python preprocess.py --output data_demo/output/db_R1 --stages 2_combine
+python preprocess.py --ref_seq_file data_demo/input/ref_seq/2DSB_R1_branch.fa --dsb_pos 67 --output data_demo/output/db_R1 --label db_R1 --total_reads 3000 3000 3000 3000 --stages 3_window
+python preprocess.py --output data_demo/output/db_R1 --stages 4_graph
+python preprocess.py --output data_demo/output/db_R1 --stages 5_histogram
+
 ### Comparison data ###
 python comparison.py --input data_demo/output/sense_R1 data_demo/output/db_R1 --output data_demo/output/sense_db_R1
 python comparison.py --input data_demo/output/sense_R2 data_demo/output/db_R2 --output data_demo/output/sense_db_R2
