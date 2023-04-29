@@ -34,8 +34,9 @@ def parse_args():
       'Perform alignment and preprocessing for raw FASTQ data.' +
       ' This is script if broken in separate stages so that each stage' +
       ' can be run separately. However, the stages must be run in the correct order indicated' +
-      ' by their prefix numbers. See --stages for more information.'
-    )
+      ' by their prefix numbers. See parameter --stages for more information.'
+    ),
+    formatter_class = argparse.ArgumentDefaultsHelpFormatter,
   )
   parser.add_argument(
     '--input',
@@ -45,7 +46,6 @@ def parse_args():
       'Input FASTQ files of raw reads.' +
       ' Each file is considered a repeat of the same experiment.'
     ),
-    required = True,
   )
   parser.add_argument(
     '--output',
@@ -71,7 +71,7 @@ def parse_args():
       ' with the mean frequencies of the repeats.' +
       ' 3_window: Extract the nucleotide sequences and alignment from around the DSB site.' +
       ' 3_comparison: Combine the data from two different experiments in preparation for' +
-      ' making comparison graphs.' +
+      ' making comparison graphs (this stage cannot be run from "preprocess.py", only "comparison.py").' +
       ' 4_graph: Preprocess the data further for graph construction and plotting.' +
       ' 5_hist: Preprocess the data further for histogram construction and plotting.' +
       ' For a more detailed explanation of the preprocessing pipeline, see the README.'
@@ -81,12 +81,10 @@ def parse_args():
     '--ref_seq_file',
     type = common_utils.check_file,
     help = 'FASTA file with a single nucleotide sequence.',
-    required = True,
   )
   parser.add_argument(
     '--dsb_pos',
     type = int,
-    required = True,
     help = (
       'Position on reference sequence immediately left (5'') of DSB site.' +
       ' I.e., the DSB is between position DSB_POS and DSB_POS + 1.'
@@ -181,6 +179,10 @@ def do_0_align(
   output,
   ref_seq_file,
 ):
+  if input is None:
+    raise Exception('INPUT must be provided for stage 0_align.')
+  if ref_seq_file is None:
+    raise Exception('REF_SEQ_FILE must be provided for stage 0_align.')
   bowtie2_build_file = file_names.bowtie2_build(output)
   file_utils.make_parent_dir(bowtie2_build_file)
   log_utils.log_input('Bowtie2 build file: ' + bowtie2_build_file)
@@ -201,6 +203,14 @@ def do_1_filter_nhej(
   min_length,
   quiet,
 ):
+  if input is None:
+    raise Exception('INPUT must be provided for stage 1_filter.')
+  if ref_seq_file is None:
+    raise Exception('REF_SEQ_FILE must be provided for stage 1_filter.')
+  if dsb_pos is None:
+    raise Exception('DSB_POS must be provided for stage 1_filter.')
+  if min_length is None:
+    raise Exception('MIN_LENGTH must be provided for stage 1_filter.')
   for i in range(1, len(input) + 1):
     filter_nhej.main(
       ref_seq_file = ref_seq_file,
@@ -216,6 +226,8 @@ def do_2_combine_repeat(
   output,
   quiet,
 ):
+  if input is None:
+    raise Exception('INPUT must be provided for stage 2_combine.')
   combine_repeat.main(
     input = [get_filter_nhej_file(output, i) for i in range(1, len(input) + 1)],
     column_names = [f'r{i}' for i in range(1, len(input) + 1)],
@@ -234,6 +246,21 @@ def do_3_window(
   freq_min,
   label,
 ):
+  if ref_seq_file is None:
+    raise Exception('REF_SEQ_FILE must be provided for stage 3_window.')
+  if dsb_pos is None:
+    raise Exception('DSB_POS must be provided for stage 3_window.')
+  if window_size is None:
+    raise Exception('WINDOW_SIZE must be provided for stage 3_window.')
+  if anchor_size is None:
+    raise Exception('ANCHOR_SIZE must be provided for stage 3_window.')
+  if anchor_mismatches is None:
+    raise Exception('ANCHOR_MISMATCHES must be provided for stage 3_window.')
+  if total_reads is None:
+    raise Exception('TOTAL_READS must be provided for stage 3_window.')
+  if freq_min is None:
+    raise Exception('FREQ_MIN must be provided for stage 3_window.')
+
   combine_repeat_file = file_names.combine_repeat_file(output)
   window_dir = file_names.window_dir(output)
   for subst_type in constants.SUBST_TYPES:
@@ -337,7 +364,6 @@ def do_stages_1(
       freq_min = freq_min,
       label = label,
     )
-  
 
 # The stages from (inclusive) the point of merging samples for comparison.
 def do_stages_2(

@@ -22,7 +22,7 @@ def parse_args():
     nargs = 2,
     type = common_utils.check_dir,
     help = 'Input directories of data created with "preprocess.py".',
-    required = True
+    required = True,
   )
   parser.add_argument(
     '--output',
@@ -30,15 +30,25 @@ def parse_args():
     help = 'Output directory.',
     required = True,
   )
+  parser.add_argument(
+    '--stages',
+    type = str,
+    choices = preprocess.STAGES_2,
+    default = preprocess.STAGES_2,
+    nargs = '+',
+    help = 'Stages to run. See the documentation for "preprocess.py".',
+  )
   return vars(parser.parse_args())
 
 def main(
   input,
   output,
+  stages,
 ):
-  preprocess.do_stage_2(
+  preprocess.do_stages_2(
     output = output,
     input_comparison = input,
+    stages = stages,
   )
 
 if __name__ == '__main__':
