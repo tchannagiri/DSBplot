@@ -61,9 +61,3 @@ def graph_dir(dir):
 
 def histogram_dir(dir):
   return os.path.join(dir, '5_histogram')
-
-def histogram_3d(data_name, variation_type):
-  return '_'.join([data_name, variation_type]) + '.png'
-
-def graph_figure(data_name, ext='png'):
-  return data_name + os.path.extsep  + ext
