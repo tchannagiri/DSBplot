@@ -472,7 +472,18 @@ It's important that all the biological repeats for each experiment use the same 
 
 The output of the preprocessing pipeline will be a collection of tables in TSV (tab-separated value) format. The most significant files are located in the  `4_graph` and `5_histogram` subdirectories, which contain data used for plotting graphs and histograms, respectively. Other intermediate preprocessing files are stored in other subdirectories.
 
-If you need more information about the parameters used in the preprocessing pipeline, you can use the command `python preprocess.py --help`. You can also see the `preprocess.py` section for more details.
+An alternative to running all the stages of preprocessing in a single `preprocess.py` invocation is to run the stages separately using the `--stages` command. Below is an example of preprocessing the db_R1 experiment with only one stage per invocation. Note that not all parameters must be set for all the stages.
+
+```
+python preprocess.py --input data_demo/input/fastq/db1_R1.fq data_demo/input/fastq/db2_R1.fq data_demo/input/fastq/db3_R1.fq data_demo/input/fastq/db4_R1.fq --ref_seq_file data_demo/input/ref_seq/2DSB_R1_branch.fa --output data_demo/output/db_R1 --stages 0_align
+python preprocess.py --ref_seq_file data_demo/input/ref_seq/2DSB_R1_branch.fa --dsb_pos 67 --output data_demo/output/db_R1 --stages 1_filter
+python preprocess.py --output data_demo/output/db_R1 --stages 2_combine
+python preprocess.py --ref_seq_file data_demo/input/ref_seq/2DSB_R1_branch.fa --dsb_pos 67 --output data_demo/output/db_R1 --label db_R1 --total_reads 3000 3000 3000 3000 --stages 3_window
+python preprocess.py --output data_demo/output/db_R1 --stages 4_graph
+python preprocess.py --output data_demo/output/db_R1 --stages 5_histogram
+```
+
+If you need more information about the parameters used in the preprocessing pipeline, you can use the command `python preprocess.py --help`. You can also see the [`preprocess.py`](#preprocesspy) section for more details.
 
 ### Tutorial: Comparisons
 

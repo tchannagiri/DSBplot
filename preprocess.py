@@ -48,13 +48,14 @@ def parse_args():
     type = common_utils.check_file,
     help = (
       'Input FASTQ files of raw reads.' +
-      ' Each file is considered a repeat of the same experiment.'
+      ' Each file is considered a repeat of the same experiment.' +
+      ' Required only for stages 0_align.'
     ),
   )
   parser.add_argument(
     '--output',
     type = common_utils.check_dir_output,
-    help = 'Output directory.',
+    help = 'Output directory. Required for all stages.',
     required = True,
   )
   parser.add_argument(
@@ -84,24 +85,30 @@ def parse_args():
   parser.add_argument(
     '--ref_seq_file',
     type = common_utils.check_file,
-    help = 'FASTA file with a single nucleotide sequence.',
+    help = (
+      'FASTA file with a single nucleotide sequence.' +
+      ' Required for stages 0_align and 1_filter.'
+    ),
   )
   parser.add_argument(
     '--dsb_pos',
     type = int,
     help = (
       'Position on reference sequence immediately left (5'') of DSB site.' +
-      ' I.e., the DSB is between position DSB_POS and DSB_POS + 1.'
+      ' I.e., the DSB is between position DSB_POS and DSB_POS + 1.' +
+      ' Required only for stage 1_filter.'
     ),
   )
   parser.add_argument(
     '--min_length',
     type = int,
-    default = -1,
     help = (
       'Minimum length of read sequence to be considered.' +
       ' Reads shorter than this are discarded.' +
-      ' Forced to be at least DSB_POS + 1, which is also the default value.'
+      ' Forced to be at least DSB_POS + 1.' +
+      ' If not given, will be assigned DSB_POS + 1.' +
+      ' Required only for stage 1_filter' +
+      ' (but can be omitted because of default).'
     ),
   )
   parser.add_argument(
@@ -113,7 +120,9 @@ def parse_args():
       ' The nucleotides at the positions' +
       ' {DSB_POS - WINDOW_SIZE + 1, ..., DSB_POS + WINDOW_SIZE} are extracted.' +
       ' The actual number of nucleotides extracted from each read may vary depending' +
-      ' on the number of insertions/deletions/substitutions in the alignment.'
+      ' on the number of insertions/deletions/substitutions in the alignment.' +
+      ' Required only for stage 3_window' +
+      ' (but can be omitted because of default).'
     ),
   )
   parser.add_argument(
@@ -122,7 +131,9 @@ def parse_args():
     default = 20,
     help = (
       'Size of the anchor on the left/right of the extracted window' +
-      ' to check for mismatches.'
+      ' to check for mismatches.' +
+      ' Required only for stage 3_window' +
+      ' (but can be omitted because of default).'
     ),
   )
   parser.add_argument(
@@ -132,7 +143,9 @@ def parse_args():
     help = (
       'Maximum number of mismatches allowed on the left/right anchor sequences.\n'
       'Reads with more than the allowed number of mismatches on the left/right anchor\n'
-      'will be discarded. This limit is applied to the left/right anchors separately.'
+      'will be discarded. This limit is applied to the left/right anchors separately.' +
+      ' Required only for stage 3_window' +
+      ' (but can be omitted because of default).'
     ),
   )
   parser.add_argument(
@@ -143,7 +156,9 @@ def parse_args():
       ' This may be strictly greater than the number of reads in the input FASTQ' +
       ' files if some reads were discarded during preprocessing.' +
       ' The number of arguments must be the same as the number of ' +
-      ' INPUTs. If not provided, the total reads remaining after NHEJ filtering are used.'
+      ' INPUTs. If not provided, the total reads remaining after NHEJ filtering are used.' +
+      ' Required only for stage 2_combine' +
+      ' (but can be omitted because of default).'
     ),
     nargs = '+',
   )
@@ -153,14 +168,19 @@ def parse_args():
     default = 1e-5,
     help = (
       f'Minimum frequency for output in' +
-      f' windows_{constants.FREQ_FILTER_MEAN}.' +
-      f' Sequences with frequencies <= this are discarded.'
+      f' windows_{constants.FREQ_FILTER_MEAN}.tsv.' +
+      f' Sequences with frequencies <= this are discarded.' +
+      f' Required only for stage 3_window' +
+      f' (but can be omitted because of default).'
     ),
   )
   parser.add_argument(
     '--label',
     type = str,
-    help = 'Label of the experiment to be used in plot legends.',
+    help = (
+      'Label of the experiment to be used in plot legends.' +
+      'Required only for stage 3_window.'
+    ),
   )
   parser.add_argument(
     '--quiet',
@@ -208,7 +228,7 @@ def do_1_filter_nhej(
   if dsb_pos is None:
     raise Exception('DSB_POS must be provided for stage 1_filter.')
   if min_length is None:
-    raise Exception('MIN_LENGTH must be provided for stage 1_filter.')
+    min_length = dsb_pos + 1
 
   min_length = max(dsb_pos + 1, min_length)
   input_num = len(glob.glob(os.path.join(file_names.sam_dir(output), '*.sam')))
@@ -257,8 +277,6 @@ def do_3_window(
     raise Exception('ANCHOR_SIZE must be provided for stage 3_window.')
   if anchor_mismatches is None:
     raise Exception('ANCHOR_MISMATCHES must be provided for stage 3_window.')
-  if total_reads is None:
-    raise Exception('TOTAL_READS must be provided for stage 3_window.')
   if freq_min is None:
     raise Exception('FREQ_MIN must be provided for stage 3_window.')
   if label is None:
