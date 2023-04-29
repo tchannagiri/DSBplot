@@ -67,7 +67,7 @@ foreach ($cell in ("OX", "WT")) {
         python ./2_get_window_data/get_window.py `
           --input ./data_OX/output/2DSB_${cell}_${construct}_${strand}/2_combine_repeat/out.tsv `
           --output ./data_OX/output/2DSB_${cell}_${construct}_${strand}/3_window/ `
-          --ref_seq_file ./data_input/ref_seq/2DSB_${strand}_${construct2}.fa `
+          --ref_seq_file ./data_OX/input/ref_seq/2DSB_${strand}_${construct2}.fa `
           --dsb_pos ${dsb_pos} --subst_type ${subst} --label ${strand}
         python ./2_get_window_data/get_freq.py `
           --input ./data_OX/output/2DSB_${cell}_${construct}_${strand}/3_window/ `
@@ -118,8 +118,6 @@ foreach ($cell in ("OX", "WT")) {
 # Plot graphs for individual data
 foreach ($cell in ("OX", "WT")) {
   foreach ($construct in ("Sense", "BranchD", "pCMVD")) {
-    $construct1 = $construct_pair[0]
-    $construct2 = $construct_pair[1]
     foreach ($strand in ("R1", "R2")) {
       if (
         (($cell -eq "OX") -and ($construct -eq "Sense") -and ($strand -eq "R1")) -or
@@ -129,7 +127,7 @@ foreach ($cell in ("OX", "WT")) {
         continue
       }
       python graph.py `
-      --input ./data_OX/input/2DSB_${cell}_${construct}_${strand}/ `
+      --input ./data_OX/output/2DSB_${cell}_${construct}_${strand}/ `
       --output ./plot_OX/graph/2DSB_${cell}_${construct}_${strand}.png `
       --layout universal_layout --width 2400 --height 1800 `
       --range_x -13 14 --range_y -19 6 `
