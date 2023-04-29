@@ -33,9 +33,12 @@ def parse_args():
   parser = argparse.ArgumentParser(
     description = (
       'Perform alignment and preprocessing for raw FASTQ data.' +
-      ' This is script if broken in separate stages so that each stage' +
+      ' This is script is broken in separate stages so that each stage' +
       ' can be run separately. However, the stages must be run in the correct order indicated' +
-      ' by their prefix numbers. See parameter --stages for more information.'
+      ' by their prefix numbers. If running the stages separately, the value of OUTPUT' +
+      ' must the same value on each separate invocation. Two experiments should not' +
+      ' be given the same OUTPUT directory. See parameter --stages and the README for more information' +
+      ' on the individual stages.'
     ),
     formatter_class = argparse.ArgumentDefaultsHelpFormatter,
   )
