@@ -101,7 +101,7 @@ def parse_args():
     help = (
       'Minimum length of read sequence to be considered.' +
       ' Reads shorter than this are discarded.' +
-      ' Forced to be at least DSB_POS + 1.'
+      ' Forced to be at least DSB_POS + 1, which is also the default value.'
     ),
   )
   parser.add_argument(

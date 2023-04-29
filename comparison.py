@@ -15,7 +15,8 @@ def parse_args():
       'Combine two individual experiment directories to make a comparison' +
       ' experiment directory for comparison graphs.' +
       ' The experiments must be have the same windowed reference sequence.'
-    )
+    ),
+    formatter_class = argparse.ArgumentDefaultsHelpFormatter,
   )
   parser.add_argument(
     '--input',

@@ -65,7 +65,7 @@ The preprocessing pipeline produces two different versions of most files: one *i
 
 #### Prepcocessing stages
 
-This `preprocess.py` script is broken in separate stages so that each stage can be run separately (potentially on different machines). However, the stages must be run in the correct order indicated by their prefixes. If running the stages separately, the value of the `OUTPUT` directory must the same value on each separate invocation. Two different experiments should not be given the same `OUTPUT` directory or the data from the first will be overwritten. The following escribes each stage in more detail.
+This `preprocess.py` script is broken in separate stages so that each stage can be run separately (potentially on different machines). However, the stages must be run in the correct order indicated by their prefixes. If running the stages separately, the value of the `OUTPUT` directory must the same value on each separate invocation. Two different experiments should not be given the same `OUTPUT` directory or the data from the second will overwrite the first. The following describes each stage in more detail.
 
 1. **0_align**: Align FASTQ reads against FASTA reference sequence. This stage requires multiple input FASTQ files representing independent repeats or biological/tehchnical replicates of the treatment condition. The alignment is done independently for each of the input FASTQs. The output of this step is a set of [SAM](https://samtools.github.io/hts-specs/SAMv1.pdf) files. Please ensure that [Bowtie 2](https://bowtie-bio.sourceforge.net/bowtie2/index.shtml) is installed and that the commands `bowtie2-build-s` and `bowtie2-align-s` are available on the PATH (using the Python command `os.system()`). The output directories of this stage are:
     * `0_bowtie2_build`: The Bowtie 2 index files built with `bowtie2-build-s`.
@@ -79,7 +79,7 @@ This `preprocess.py` script is broken in separate stages so that each stage can 
    If multiple reads have exactly the same nucleotide sequence but had different alignments with the reference, they will be forced to have the same alignment as the first such read encountered. Note that the left-most (5'-most) position on the read must align with the left-most position on the reference, but the same is not true for the right-most (3'-most) positions. This is because it is possible for reads to be too small and only capture the 5' primer but not the 3' primer. However, the read must have a length of at least `DSB_POS + 1` so that it surrounds the DSB position. The output is a set of tables in TSV format that contain the unique alignments and their read counts. The output is saved in files named `1_filter_nhej/[N].tsv`, where `[N]` is an integer representing the repeat number, in the same order they are specified on the command line.
 3. **2_combine**: Combine the tables output from stage 2 into a single table with multiple frequency columns, one for each input. The output will be in `2_combine_repeat/out.tsv`.
 4. **3_window**: This stage is broken into the following substages:
-  1. Window extraction: For each unique alignment in the output table of stage 3, extract the portion of the read that aligns to the positions `DSB_POS - WINDOW_SIZE + 1` to `DSB_POS + WINDOW_SIZE` on the reference sequence. If different reads become identical after extracting their windows, their read counts will be summed. To ensure that variations near the DSB do not spill outside the window, *anchors* must be present on either side of the extracted windows. Anchors are the parts of the read that align to the `ANCHOR_SIZE` nucleotides on the left (5') and right (3') of the window on the reference. Each anchor must have at most `ANCHOR_MISMATCHES` mismatches and no in/dels, or it is discarded. The output is a table in TSV format. The output will be in directory `3_window`, in files `window_count_withoutSubst.tsv` and `window_count_withSubst.tsv`. The "withoutSubst" version of the output has substitutions (or mismatches) in the alignment removed by replacing the incorrect nucleotide on the read with the correct nucleotide from the reference. See [here](#substitutions-in-bowtie-2) for the justification of removing substitutions.
+  1. Window extraction: For each unique alignment in the output table of stage 2_combine, extract the portion of the read that aligns to the positions `DSB_POS - WINDOW_SIZE + 1` to `DSB_POS + WINDOW_SIZE` on the reference sequence. If different reads become identical after extracting their windows, their read counts will be summed. To ensure that variations near the DSB do not spill outside the window, *anchors* must be present on either side of the extracted windows. Anchors are the parts of the read that align to the `ANCHOR_SIZE` nucleotides on the left (5') and right (3') of the window on the reference. Each anchor must have at most `ANCHOR_MISMATCHES` mismatches and no in/dels, or it is discarded. The output is a table in TSV format. The output will be in directory `3_window`, in files `window_count_withoutSubst.tsv` and `window_count_withSubst.tsv`. The "withoutSubst" version of the output has substitutions (or mismatches) in the alignment removed by replacing the incorrect nucleotide on the read with the correct nucleotide from the reference. See [here](#substitutions-in-bowtie-2) for the justification of removing substitutions.
   2. Frequency conversion: Convert the raw read counts into frequencies in the range [0,1]. This is done by dividing the read counts by the total number of reads in the library. Since the total number of reads in each sample might not be exactly the sum of the read counts (e.g., if the trimming process removed some reads), the total reads are input using `--total_reads`. In this stage, the separate frequency columns for each repeat are collapsed into a single column by taking their mean. Also, alignments whose minimum frequency across the repeats is below `FREQ_MIN` will be discarded. The output will be in the subdirectory 3_window, in files:
   * `window_freq_withSubst.tsv`/`window_freq_withoutSubst.tsv`: Frequency tables with separate columns for the separate repeats.
   * `window_freq_filter_withSubst.tsv`/`window_freq_filter_withoutSubst.tsv`: The previous frequency tables with the minimum frequency filter applied.
@@ -92,40 +92,55 @@ This `preprocess.py` script is broken in separate stages so that each stage can 
 Output of `python preprocess.py --help`:
 
 ```
-usage: preprocess.py [-h] --input INPUT [INPUT ...] --output OUTPUT --ref_seq_file REF_SEQ_FILE --dsb_pos DSB_POS [--min_length MIN_LENGTH]
-                     [--window_size WINDOW_SIZE] [--anchor_size ANCHOR_SIZE] [--anchor_mismatches ANCHOR_MISMATCHES] --total_reads
-                     TOTAL_READS [TOTAL_READS ...] [--freq_min FREQ_MIN] --label LABEL [--quiet]
+usage: preprocess.py [-h] [--input INPUT [INPUT ...]] --output OUTPUT
+                     [--stages {0_align,1_filter,2_combine,3_window,3_comparison,4_graph,5_histogram} [{0_align,1_filter,2_combine,3_window,3_comparison,4_graph,5_histogram} ...]]
+                     [--ref_seq_file REF_SEQ_FILE] [--dsb_pos DSB_POS] [--min_length MIN_LENGTH]
+                     [--window_size WINDOW_SIZE] [--anchor_size ANCHOR_SIZE] [--anchor_mismatches ANCHOR_MISMATCHES]        
+                     [--total_reads TOTAL_READS [TOTAL_READS ...]] [--freq_min FREQ_MIN] [--label LABEL] [--quiet]
 
-Perform alignment and preprocessing for raw FASTQ data.
+Perform alignment and preprocessing for raw FASTQ data. This is script is broken in separate stages so that each stage can  
+be run separately. However, the stages must be run in the correct order indicated by their prefix numbers. If running the   
+stages separately, the value of OUTPUT must the same value on each separate invocation. Two experiments should not be       
+given the same OUTPUT directory. See parameter --stages and the README for more information on the individual stages.       
 
 options:
   -h, --help            show this help message and exit
   --input INPUT [INPUT ...]
-                        Input FASTQ files of raw reads. Each file is considered a repeat of the same experiment.
-  --output OUTPUT       Output directory.
+                        Input FASTQ files of raw reads. Each file is considered a repeat of the same experiment. (default:  
+                        None)
+  --output OUTPUT       Output directory. (default: None)
+  --stages {0_align,1_filter,2_combine,3_window,3_comparison,4_graph,5_histogram} [{0_align,1_filter,2_combine,3_window,3_comparison,4_graph,5_histogram} ...]
+                        Stages to run. The stages must be run in the correct order indicated by their prefix numbers        
+                        (3_comparison must come after 3_window). Briefly, the stages are: 0_align: Align reads to
+                        reference sequence using Bowtie 2. 1_filter: Filter reads that represent NHEJ repair (all in/dels   
+                        touch the DSB site and are contiguous). 2_combine: Combine the repeats of from the same experiment  
+                        into a single file with the mean frequencies of the repeats. 3_window: Extract the nucleotide       
+                        sequences and alignment from around the DSB site. 3_comparison: Combine the data from two
+                        different experiments in preparation for making comparison graphs (this stage cannot be run from    
+                        "preprocess.py", only "comparison.py"). 4_graph: Preprocess the data further for graph
+                        construction and plotting. 5_hist: Preprocess the data further for histogram construction and       
+                        plotting. For a more detailed explanation of the preprocessing pipeline, see the README. (default:  
+                        ['0_align', '1_filter', '2_combine', '3_window', '4_graph', '5_histogram'])
   --ref_seq_file REF_SEQ_FILE
-                        FASTA file with a single nucleotide sequence.
-  --dsb_pos DSB_POS     Position on reference sequence immediately left (5) of DSB site. I.e., the DSB is between position DSB_POS and        
-                        DSB_POS + 1.
+                        FASTA file with a single nucleotide sequence. (default: None)
+  --dsb_pos DSB_POS     Position on reference sequence immediately left (5) of DSB site. I.e., the DSB is between position  
+                        DSB_POS and DSB_POS + 1. (default: None)
   --min_length MIN_LENGTH
-                        Minimum length of read sequence to be considered. Reads shorter than this are discarded. Forced to be at least        
-                        DSB_POS + 1.
-  --window_size WINDOW_SIZE
-                        Size of window around DSB site to extract. The nucleotides at the positions {DSB_POS - WINDOW_SIZE + 1, ..., DSB_POS  
-                        + WINDOW_SIZE} are extracted. The actual number of nucleotides extracted from each read may vary depending on the     
-                        number of insertions/deletions/substitutions in the alignment.
-  --anchor_size ANCHOR_SIZE
-                        Size of the anchor on the left/right of the extracted window to check for mismatches.
+                        Minimum length of read sequence to be considered. Reads shorter than this are discarded. Forced to  
+                        be at least DSB_POS + 1, which is also the default value (default: -1)
   --anchor_mismatches ANCHOR_MISMATCHES
-                        Maximum number of mismatches allowed on the left/right anchor sequences. Reads with more than the allowed number of   
-                        mismatches on the left/right anchor will be discarded. This limit is applied to the left/right anchors separately.    
+                        Maximum number of mismatches allowed on the left/right anchor sequences. Reads with more than the   
+                        allowed number of mismatches on the left/right anchor will be discarded. This limit is applied to   
+                        the left/right anchors separately. (default: 1)
   --total_reads TOTAL_READS [TOTAL_READS ...]
-                        Total number reads in each experiment. This may be strictly greater than the number of reads in the input FASTQ       
-                        files if some reads were discarded during preprocessing. The number of arguments must be the same as the number of    
-                        INPUTs.
-  --freq_min FREQ_MIN   Minimum frequency for output in windows_freq_filter_mean. Sequences with frequencies <= this are discarded.
-  --label LABEL         Label of the experiment to be used in plot legends.
-  --quiet               If present, do no output verbose log message.
+                        Total number reads in each experiment. This may be strictly greater than the number of reads in     
+                        the input FASTQ files if some reads were discarded during preprocessing. The number of arguments    
+                        must be the same as the number of INPUTs. If not provided, the total reads remaining after NHEJ     
+                        filtering are used. (default: None)
+  --freq_min FREQ_MIN   Minimum frequency for output in windows_freq_filter_mean. Sequences with frequencies <= this are    
+                        discarded. (default: 1e-05)
+  --label LABEL         Label of the experiment to be used in plot legends. (default: None)
+  --quiet               If present, do no output verbose log message. (default: False)
 ```
 
 Please reference to CITATION for more details about the preprocessing.
@@ -135,16 +150,21 @@ Please reference to CITATION for more details about the preprocessing.
 This stages creates data needed to compare two different sequencing libraries. Specifically, it takes as input two directories that were created using the `preprocess.py` script, and will output a third directory that contains analogous data for creating comparison graphs of the two samples. For meaningful comparisons, it is important that the reference sequences (after restricting to the specified window) are identical between the two libraries. The output data will contain the same columns as that output from `preprocess.py` (i.e., it will have the same information about the variations around the DSBs), but will have two additional columns (with suffixes `_1` and `_2`) for the frequencies of the two different samples being compared. The original frequency column, with no suffix, will contain the maximum of these two frequencies. The output will be in the subdirectories `3_window`, `4_graph`, and `5_histogram`.
 
 Output of `python comparison.py --help`:
+
 ```
 usage: comparison.py [-h] --input INPUT INPUT --output OUTPUT
+                     [--stages {3_comparison,4_graph,5_histogram} [{3_comparison,4_graph,5_histogram} ...]]
 
-Combine two individual experiment directories to make a comparison experiment directory for comparison graphs. The experiments must
-be have the same windowed reference sequence.
+Combine two individual experiment directories to make a comparison experiment directory for comparison graphs. The
+experiments must be have the same windowed reference sequence.
 
 options:
-  -h, --help           show this help message and exit
-  --input INPUT INPUT  Input directories of data created with "preprocess.py".
-  --output OUTPUT      Output directory.
+  -h, --help            show this help message and exit
+  --input INPUT INPUT   Input directories of data created with "preprocess.py". (default: None)
+  --output OUTPUT       Output directory. (default: None)
+  --stages {3_comparison,4_graph,5_histogram} [{3_comparison,4_graph,5_histogram} ...]
+                        Stages to run. See the documentation for "preprocess.py". (default: ['3_comparison', '4_graph',     
+                        '5_histogram'])
 ```
 
 ### `graph.py`
@@ -167,123 +187,135 @@ usage: graph.py [-h] --input INPUT [INPUT ...] [--output OUTPUT [OUTPUT ...]] [-
                 [--universal_layout_x_scale_insertion UNIVERSAL_LAYOUT_X_SCALE_INSERTION]
                 [--universal_layout_y_scale_insertion UNIVERSAL_LAYOUT_Y_SCALE_INSERTION]
                 [--universal_layout_x_scale_deletion UNIVERSAL_LAYOUT_X_SCALE_DELETION]
-                [--universal_layout_y_scale_deletion UNIVERSAL_LAYOUT_Y_SCALE_DELETION] [--subst_type {withSubst,withoutSubst}]
-                [--node_freq_range NODE_FREQ_RANGE NODE_FREQ_RANGE] [--node_px_range NODE_PX_RANGE NODE_PX_RANGE]
-                [--node_outline_scale NODE_OUTLINE_SCALE] [--node_comparison_colors NODE_COMPARISON_COLORS NODE_COMPARISON_COLORS]
-                [--node_comparison_color_type {continuous,discrete}] [--node_freq_ratio_range NODE_FREQ_RATIO_RANGE NODE_FREQ_RATIO_RANGE]    
-                [--node_reference_outline_color NODE_REFERENCE_OUTLINE_COLOR] [--node_outline_color NODE_OUTLINE_COLOR]
+                [--universal_layout_y_scale_deletion UNIVERSAL_LAYOUT_Y_SCALE_DELETION]
+                [--subst_type {withSubst,withoutSubst}] [--node_freq_range NODE_FREQ_RANGE NODE_FREQ_RANGE]
+                [--node_px_range NODE_PX_RANGE NODE_PX_RANGE] [--node_outline_scale NODE_OUTLINE_SCALE]
+                [--node_comparison_colors NODE_COMPARISON_COLORS NODE_COMPARISON_COLORS]
+                [--node_comparison_color_type {continuous,discrete}]
+                [--node_freq_ratio_range NODE_FREQ_RATIO_RANGE NODE_FREQ_RATIO_RANGE]
+                [--node_reference_outline_color NODE_REFERENCE_OUTLINE_COLOR] [--node_outline_color NODE_OUTLINE_COLOR]     
                 [--node_fill_color NODE_FILL_COLOR]
                 [--variation_types {insertion,deletion,substitution,mixed,none} [{insertion,deletion,substitution,mixed,none} ...]]
                 [--variation_type_colors VARIATION_TYPE_COLORS VARIATION_TYPE_COLORS VARIATION_TYPE_COLORS VARIATION_TYPE_COLORS VARIATION_TYPE_COLORS]
-                [--edge_show {True,False}] [--edge_types {indel,substitution} [{indel,substitution} ...]] [--edge_scale EDGE_SCALE]
-                [--stats] [--width_px WIDTH_PX] [--height_px HEIGHT_PX] [--margin_top_px MARGIN_TOP_PX]
-                [--margin_bottom_px MARGIN_BOTTOM_PX] [--margin_left_px MARGIN_LEFT_PX] [--margin_right_px MARGIN_RIGHT_PX]
-                [--line_width_scale LINE_WIDTH_SCALE] [--font_size_scale FONT_SIZE_SCALE] [--crop_x CROP_X CROP_X] [--crop_y CROP_Y CROP_Y]   
-                [--range_x RANGE_X RANGE_X] [--range_y RANGE_Y RANGE_Y] [--legend] [--legend_colorbar_scale LEGEND_COLORBAR_SCALE]
-                [--legend_spacing_px LEGEND_SPACING_PX] [--separate_components] [--interactive] [--reverse_complement {0,1} [{0,1} ...]]      
+                [--edge_show {True,False}] [--edge_types {indel,substitution} [{indel,substitution} ...]]
+                [--edge_scale EDGE_SCALE] [--stats] [--width_px WIDTH_PX] [--height_px HEIGHT_PX]
+                [--margin_top_px MARGIN_TOP_PX] [--margin_bottom_px MARGIN_BOTTOM_PX] [--margin_left_px MARGIN_LEFT_PX]     
+                [--margin_right_px MARGIN_RIGHT_PX] [--line_width_scale LINE_WIDTH_SCALE]
+                [--font_size_scale FONT_SIZE_SCALE] [--crop_x CROP_X CROP_X] [--crop_y CROP_Y CROP_Y]
+                [--range_x RANGE_X RANGE_X] [--range_y RANGE_Y RANGE_Y] [--legend]
+                [--legend_colorbar_scale LEGEND_COLORBAR_SCALE] [--legend_spacing_px LEGEND_SPACING_PX]
+                [--separate_components] [--interactive] [--reverse_complement {0,1} [{0,1} ...]] [--quiet]
 
-Lay out and plot variation-distance graphs. Uses the output from "get_graph_data" as input. For more information about the layouts please     
-see the publication FIXME.
+Layout and plot variation-distance graphs. Uses the output from "get_graph_data" as input. For more information about the   
+layouts please see the publication FIXME.
 
 options:
   -h, --help            show this help message and exit
   --input INPUT [INPUT ...]
-                        List of directories with the data files produced with "get_graph_data.py". All libraries specified here must have     
-                        the same windowed reference sequence (i.e., the 20bp section of the reference around the DSB site should be the same  
-                        in all libraries). All the libraries will be laid out using common x/y-coordinate assignments to the vertices.        
-                        (default: None)
+                        List of directories with the data files produced with "get_graph_data.py". All libraries specified  
+                        here must have the same windowed reference sequence (i.e., the 20bp section of the reference        
+                        around the DSB site should be the same in all libraries). All the libraries will be laid out using  
+                        common x/y-coordinate assignments to the vertices. (default: None)
   --output OUTPUT [OUTPUT ...]
-                        Output file. If not given no output will be written (useful only when using "--interactive"). The file extension      
-                        should be either ".png" or ".html" for a static PNG or interactive HTML output respectively. Should be either 0       
-                        arguments or the number of arguments should match the number of input directories. (default: None)
+                        Output file. If not given no output will be written (useful only when using "--interactive"). The   
+                        file extension should be either ".png" or ".html" for a static PNG or interactive HTML output       
+                        respectively. Should be either 0 arguments or the number of arguments should match the number of    
+                        input directories. (default: None)
   --title TITLE [TITLE ...]
-                        If present, adds a title to the plot with this value. Number of arguments should match the number of input files.     
-                        (default: None)
+                        If present, adds a title to the plot with this value. Number of arguments should match the number   
+                        of input files. (default: None)
   --layout {mds_layout,radial_layout,universal_layout,fractal_layout,kamada_layout,spectral_layout,spring_layout,shell_layout,spiral_layout,circular_layout,multipartite_layout}
                         The algorithm to use for laying out the graph. (default: universal_layout)
   --universal_layout_y_axis_x_pos UNIVERSAL_LAYOUT_Y_AXIS_X_POS
-                        If present, shows a y-axis at the given x position showing the distances to the reference. Univeral layout only.      
-                        (default: None)
+                        If present, shows a y-axis at the given x position showing the distances to the reference.
+                        Univeral layout only. (default: None)
   --universal_layout_x_axis_deletion_y_pos UNIVERSAL_LAYOUT_X_AXIS_DELETION_Y_POS
-                        If present, shows an x-axis for deletions at the given y position showing the approximate position of the deleted     
-                        ranges. Univeral layout only. (default: None)
+                        If present, shows an x-axis for deletions at the given y position showing the approximate position  
+                        of the deleted ranges. Univeral layout only. (default: None)
   --universal_layout_x_axis_deletion_label_type {relative,absolute}
-                        The type of labeling to use for the universal layout deletion x-axis (if present). "relative" labels have 0 in the    
-                        middle with negative/positive values on the left/right. "absolute" labels have 1 on the left and the length of the    
-                        reference sequence on the right. (default: relative)
+                        The type of labeling to use for the universal layout deletion x-axis (if present). "relative"       
+                        labels have 0 in the middle with negative/positive values on the left/right. "absolute" labels      
+                        have 1 on the left and the length of the reference sequence on the right. (default: relative)       
   --universal_layout_x_axis_insertion_y_pos UNIVERSAL_LAYOUT_X_AXIS_INSERTION_Y_POS
-                        If present, shows a x-axis for insertions at the given y position showing the first nucleotide of inserted
-                        sequences. Univeral layout only. (default: None)
+                        If present, shows a x-axis for insertions at the given y position showing the first nucleotide of   
+                        inserted sequences. Univeral layout only. (default: None)
   --universal_layout_y_axis_y_range UNIVERSAL_LAYOUT_Y_AXIS_Y_RANGE UNIVERSAL_LAYOUT_Y_AXIS_Y_RANGE
-                        If showing an y-axis for the universal layout, the min and max y-position of the line. (default: [nan, nan])
+                        If showing an y-axis for the universal layout, the min and max y-position of the line. (default:    
+                        [nan, nan])
   --universal_layout_x_axis_x_range UNIVERSAL_LAYOUT_X_AXIS_X_RANGE UNIVERSAL_LAYOUT_X_AXIS_X_RANGE
-                        If showing an x-axis for the universal layout, the min and max x-position of the line. (default: [nan, nan])
+                        If showing an x-axis for the universal layout, the min and max x-position of the line. (default:    
+                        [nan, nan])
   --universal_layout_y_axis_deletion_max_tick UNIVERSAL_LAYOUT_Y_AXIS_DELETION_MAX_TICK
-                        If showing an y-axis for the universal layout, the max tick value for the deletion side. (default: None)
+                        If showing an y-axis for the universal layout, the max tick value for the deletion side. (default:  
+                        None)
   --universal_layout_y_axis_insertion_max_tick UNIVERSAL_LAYOUT_Y_AXIS_INSERTION_MAX_TICK
-                        If showing an y-axis for the universal layout, the max tick value for the insertion side. (default: None)
+                        If showing an y-axis for the universal layout, the max tick value for the insertion side.
+                        (default: None)
   --universal_layout_x_scale_insertion UNIVERSAL_LAYOUT_X_SCALE_INSERTION
-                        The factor for determining the scale on the universal layout insertion x-axis. Insertion vertex x-coordinates will    
-                        be multiplied by this value. (default: 10)
+                        The factor for determining the scale on the universal layout insertion x-axis. Insertion vertex     
+                        x-coordinates will be multiplied by this value. (default: 10)
   --universal_layout_y_scale_insertion UNIVERSAL_LAYOUT_Y_SCALE_INSERTION
-                        The factor for determining the scale on the universal layout insertion y-axis. Insertion vertex y-coordinates will    
-                        be multiplied by this value. (default: 3)
+                        The factor for determining the scale on the universal layout insertion y-axis. Insertion vertex     
+                        y-coordinates will be multiplied by this value. (default: 3)
   --universal_layout_x_scale_deletion UNIVERSAL_LAYOUT_X_SCALE_DELETION
-                        The factor for determining the scale on the universal layout deletion x-axis. Deletion vertex x-coordinates will be   
-                        multiplied by this value. (default: 2)
+                        The factor for determining the scale on the universal layout deletion x-axis. Deletion vertex       
+                        x-coordinates will be multiplied by this value. (default: 2)
   --universal_layout_y_scale_deletion UNIVERSAL_LAYOUT_Y_SCALE_DELETION
-                        The factor for determining the scale on the universal layout deletion y-axis. Deletion vertex y-coordinates will be   
-                        multiplied by this value. (default: 1)
+                        The factor for determining the scale on the universal layout deletion y-axis. Deletion vertex       
+                        y-coordinates will be multiplied by this value. (default: 1)
   --subst_type {withSubst,withoutSubst}
                         Whether to plot data with or without substitutions. (default: withoutSubst)
   --node_freq_range NODE_FREQ_RANGE NODE_FREQ_RANGE
-                        Min and max frequency to determine node size. Higher frequencies are clipped to this value. (default: [1e-05, 1])     
+                        Min and max frequency to determine node size. Higher frequencies are clipped to this value.
+                        (default: [1e-05, 1])
   --node_px_range NODE_PX_RANGE NODE_PX_RANGE
                         Largest node size as determined by the frequency. (default: [10, 120])
   --node_outline_scale NODE_OUTLINE_SCALE
-                        How much to scale the node outline width (thickness). Values > 1 increase the width; values < 1 decrease the width.   
-                        (default: 4)
+                        How much to scale the node outline width (thickness). Values > 1 increase the width; values < 1     
+                        decrease the width. (default: 4)
   --node_comparison_colors NODE_COMPARISON_COLORS NODE_COMPARISON_COLORS
-                        The colors to use in the gradient when the node colors show the frequency ratio of two experiments. May be specified  
-                        in hex (e.g., "#ff0000" for red) or with recognized keywords such as "red", "blue", "green". (default: ['#ff0000',    
-                        '#0000ff'])
+                        The colors to use in the gradient when the node colors show the frequency ratio of two
+                        experiments. May be specified in hex (e.g., "#ff0000" for red) or with recognized keywords such as  
+                        "red", "blue", "green". (default: ['#ff0000', '#0000ff'])
   --node_comparison_color_type {continuous,discrete}
-                        The type of color scheme to use for coloring nodes in a comparison graph. The "continuous" scheme uses a gradient of  
-                        colors from the min to max ratio. The "discrete" schemes uses three colors to indicate that the ratio is < the min    
-                        ratio, between the min and max ratio, or > the max ratio. The min and max ratios are determined by
-                        NODE_FREQ_RATIO_RANGE and the corresponding colors are determined by NODE_COMPARISON_COLORS. (default: continuous)    
+                        The type of color scheme to use for coloring nodes in a comparison graph. The "continuous" scheme   
+                        uses a gradient of colors from the min to max ratio. The "discrete" schemes uses three colors to    
+                        indicate that the ratio is < the min ratio, between the min and max ratio, or > the max ratio. The  
+                        min and max ratios are determined by NODE_FREQ_RATIO_RANGE and the corresponding colors are
+                        determined by NODE_COMPARISON_COLORS. (default: continuous)
   --node_freq_ratio_range NODE_FREQ_RATIO_RANGE NODE_FREQ_RATIO_RANGE
-                        The two frequencies used to determine node colors for comparison graphs. Also controls the range of ratios displayed  
-                        on the frequency-ratio colorbar legend. Typically, the min value should be < 1 and the max value should be > 1.       
-                        (default: [0.6666666666666666, 1.5])
+                        The two frequencies used to determine node colors for comparison graphs. Also controls the range    
+                        of ratios displayed on the frequency-ratio colorbar legend. Typically, the min value should be < 1  
+                        and the max value should be > 1. (default: [0.6666666666666666, 1.5])
   --node_reference_outline_color NODE_REFERENCE_OUTLINE_COLOR
-                        Color to make the reference node outline. May be specified in hex (e.g., "#ff0000" for red) or with recognized        
-                        keywords such as "red", "blue", "green". (default: #32cd32)
+                        Color to make the reference node outline. May be specified in hex (e.g., "#ff0000" for red) or      
+                        with recognized keywords such as "red", "blue", "green". (default: #32cd32)
   --node_outline_color NODE_OUTLINE_COLOR
-                        Color to make the default node outline. May be specified in hex (e.g., "#ff0000" for red) or with recognized
-                        keywords such as "red", "blue", "green". (default: #000000)
+                        Color to make the default node outline. May be specified in hex (e.g., "#ff0000" for red) or with   
+                        recognized keywords such as "red", "blue", "green". (default: #000000)
   --node_fill_color NODE_FILL_COLOR
-                        Color to make the default node fill. May be specified in hex (e.g., "#ff0000" for red) or with recognized keywords    
-                        such as "red", "blue", "green". (default: #ffffff)
+                        Color to make the default node fill. May be specified in hex (e.g., "#ff0000" for red) or with      
+                        recognized keywords such as "red", "blue", "green". (default: #ffffff)
   --variation_types {insertion,deletion,substitution,mixed,none} [{insertion,deletion,substitution,mixed,none} ...]
-                        The variation types that should be included in the graph. This should be a list of the types: "insertion",
-                        "deletion", "substitution", "mixed", "none". Default value: "insertion", "deletion", "none". "mixed" means nodes      
-                        that have multiples variation types (e.g. insertions and substitutions). "none" means the reference node (no
-                        variations). May be specified in hex (e.g., "#ff0000" for red) or with recognized keywords such as "red", "blue",     
-                        "green". (default: ['insertion', 'deletion', 'substitution', 'mixed', 'none'])
-  --variation_type_colors VARIATION_TYPE_COLORS VARIATION_TYPE_COLORS VARIATION_TYPE_COLORS VARIATION_TYPE_COLORS VARIATION_TYPE_COLORS       
-                        The colors for the different variations types. They must be specified in the order: INSERTION DELETION SUBSTITUTION   
-                        MIXED NONE. MIXED is the color for nodes with multiple types of variations (e.g. insertions and substitutions); NONE  
-                        is the color for the reference node (no variations). May be specified in hex (e.g., "#ff0000" for red) or with        
-                        recognized keywords such as "red", "blue", "green". (default: ['#ffa500', '#8080ff', '#808080', '#00ff00',
-                        '#ffffff'])
+                        The variation types that should be included in the graph. This should be a list of the types:       
+                        "insertion", "deletion", "substitution", "mixed", "none". Default value: "insertion", "deletion",   
+                        "none". "mixed" means nodes that have multiples variation types (e.g. insertions and
+                        substitutions). "none" means the reference node (no variations). May be specified in hex (e.g.,     
+                        "#ff0000" for red) or with recognized keywords such as "red", "blue", "green". (default:
+                        ['insertion', 'deletion', 'substitution', 'mixed', 'none'])
+  --variation_type_colors VARIATION_TYPE_COLORS VARIATION_TYPE_COLORS VARIATION_TYPE_COLORS VARIATION_TYPE_COLORS VARIATION_TYPE_COLORS
+                        The colors for the different variations types. They must be specified in the order: INSERTION       
+                        DELETION SUBSTITUTION MIXED NONE. MIXED is the color for nodes with multiple types of variations    
+                        (e.g. insertions and substitutions); NONE is the color for the reference node (no variations). May  
+                        be specified in hex (e.g., "#ff0000" for red) or with recognized keywords such as "red", "blue",    
+                        "green". (default: ['#ffa500', '#8080ff', '#808080', '#00ff00', '#ffffff'])
   --edge_show {True,False}
                         Whether to show edges between nodes. (default: True)
   --edge_types {indel,substitution} [{indel,substitution} ...]
                         The edge types to show. (default: ['indel'])
   --edge_scale EDGE_SCALE
-                        How much to scale the edges width (thickness). Values > 1 increase the width; values < 1 decrease the width.
-                        (default: 8)
+                        How much to scale the edges width (thickness). Values > 1 increase the width; values < 1 decrease   
+                        the width. (default: 8)
   --stats               If present, show graph summary statistics in the left margin. (default: False)
   --width_px WIDTH_PX   The width of the plot in pixels. (default: 2400)
   --height_px HEIGHT_PX
@@ -297,22 +329,40 @@ options:
   --margin_right_px MARGIN_RIGHT_PX
                         The size of the right margin in pixels. (default: 300)
   --line_width_scale LINE_WIDTH_SCALE
-                        How much to scale the line widths (aka thickness). Values > 1 increase the width; values < 1 decrease the width.      
-                        (default: 8)
+                        How much to scale the line widths (aka thickness). Values > 1 increase the width; values < 1        
+                        decrease the width. (default: 8)
   --font_size_scale FONT_SIZE_SCALE
+                        How much to scale the font size. Values > 1 increase the font size; values < 1 decrease it.
+                        (default: 2)
+  --crop_x CROP_X CROP_X
+                        Range of the horizontal dimension to crop. Specified with normalized coords in range [0, 1].        
+                        (default: [0, 1])
+  --crop_y CROP_Y CROP_Y
+                        Range of the vertical dimension to crop. Specified in normalized coords in range [0, 1]. (default:  
+                        [0, 1])
+  --range_x RANGE_X RANGE_X
+                        Range of x-axis for plotting.If not specified chosen automatically to either show all nodes or a    
+                        preset value for the layout. (default: [nan, nan])
+  --range_y RANGE_Y RANGE_Y
+                        Range of y-axis for plotting.If not specified chosen automatically to either show all nodes or a    
+                        preset value for the layout. (default: [nan, nan])
+  --legend              Whether to show a legend on the figure. (default: False)
+  --legend_colorbar_scale LEGEND_COLORBAR_SCALE
                         How much to scale the colorbar legend (for frequency-ratio coloring). (default: 4)
   --legend_spacing_px LEGEND_SPACING_PX
                         Amount of vertical space in pixels between different legends. (default: 200)
   --separate_components
                         If present, separate the connected components of the graph. (default: False)
-  --interactive         If present opens the interactive version in a browser. Uses the Ploty library figure.show() function to do so.        
-                        (default: False)
+  --interactive         If present opens the interactive version in a browser. Uses the Ploty library figure.show()
+                        function to do so. (default: False)
   --reverse_complement {0,1} [{0,1} ...]
-                        Whether to reverse complement the sequences in the data sets. If present, the number of values must be the same as    
-                        the number of input directories. "1" mean reverse complement the sequence and "0" means do not. Used for making a     
-                        layout for data sets that have reference sequences that are the reverse complements of each other. If "1" also uses   
-                        the reverse complement of sequences when determining the display labels and hover text. This affects the universal    
-                        layout and fractal layout. (default: None)
+                        Whether to reverse complement the sequences in the data sets. If present, the number of values      
+                        must be the same as the number of input directories. "1" mean reverse complement the sequence and   
+                        "0" means do not. Used for making a layout for data sets that have reference sequences that are     
+                        the reverse complements of each other. If "1" also uses the reverse complement of sequences when    
+                        determining the display labels and hover text. This affects the universal layout and fractal        
+                        layout. (default: None)
+  --quiet               If present, do not print extra log messages. (default: False)
 ```
 
 ### `histogram.py`
@@ -328,8 +378,9 @@ To understand how the frequencies are calculated, consider the following example
 Output of `histogram.py --help`:
 
 ```
-usage: histogram.py [-h] --input INPUT --output OUTPUT --variation_type {substitution,insertion,deletion} [--reverse_pos] --label_type
-                    {relative,absolute} [--color COLOR] [--freq_range FREQ_RANGE FREQ_RANGE] [--freq_scale {linear,log}]
+usage: histogram.py [-h] --input INPUT --output OUTPUT --variation_type {substitution,insertion,deletion} [--reverse_pos]
+                    --label_type {relative,absolute} [--color COLOR] [--freq_range FREQ_RANGE FREQ_RANGE]
+                    [--freq_scale {linear,log}]
 
 Plot 3d histograms showing variation type/position/frequency.
 
@@ -339,13 +390,15 @@ options:
   --output OUTPUT       Output image file. Must have extension ".png". (default: None)
   --variation_type {substitution,insertion,deletion}
                         Which variation type to show in the histogram. (default: None)
-  --reverse_pos         Whether to reverse the x-axis positions. Useful if comparing reverse strand data with forward strand data. (default:
-                        False)
+  --reverse_pos         Whether to reverse the x-axis positions. Useful if comparing reverse strand data with forward       
+                        strand data. (default: False)
   --label_type {relative,absolute}
-                        Whether to index the x-axis by "absolute" positions on the reference sequence from 1 to [reference length], or        
-                        "relative" positions from -[reference length]/2 to [reference length]/2 (skipping 0). [reference length] refers to    
-                        the length of the reference sequence after extracting the window around the DSB site. (default: None)
-  --color COLOR         Color of the bar graph. If not specified, a default color based on VARIATION_TYPE will be chosen. (default: None)     
+                        Whether to index the x-axis by "absolute" positions on the reference sequence from 1 to [reference  
+                        length], or "relative" positions from -[reference length]/2 to [reference length]/2 (skipping 0).   
+                        [reference length] refers to the length of the reference sequence after extracting the window       
+                        around the DSB site. (default: None)
+  --color COLOR         Color of the bar graph. If not specified, a default color based on VARIATION_TYPE will be chosen.   
+                        (default: None)
   --freq_range FREQ_RANGE FREQ_RANGE
                         Range of the z-axis frequency values to show. (default: [1e-05, 1])
   --freq_scale {linear,log}
