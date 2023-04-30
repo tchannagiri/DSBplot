@@ -73,9 +73,9 @@ This `preprocess.py` script is broken in separate stages so that each stage can 
 2. **1_filter**: Filter each SAM file independently using various heuristics to discard alignments that don't represent NHEJ repair. The filtering process involves the following steps:
     1. Discard alignments that represent a failed/invalid aligment in the SAM format.
     2. Discard alignments where the read sequence has length less than `MIN_LENGTH`.
-    3. Discard alignment where the left-most (5'-most) position of the read does not align with the left-most position of the reference sequence.
+    3. Discard alignments where the left-most (5'-most) position of the read does not align with the left-most position of the reference sequence.
     4. If the in/del positions of the alignment are not adjacent to or around the DSB position, try to shift them towards the DSB position in a way that keeps the number of substitutions roughly the same. If such a modification of the alignment cannot be found, discard the alignment.
-    5. Finally, if the resulting alignment has in/dels that are not at consecutive positions, discard the alignment.
+    5. Finally, if the resulting alignment has in/dels that are not contiguous, discard the alignment.
    If multiple reads have exactly the same nucleotide sequence but had different alignments with the reference, they will be forced to have the same alignment as the first such read encountered. Note that the left-most (5'-most) position on the read must align with the left-most position on the reference, but the same is not true for the right-most (3'-most) positions. This is because it is possible for reads to be too small and only capture the 5' primer but not the 3' primer. However, the read must have a length of at least `DSB_POS + 1` so that it surrounds the DSB position. The output is a set of tables in TSV format that contain the unique alignments and their read counts. The output is saved in files named `1_filter_nhej/[N].tsv`, where `[N]` is an integer representing the repeat number, in the same order they are specified on the command line.
 3. **2_combine**: Combine the tables output from stage 2 into a single table with multiple frequency columns, one for each input. The output will be in `2_combine_repeat/out.tsv`.
 4. **3_window**: This stage is broken into the following substages:
