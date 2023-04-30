@@ -311,7 +311,7 @@ def do_3_comparison(
 ):
   for subst_type in constants.SUBST_TYPES:
     get_freq_comparison.main(
-      input = [input_1, input_2],
+      input = [file_names.window_dir(input_1), file_names.window_dir(input_2)],
       output = file_names.window_dir(output),
       subst_type = subst_type,
     )
