@@ -139,171 +139,171 @@ python graph.py --input data_HEK/output/WT_sgCD_R2_antisense_splicing_new --outp
 python graph.py --input data_HEK/output/WT_sgCD_R2_antisense_splicing_old --output plot_HEK/graph/comparison/WT_sgCD_R2_antisense_splicing_old.png --layout universal_layout --reverse_complement 1 --width 2400 --height 1800 --range_x -12 13 --range_y -22 27 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -19.5 25.5 --universal_layout_y_axis_insertion_max_tick 8 --universal_layout_y_axis_deletion_max_tick 17
 
 ### Plot histograms ###
-python histogram.py --input data_HEK/output/KO_sgAB_R1_branch --output plot_HEK/histogram/KO_sgAB_R1_branch_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgAB_R1_branch --output plot_HEK/histogram/KO_sgAB_R1_branch_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgAB_R1_branch --output plot_HEK/histogram/KO_sgAB_R1_branch_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgAB_R1_cmv --output plot_HEK/histogram/KO_sgAB_R1_cmv_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgAB_R1_cmv --output plot_HEK/histogram/KO_sgAB_R1_cmv_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgAB_R1_cmv --output plot_HEK/histogram/KO_sgAB_R1_cmv_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgAB_R1_sense --output plot_HEK/histogram/KO_sgAB_R1_sense_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgAB_R1_sense --output plot_HEK/histogram/KO_sgAB_R1_sense_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgAB_R1_sense --output plot_HEK/histogram/KO_sgAB_R1_sense_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgAB_R2_branch --output plot_HEK/histogram/KO_sgAB_R2_branch_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgAB_R2_branch --output plot_HEK/histogram/KO_sgAB_R2_branch_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgAB_R2_branch --output plot_HEK/histogram/KO_sgAB_R2_branch_substitution.png  --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgAB_R2_cmv --output plot_HEK/histogram/KO_sgAB_R2_cmv_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgAB_R2_cmv --output plot_HEK/histogram/KO_sgAB_R2_cmv_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgAB_R2_cmv --output plot_HEK/histogram/KO_sgAB_R2_cmv_substitution.png  --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgAB_R2_sense --output plot_HEK/histogram/KO_sgAB_R2_sense_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgAB_R2_sense --output plot_HEK/histogram/KO_sgAB_R2_sense_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgAB_R2_sense --output plot_HEK/histogram/KO_sgAB_R2_sense_substitution.png  --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgA_R1_branch_30bpDown --output plot_HEK/histogram/KO_sgA_R1_branch_30bpDown_deletion.png --reverse_pos --label_type absolute --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgA_R1_branch_30bpDown --output plot_HEK/histogram/KO_sgA_R1_branch_30bpDown_insertion.png --reverse_pos --label_type absolute --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgA_R1_branch_30bpDown --output plot_HEK/histogram/KO_sgA_R1_branch_30bpDown_substitution.png --reverse_pos --label_type absolute --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgA_R1_branch --output plot_HEK/histogram/KO_sgA_R1_branch_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgA_R1_branch --output plot_HEK/histogram/KO_sgA_R1_branch_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgA_R1_branch_noDSB --output plot_HEK/histogram/KO_sgA_R1_branch_noDSB_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgA_R1_branch_noDSB --output plot_HEK/histogram/KO_sgA_R1_branch_noDSB_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgA_R1_branch_noDSB --output plot_HEK/histogram/KO_sgA_R1_branch_noDSB_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgA_R1_branch --output plot_HEK/histogram/KO_sgA_R1_branch_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgA_R1_cmv_30bpDown --output plot_HEK/histogram/KO_sgA_R1_cmv_30bpDown_deletion.png --reverse_pos --label_type absolute --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgA_R1_cmv_30bpDown --output plot_HEK/histogram/KO_sgA_R1_cmv_30bpDown_insertion.png --reverse_pos --label_type absolute --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgA_R1_cmv_30bpDown --output plot_HEK/histogram/KO_sgA_R1_cmv_30bpDown_substitution.png --reverse_pos --label_type absolute --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgA_R1_cmv --output plot_HEK/histogram/KO_sgA_R1_cmv_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgA_R1_cmv --output plot_HEK/histogram/KO_sgA_R1_cmv_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgA_R1_cmv_noDSB --output plot_HEK/histogram/KO_sgA_R1_cmv_noDSB_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgA_R1_cmv_noDSB --output plot_HEK/histogram/KO_sgA_R1_cmv_noDSB_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgA_R1_cmv_noDSB --output plot_HEK/histogram/KO_sgA_R1_cmv_noDSB_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgA_R1_cmv --output plot_HEK/histogram/KO_sgA_R1_cmv_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgA_R1_sense_30bpDown --output plot_HEK/histogram/KO_sgA_R1_sense_30bpDown_deletion.png --reverse_pos --label_type absolute --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgA_R1_sense_30bpDown --output plot_HEK/histogram/KO_sgA_R1_sense_30bpDown_insertion.png --reverse_pos --label_type absolute --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgA_R1_sense_30bpDown --output plot_HEK/histogram/KO_sgA_R1_sense_30bpDown_substitution.png --reverse_pos --label_type absolute --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgA_R1_sense --output plot_HEK/histogram/KO_sgA_R1_sense_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgA_R1_sense --output plot_HEK/histogram/KO_sgA_R1_sense_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgA_R1_sense_noDSB --output plot_HEK/histogram/KO_sgA_R1_sense_noDSB_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgA_R1_sense_noDSB --output plot_HEK/histogram/KO_sgA_R1_sense_noDSB_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgA_R1_sense_noDSB --output plot_HEK/histogram/KO_sgA_R1_sense_noDSB_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgA_R1_sense --output plot_HEK/histogram/KO_sgA_R1_sense_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgB_R2_branch_30bpDown --output plot_HEK/histogram/KO_sgB_R2_branch_30bpDown_deletion.png  --label_type absolute --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgB_R2_branch_30bpDown --output plot_HEK/histogram/KO_sgB_R2_branch_30bpDown_insertion.png  --label_type absolute --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgB_R2_branch_30bpDown --output plot_HEK/histogram/KO_sgB_R2_branch_30bpDown_substitution.png  --label_type absolute --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgB_R2_branch --output plot_HEK/histogram/KO_sgB_R2_branch_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgB_R2_branch --output plot_HEK/histogram/KO_sgB_R2_branch_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgB_R2_branch_noDSB --output plot_HEK/histogram/KO_sgB_R2_branch_noDSB_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgB_R2_branch_noDSB --output plot_HEK/histogram/KO_sgB_R2_branch_noDSB_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgB_R2_branch_noDSB --output plot_HEK/histogram/KO_sgB_R2_branch_noDSB_substitution.png  --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgB_R2_branch --output plot_HEK/histogram/KO_sgB_R2_branch_substitution.png  --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgB_R2_cmv_30bpDown --output plot_HEK/histogram/KO_sgB_R2_cmv_30bpDown_deletion.png  --label_type absolute --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgB_R2_cmv_30bpDown --output plot_HEK/histogram/KO_sgB_R2_cmv_30bpDown_insertion.png  --label_type absolute --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgB_R2_cmv_30bpDown --output plot_HEK/histogram/KO_sgB_R2_cmv_30bpDown_substitution.png  --label_type absolute --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgB_R2_cmv --output plot_HEK/histogram/KO_sgB_R2_cmv_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgB_R2_cmv --output plot_HEK/histogram/KO_sgB_R2_cmv_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgB_R2_cmv_noDSB --output plot_HEK/histogram/KO_sgB_R2_cmv_noDSB_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgB_R2_cmv_noDSB --output plot_HEK/histogram/KO_sgB_R2_cmv_noDSB_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgB_R2_cmv_noDSB --output plot_HEK/histogram/KO_sgB_R2_cmv_noDSB_substitution.png  --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgB_R2_cmv --output plot_HEK/histogram/KO_sgB_R2_cmv_substitution.png  --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgB_R2_sense_30bpDown --output plot_HEK/histogram/KO_sgB_R2_sense_30bpDown_deletion.png  --label_type absolute --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgB_R2_sense_30bpDown --output plot_HEK/histogram/KO_sgB_R2_sense_30bpDown_insertion.png  --label_type absolute --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgB_R2_sense_30bpDown --output plot_HEK/histogram/KO_sgB_R2_sense_30bpDown_substitution.png  --label_type absolute --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgB_R2_sense --output plot_HEK/histogram/KO_sgB_R2_sense_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgB_R2_sense --output plot_HEK/histogram/KO_sgB_R2_sense_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgB_R2_sense_noDSB --output plot_HEK/histogram/KO_sgB_R2_sense_noDSB_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/KO_sgB_R2_sense_noDSB --output plot_HEK/histogram/KO_sgB_R2_sense_noDSB_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/KO_sgB_R2_sense_noDSB --output plot_HEK/histogram/KO_sgB_R2_sense_noDSB_substitution.png  --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/KO_sgB_R2_sense --output plot_HEK/histogram/KO_sgB_R2_sense_substitution.png  --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgAB_R1_branch --output plot_HEK/histogram/WT_sgAB_R1_branch_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgAB_R1_branch --output plot_HEK/histogram/WT_sgAB_R1_branch_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgAB_R1_branch --output plot_HEK/histogram/WT_sgAB_R1_branch_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgAB_R1_cmv --output plot_HEK/histogram/WT_sgAB_R1_cmv_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgAB_R1_cmv --output plot_HEK/histogram/WT_sgAB_R1_cmv_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgAB_R1_cmv --output plot_HEK/histogram/WT_sgAB_R1_cmv_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgAB_R1_sense --output plot_HEK/histogram/WT_sgAB_R1_sense_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgAB_R1_sense --output plot_HEK/histogram/WT_sgAB_R1_sense_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgAB_R1_sense --output plot_HEK/histogram/WT_sgAB_R1_sense_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgAB_R2_branch --output plot_HEK/histogram/WT_sgAB_R2_branch_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgAB_R2_branch --output plot_HEK/histogram/WT_sgAB_R2_branch_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgAB_R2_branch --output plot_HEK/histogram/WT_sgAB_R2_branch_substitution.png  --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgAB_R2_cmv --output plot_HEK/histogram/WT_sgAB_R2_cmv_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgAB_R2_cmv --output plot_HEK/histogram/WT_sgAB_R2_cmv_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgAB_R2_cmv --output plot_HEK/histogram/WT_sgAB_R2_cmv_substitution.png  --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgAB_R2_sense --output plot_HEK/histogram/WT_sgAB_R2_sense_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgAB_R2_sense --output plot_HEK/histogram/WT_sgAB_R2_sense_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgAB_R2_sense --output plot_HEK/histogram/WT_sgAB_R2_sense_substitution.png  --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgA_R1_branch_30bpDown --output plot_HEK/histogram/WT_sgA_R1_branch_30bpDown_deletion.png --reverse_pos --label_type absolute --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgA_R1_branch_30bpDown --output plot_HEK/histogram/WT_sgA_R1_branch_30bpDown_insertion.png --reverse_pos --label_type absolute --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgA_R1_branch_30bpDown --output plot_HEK/histogram/WT_sgA_R1_branch_30bpDown_substitution.png --reverse_pos --label_type absolute --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgA_R1_branch --output plot_HEK/histogram/WT_sgA_R1_branch_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgA_R1_branch --output plot_HEK/histogram/WT_sgA_R1_branch_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgA_R1_branch_noDSB --output plot_HEK/histogram/WT_sgA_R1_branch_noDSB_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgA_R1_branch_noDSB --output plot_HEK/histogram/WT_sgA_R1_branch_noDSB_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgA_R1_branch_noDSB --output plot_HEK/histogram/WT_sgA_R1_branch_noDSB_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgA_R1_branch --output plot_HEK/histogram/WT_sgA_R1_branch_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgA_R1_cmv_30bpDown --output plot_HEK/histogram/WT_sgA_R1_cmv_30bpDown_deletion.png --reverse_pos --label_type absolute --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgA_R1_cmv_30bpDown --output plot_HEK/histogram/WT_sgA_R1_cmv_30bpDown_insertion.png --reverse_pos --label_type absolute --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgA_R1_cmv_30bpDown --output plot_HEK/histogram/WT_sgA_R1_cmv_30bpDown_substitution.png --reverse_pos --label_type absolute --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgA_R1_cmv --output plot_HEK/histogram/WT_sgA_R1_cmv_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgA_R1_cmv --output plot_HEK/histogram/WT_sgA_R1_cmv_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgA_R1_cmv_noDSB --output plot_HEK/histogram/WT_sgA_R1_cmv_noDSB_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgA_R1_cmv_noDSB --output plot_HEK/histogram/WT_sgA_R1_cmv_noDSB_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgA_R1_cmv_noDSB --output plot_HEK/histogram/WT_sgA_R1_cmv_noDSB_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgA_R1_cmv --output plot_HEK/histogram/WT_sgA_R1_cmv_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgA_R1_sense_30bpDown --output plot_HEK/histogram/WT_sgA_R1_sense_30bpDown_deletion.png --reverse_pos --label_type absolute --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgA_R1_sense_30bpDown --output plot_HEK/histogram/WT_sgA_R1_sense_30bpDown_insertion.png --reverse_pos --label_type absolute --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgA_R1_sense_30bpDown --output plot_HEK/histogram/WT_sgA_R1_sense_30bpDown_substitution.png --reverse_pos --label_type absolute --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgA_R1_sense --output plot_HEK/histogram/WT_sgA_R1_sense_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgA_R1_sense --output plot_HEK/histogram/WT_sgA_R1_sense_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgA_R1_sense_noDSB --output plot_HEK/histogram/WT_sgA_R1_sense_noDSB_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgA_R1_sense_noDSB --output plot_HEK/histogram/WT_sgA_R1_sense_noDSB_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgA_R1_sense_noDSB --output plot_HEK/histogram/WT_sgA_R1_sense_noDSB_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgA_R1_sense --output plot_HEK/histogram/WT_sgA_R1_sense_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgB_R2_branch_30bpDown --output plot_HEK/histogram/WT_sgB_R2_branch_30bpDown_deletion.png  --label_type absolute --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgB_R2_branch_30bpDown --output plot_HEK/histogram/WT_sgB_R2_branch_30bpDown_insertion.png  --label_type absolute --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgB_R2_branch_30bpDown --output plot_HEK/histogram/WT_sgB_R2_branch_30bpDown_substitution.png  --label_type absolute --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgB_R2_branch --output plot_HEK/histogram/WT_sgB_R2_branch_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgB_R2_branch --output plot_HEK/histogram/WT_sgB_R2_branch_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgB_R2_branch_noDSB --output plot_HEK/histogram/WT_sgB_R2_branch_noDSB_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgB_R2_branch_noDSB --output plot_HEK/histogram/WT_sgB_R2_branch_noDSB_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgB_R2_branch_noDSB --output plot_HEK/histogram/WT_sgB_R2_branch_noDSB_substitution.png  --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgB_R2_branch --output plot_HEK/histogram/WT_sgB_R2_branch_substitution.png  --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgB_R2_cmv_30bpDown --output plot_HEK/histogram/WT_sgB_R2_cmv_30bpDown_deletion.png  --label_type absolute --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgB_R2_cmv_30bpDown --output plot_HEK/histogram/WT_sgB_R2_cmv_30bpDown_insertion.png  --label_type absolute --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgB_R2_cmv_30bpDown --output plot_HEK/histogram/WT_sgB_R2_cmv_30bpDown_substitution.png  --label_type absolute --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgB_R2_cmv --output plot_HEK/histogram/WT_sgB_R2_cmv_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgB_R2_cmv --output plot_HEK/histogram/WT_sgB_R2_cmv_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgB_R2_cmv_noDSB --output plot_HEK/histogram/WT_sgB_R2_cmv_noDSB_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgB_R2_cmv_noDSB --output plot_HEK/histogram/WT_sgB_R2_cmv_noDSB_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgB_R2_cmv_noDSB --output plot_HEK/histogram/WT_sgB_R2_cmv_noDSB_substitution.png  --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgB_R2_cmv --output plot_HEK/histogram/WT_sgB_R2_cmv_substitution.png  --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgB_R2_sense_30bpDown --output plot_HEK/histogram/WT_sgB_R2_sense_30bpDown_deletion.png  --label_type absolute --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgB_R2_sense_30bpDown --output plot_HEK/histogram/WT_sgB_R2_sense_30bpDown_insertion.png  --label_type absolute --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgB_R2_sense_30bpDown --output plot_HEK/histogram/WT_sgB_R2_sense_30bpDown_substitution.png  --label_type absolute --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgB_R2_sense --output plot_HEK/histogram/WT_sgB_R2_sense_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgB_R2_sense --output plot_HEK/histogram/WT_sgB_R2_sense_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgB_R2_sense_noDSB --output plot_HEK/histogram/WT_sgB_R2_sense_noDSB_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgB_R2_sense_noDSB --output plot_HEK/histogram/WT_sgB_R2_sense_noDSB_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgB_R2_sense_noDSB --output plot_HEK/histogram/WT_sgB_R2_sense_noDSB_substitution.png  --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgB_R2_sense --output plot_HEK/histogram/WT_sgB_R2_sense_substitution.png  --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgCD_R1_antisense_new --output plot_HEK/histogram/WT_sgCD_R1_antisense_new_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgCD_R1_antisense_new --output plot_HEK/histogram/WT_sgCD_R1_antisense_new_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgCD_R1_antisense_new --output plot_HEK/histogram/WT_sgCD_R1_antisense_new_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgCD_R1_antisense_old --output plot_HEK/histogram/WT_sgCD_R1_antisense_old_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgCD_R1_antisense_old --output plot_HEK/histogram/WT_sgCD_R1_antisense_old_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgCD_R1_antisense_old --output plot_HEK/histogram/WT_sgCD_R1_antisense_old_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgCD_R1_splicing_new --output plot_HEK/histogram/WT_sgCD_R1_splicing_new_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgCD_R1_splicing_new --output plot_HEK/histogram/WT_sgCD_R1_splicing_new_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgCD_R1_splicing_new --output plot_HEK/histogram/WT_sgCD_R1_splicing_new_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgCD_R1_splicing_old --output plot_HEK/histogram/WT_sgCD_R1_splicing_old_deletion.png --reverse_pos --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgCD_R1_splicing_old --output plot_HEK/histogram/WT_sgCD_R1_splicing_old_insertion.png --reverse_pos --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgCD_R1_splicing_old --output plot_HEK/histogram/WT_sgCD_R1_splicing_old_substitution.png --reverse_pos --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgCD_R2_antisense_new --output plot_HEK/histogram/WT_sgCD_R2_antisense_new_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgCD_R2_antisense_new --output plot_HEK/histogram/WT_sgCD_R2_antisense_new_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgCD_R2_antisense_new --output plot_HEK/histogram/WT_sgCD_R2_antisense_new_substitution.png  --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgCD_R2_antisense_old --output plot_HEK/histogram/WT_sgCD_R2_antisense_old_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgCD_R2_antisense_old --output plot_HEK/histogram/WT_sgCD_R2_antisense_old_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgCD_R2_antisense_old --output plot_HEK/histogram/WT_sgCD_R2_antisense_old_substitution.png  --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgCD_R2_splicing_new --output plot_HEK/histogram/WT_sgCD_R2_splicing_new_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgCD_R2_splicing_new --output plot_HEK/histogram/WT_sgCD_R2_splicing_new_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgCD_R2_splicing_new --output plot_HEK/histogram/WT_sgCD_R2_splicing_new_substitution.png  --label_type relative --variation_type substitution
-python histogram.py --input data_HEK/output/WT_sgCD_R2_splicing_old --output plot_HEK/histogram/WT_sgCD_R2_splicing_old_deletion.png  --label_type relative --variation_type deletion
-python histogram.py --input data_HEK/output/WT_sgCD_R2_splicing_old --output plot_HEK/histogram/WT_sgCD_R2_splicing_old_insertion.png  --label_type relative --variation_type insertion
-python histogram.py --input data_HEK/output/WT_sgCD_R2_splicing_old --output plot_HEK/histogram/WT_sgCD_R2_splicing_old_substitution.png  --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgAB_R1_branch --output plot_HEK/histogram/KO_sgAB_R1_branch_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgAB_R1_branch --output plot_HEK/histogram/KO_sgAB_R1_branch_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgAB_R1_branch --output plot_HEK/histogram/KO_sgAB_R1_branch_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgAB_R1_cmv --output plot_HEK/histogram/KO_sgAB_R1_cmv_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgAB_R1_cmv --output plot_HEK/histogram/KO_sgAB_R1_cmv_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgAB_R1_cmv --output plot_HEK/histogram/KO_sgAB_R1_cmv_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgAB_R1_sense --output plot_HEK/histogram/KO_sgAB_R1_sense_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgAB_R1_sense --output plot_HEK/histogram/KO_sgAB_R1_sense_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgAB_R1_sense --output plot_HEK/histogram/KO_sgAB_R1_sense_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgAB_R2_branch --output plot_HEK/histogram/KO_sgAB_R2_branch_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgAB_R2_branch --output plot_HEK/histogram/KO_sgAB_R2_branch_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgAB_R2_branch --output plot_HEK/histogram/KO_sgAB_R2_branch_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgAB_R2_cmv --output plot_HEK/histogram/KO_sgAB_R2_cmv_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgAB_R2_cmv --output plot_HEK/histogram/KO_sgAB_R2_cmv_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgAB_R2_cmv --output plot_HEK/histogram/KO_sgAB_R2_cmv_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgAB_R2_sense --output plot_HEK/histogram/KO_sgAB_R2_sense_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgAB_R2_sense --output plot_HEK/histogram/KO_sgAB_R2_sense_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgAB_R2_sense --output plot_HEK/histogram/KO_sgAB_R2_sense_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgA_R1_branch_30bpDown --output plot_HEK/histogram/KO_sgA_R1_branch_30bpDown_deletion.png --color "#8080ff" --label_type absolute --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgA_R1_branch_30bpDown --output plot_HEK/histogram/KO_sgA_R1_branch_30bpDown_insertion.png --color "#ffa500" --label_type absolute --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgA_R1_branch_30bpDown --output plot_HEK/histogram/KO_sgA_R1_branch_30bpDown_substitution.png --color "#bfbfbf" --label_type absolute --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgA_R1_branch --output plot_HEK/histogram/KO_sgA_R1_branch_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgA_R1_branch --output plot_HEK/histogram/KO_sgA_R1_branch_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgA_R1_branch_noDSB --output plot_HEK/histogram/KO_sgA_R1_branch_noDSB_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgA_R1_branch_noDSB --output plot_HEK/histogram/KO_sgA_R1_branch_noDSB_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgA_R1_branch_noDSB --output plot_HEK/histogram/KO_sgA_R1_branch_noDSB_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgA_R1_branch --output plot_HEK/histogram/KO_sgA_R1_branch_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgA_R1_cmv_30bpDown --output plot_HEK/histogram/KO_sgA_R1_cmv_30bpDown_deletion.png --color "#8080ff" --label_type absolute --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgA_R1_cmv_30bpDown --output plot_HEK/histogram/KO_sgA_R1_cmv_30bpDown_insertion.png --color "#ffa500" --label_type absolute --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgA_R1_cmv_30bpDown --output plot_HEK/histogram/KO_sgA_R1_cmv_30bpDown_substitution.png --color "#bfbfbf" --label_type absolute --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgA_R1_cmv --output plot_HEK/histogram/KO_sgA_R1_cmv_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgA_R1_cmv --output plot_HEK/histogram/KO_sgA_R1_cmv_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgA_R1_cmv_noDSB --output plot_HEK/histogram/KO_sgA_R1_cmv_noDSB_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgA_R1_cmv_noDSB --output plot_HEK/histogram/KO_sgA_R1_cmv_noDSB_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgA_R1_cmv_noDSB --output plot_HEK/histogram/KO_sgA_R1_cmv_noDSB_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgA_R1_cmv --output plot_HEK/histogram/KO_sgA_R1_cmv_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgA_R1_sense_30bpDown --output plot_HEK/histogram/KO_sgA_R1_sense_30bpDown_deletion.png --color "#8080ff" --label_type absolute --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgA_R1_sense_30bpDown --output plot_HEK/histogram/KO_sgA_R1_sense_30bpDown_insertion.png --color "#ffa500" --label_type absolute --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgA_R1_sense_30bpDown --output plot_HEK/histogram/KO_sgA_R1_sense_30bpDown_substitution.png --color "#bfbfbf" --label_type absolute --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgA_R1_sense --output plot_HEK/histogram/KO_sgA_R1_sense_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgA_R1_sense --output plot_HEK/histogram/KO_sgA_R1_sense_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgA_R1_sense_noDSB --output plot_HEK/histogram/KO_sgA_R1_sense_noDSB_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgA_R1_sense_noDSB --output plot_HEK/histogram/KO_sgA_R1_sense_noDSB_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgA_R1_sense_noDSB --output plot_HEK/histogram/KO_sgA_R1_sense_noDSB_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgA_R1_sense --output plot_HEK/histogram/KO_sgA_R1_sense_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgB_R2_branch_30bpDown --output plot_HEK/histogram/KO_sgB_R2_branch_30bpDown_deletion.png --color "#8080ff" --reverse_pos --label_type absolute --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgB_R2_branch_30bpDown --output plot_HEK/histogram/KO_sgB_R2_branch_30bpDown_insertion.png --color "#ffa500" --reverse_pos --label_type absolute --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgB_R2_branch_30bpDown --output plot_HEK/histogram/KO_sgB_R2_branch_30bpDown_substitution.png --color "#bfbfbf" --reverse_pos --label_type absolute --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgB_R2_branch --output plot_HEK/histogram/KO_sgB_R2_branch_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgB_R2_branch --output plot_HEK/histogram/KO_sgB_R2_branch_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgB_R2_branch_noDSB --output plot_HEK/histogram/KO_sgB_R2_branch_noDSB_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgB_R2_branch_noDSB --output plot_HEK/histogram/KO_sgB_R2_branch_noDSB_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgB_R2_branch_noDSB --output plot_HEK/histogram/KO_sgB_R2_branch_noDSB_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgB_R2_branch --output plot_HEK/histogram/KO_sgB_R2_branch_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgB_R2_cmv_30bpDown --output plot_HEK/histogram/KO_sgB_R2_cmv_30bpDown_deletion.png --color "#8080ff" --reverse_pos --label_type absolute --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgB_R2_cmv_30bpDown --output plot_HEK/histogram/KO_sgB_R2_cmv_30bpDown_insertion.png --color "#ffa500" --reverse_pos --label_type absolute --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgB_R2_cmv_30bpDown --output plot_HEK/histogram/KO_sgB_R2_cmv_30bpDown_substitution.png --color "#bfbfbf" --reverse_pos --label_type absolute --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgB_R2_cmv --output plot_HEK/histogram/KO_sgB_R2_cmv_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgB_R2_cmv --output plot_HEK/histogram/KO_sgB_R2_cmv_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgB_R2_cmv_noDSB --output plot_HEK/histogram/KO_sgB_R2_cmv_noDSB_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgB_R2_cmv_noDSB --output plot_HEK/histogram/KO_sgB_R2_cmv_noDSB_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgB_R2_cmv_noDSB --output plot_HEK/histogram/KO_sgB_R2_cmv_noDSB_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgB_R2_cmv --output plot_HEK/histogram/KO_sgB_R2_cmv_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgB_R2_sense_30bpDown --output plot_HEK/histogram/KO_sgB_R2_sense_30bpDown_deletion.png --color "#8080ff" --reverse_pos --label_type absolute --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgB_R2_sense_30bpDown --output plot_HEK/histogram/KO_sgB_R2_sense_30bpDown_insertion.png --color "#ffa500" --reverse_pos --label_type absolute --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgB_R2_sense_30bpDown --output plot_HEK/histogram/KO_sgB_R2_sense_30bpDown_substitution.png --color "#bfbfbf" --reverse_pos --label_type absolute --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgB_R2_sense --output plot_HEK/histogram/KO_sgB_R2_sense_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgB_R2_sense --output plot_HEK/histogram/KO_sgB_R2_sense_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgB_R2_sense_noDSB --output plot_HEK/histogram/KO_sgB_R2_sense_noDSB_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/KO_sgB_R2_sense_noDSB --output plot_HEK/histogram/KO_sgB_R2_sense_noDSB_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/KO_sgB_R2_sense_noDSB --output plot_HEK/histogram/KO_sgB_R2_sense_noDSB_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/KO_sgB_R2_sense --output plot_HEK/histogram/KO_sgB_R2_sense_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgAB_R1_branch --output plot_HEK/histogram/WT_sgAB_R1_branch_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgAB_R1_branch --output plot_HEK/histogram/WT_sgAB_R1_branch_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgAB_R1_branch --output plot_HEK/histogram/WT_sgAB_R1_branch_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgAB_R1_cmv --output plot_HEK/histogram/WT_sgAB_R1_cmv_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgAB_R1_cmv --output plot_HEK/histogram/WT_sgAB_R1_cmv_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgAB_R1_cmv --output plot_HEK/histogram/WT_sgAB_R1_cmv_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgAB_R1_sense --output plot_HEK/histogram/WT_sgAB_R1_sense_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgAB_R1_sense --output plot_HEK/histogram/WT_sgAB_R1_sense_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgAB_R1_sense --output plot_HEK/histogram/WT_sgAB_R1_sense_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgAB_R2_branch --output plot_HEK/histogram/WT_sgAB_R2_branch_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgAB_R2_branch --output plot_HEK/histogram/WT_sgAB_R2_branch_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgAB_R2_branch --output plot_HEK/histogram/WT_sgAB_R2_branch_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgAB_R2_cmv --output plot_HEK/histogram/WT_sgAB_R2_cmv_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgAB_R2_cmv --output plot_HEK/histogram/WT_sgAB_R2_cmv_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgAB_R2_cmv --output plot_HEK/histogram/WT_sgAB_R2_cmv_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgAB_R2_sense --output plot_HEK/histogram/WT_sgAB_R2_sense_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgAB_R2_sense --output plot_HEK/histogram/WT_sgAB_R2_sense_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgAB_R2_sense --output plot_HEK/histogram/WT_sgAB_R2_sense_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgA_R1_branch_30bpDown --output plot_HEK/histogram/WT_sgA_R1_branch_30bpDown_deletion.png --color "#8080ff" --label_type absolute --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgA_R1_branch_30bpDown --output plot_HEK/histogram/WT_sgA_R1_branch_30bpDown_insertion.png --color "#ffa500" --label_type absolute --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgA_R1_branch_30bpDown --output plot_HEK/histogram/WT_sgA_R1_branch_30bpDown_substitution.png --color "#bfbfbf" --label_type absolute --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgA_R1_branch --output plot_HEK/histogram/WT_sgA_R1_branch_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgA_R1_branch --output plot_HEK/histogram/WT_sgA_R1_branch_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgA_R1_branch_noDSB --output plot_HEK/histogram/WT_sgA_R1_branch_noDSB_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgA_R1_branch_noDSB --output plot_HEK/histogram/WT_sgA_R1_branch_noDSB_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgA_R1_branch_noDSB --output plot_HEK/histogram/WT_sgA_R1_branch_noDSB_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgA_R1_branch --output plot_HEK/histogram/WT_sgA_R1_branch_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgA_R1_cmv_30bpDown --output plot_HEK/histogram/WT_sgA_R1_cmv_30bpDown_deletion.png --color "#8080ff" --label_type absolute --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgA_R1_cmv_30bpDown --output plot_HEK/histogram/WT_sgA_R1_cmv_30bpDown_insertion.png --color "#ffa500" --label_type absolute --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgA_R1_cmv_30bpDown --output plot_HEK/histogram/WT_sgA_R1_cmv_30bpDown_substitution.png --color "#bfbfbf" --label_type absolute --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgA_R1_cmv --output plot_HEK/histogram/WT_sgA_R1_cmv_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgA_R1_cmv --output plot_HEK/histogram/WT_sgA_R1_cmv_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgA_R1_cmv_noDSB --output plot_HEK/histogram/WT_sgA_R1_cmv_noDSB_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgA_R1_cmv_noDSB --output plot_HEK/histogram/WT_sgA_R1_cmv_noDSB_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgA_R1_cmv_noDSB --output plot_HEK/histogram/WT_sgA_R1_cmv_noDSB_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgA_R1_cmv --output plot_HEK/histogram/WT_sgA_R1_cmv_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgA_R1_sense_30bpDown --output plot_HEK/histogram/WT_sgA_R1_sense_30bpDown_deletion.png --color "#8080ff" --label_type absolute --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgA_R1_sense_30bpDown --output plot_HEK/histogram/WT_sgA_R1_sense_30bpDown_insertion.png --color "#ffa500" --label_type absolute --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgA_R1_sense_30bpDown --output plot_HEK/histogram/WT_sgA_R1_sense_30bpDown_substitution.png --color "#bfbfbf" --label_type absolute --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgA_R1_sense --output plot_HEK/histogram/WT_sgA_R1_sense_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgA_R1_sense --output plot_HEK/histogram/WT_sgA_R1_sense_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgA_R1_sense_noDSB --output plot_HEK/histogram/WT_sgA_R1_sense_noDSB_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgA_R1_sense_noDSB --output plot_HEK/histogram/WT_sgA_R1_sense_noDSB_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgA_R1_sense_noDSB --output plot_HEK/histogram/WT_sgA_R1_sense_noDSB_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgA_R1_sense --output plot_HEK/histogram/WT_sgA_R1_sense_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgB_R2_branch_30bpDown --output plot_HEK/histogram/WT_sgB_R2_branch_30bpDown_deletion.png --color "#8080ff" --reverse_pos --label_type absolute --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgB_R2_branch_30bpDown --output plot_HEK/histogram/WT_sgB_R2_branch_30bpDown_insertion.png --color "#ffa500" --reverse_pos --label_type absolute --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgB_R2_branch_30bpDown --output plot_HEK/histogram/WT_sgB_R2_branch_30bpDown_substitution.png --color "#bfbfbf" --reverse_pos --label_type absolute --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgB_R2_branch --output plot_HEK/histogram/WT_sgB_R2_branch_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgB_R2_branch --output plot_HEK/histogram/WT_sgB_R2_branch_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgB_R2_branch_noDSB --output plot_HEK/histogram/WT_sgB_R2_branch_noDSB_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgB_R2_branch_noDSB --output plot_HEK/histogram/WT_sgB_R2_branch_noDSB_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgB_R2_branch_noDSB --output plot_HEK/histogram/WT_sgB_R2_branch_noDSB_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgB_R2_branch --output plot_HEK/histogram/WT_sgB_R2_branch_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgB_R2_cmv_30bpDown --output plot_HEK/histogram/WT_sgB_R2_cmv_30bpDown_deletion.png --color "#8080ff" --reverse_pos --label_type absolute --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgB_R2_cmv_30bpDown --output plot_HEK/histogram/WT_sgB_R2_cmv_30bpDown_insertion.png --color "#ffa500" --reverse_pos --label_type absolute --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgB_R2_cmv_30bpDown --output plot_HEK/histogram/WT_sgB_R2_cmv_30bpDown_substitution.png --color "#bfbfbf" --reverse_pos --label_type absolute --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgB_R2_cmv --output plot_HEK/histogram/WT_sgB_R2_cmv_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgB_R2_cmv --output plot_HEK/histogram/WT_sgB_R2_cmv_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgB_R2_cmv_noDSB --output plot_HEK/histogram/WT_sgB_R2_cmv_noDSB_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgB_R2_cmv_noDSB --output plot_HEK/histogram/WT_sgB_R2_cmv_noDSB_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgB_R2_cmv_noDSB --output plot_HEK/histogram/WT_sgB_R2_cmv_noDSB_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgB_R2_cmv --output plot_HEK/histogram/WT_sgB_R2_cmv_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgB_R2_sense_30bpDown --output plot_HEK/histogram/WT_sgB_R2_sense_30bpDown_deletion.png --color "#8080ff" --reverse_pos --label_type absolute --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgB_R2_sense_30bpDown --output plot_HEK/histogram/WT_sgB_R2_sense_30bpDown_insertion.png --color "#ffa500" --reverse_pos --label_type absolute --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgB_R2_sense_30bpDown --output plot_HEK/histogram/WT_sgB_R2_sense_30bpDown_substitution.png --color "#bfbfbf" --reverse_pos --label_type absolute --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgB_R2_sense --output plot_HEK/histogram/WT_sgB_R2_sense_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgB_R2_sense --output plot_HEK/histogram/WT_sgB_R2_sense_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgB_R2_sense_noDSB --output plot_HEK/histogram/WT_sgB_R2_sense_noDSB_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgB_R2_sense_noDSB --output plot_HEK/histogram/WT_sgB_R2_sense_noDSB_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgB_R2_sense_noDSB --output plot_HEK/histogram/WT_sgB_R2_sense_noDSB_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgB_R2_sense --output plot_HEK/histogram/WT_sgB_R2_sense_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgCD_R1_antisense_new --output plot_HEK/histogram/WT_sgCD_R1_antisense_new_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgCD_R1_antisense_new --output plot_HEK/histogram/WT_sgCD_R1_antisense_new_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgCD_R1_antisense_new --output plot_HEK/histogram/WT_sgCD_R1_antisense_new_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgCD_R1_antisense_old --output plot_HEK/histogram/WT_sgCD_R1_antisense_old_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgCD_R1_antisense_old --output plot_HEK/histogram/WT_sgCD_R1_antisense_old_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgCD_R1_antisense_old --output plot_HEK/histogram/WT_sgCD_R1_antisense_old_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgCD_R1_splicing_new --output plot_HEK/histogram/WT_sgCD_R1_splicing_new_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgCD_R1_splicing_new --output plot_HEK/histogram/WT_sgCD_R1_splicing_new_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgCD_R1_splicing_new --output plot_HEK/histogram/WT_sgCD_R1_splicing_new_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgCD_R1_splicing_old --output plot_HEK/histogram/WT_sgCD_R1_splicing_old_deletion.png --color "#8080ff" --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgCD_R1_splicing_old --output plot_HEK/histogram/WT_sgCD_R1_splicing_old_insertion.png --color "#ffa500" --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgCD_R1_splicing_old --output plot_HEK/histogram/WT_sgCD_R1_splicing_old_substitution.png --color "#bfbfbf" --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgCD_R2_antisense_new --output plot_HEK/histogram/WT_sgCD_R2_antisense_new_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgCD_R2_antisense_new --output plot_HEK/histogram/WT_sgCD_R2_antisense_new_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgCD_R2_antisense_new --output plot_HEK/histogram/WT_sgCD_R2_antisense_new_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgCD_R2_antisense_old --output plot_HEK/histogram/WT_sgCD_R2_antisense_old_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgCD_R2_antisense_old --output plot_HEK/histogram/WT_sgCD_R2_antisense_old_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgCD_R2_antisense_old --output plot_HEK/histogram/WT_sgCD_R2_antisense_old_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgCD_R2_splicing_new --output plot_HEK/histogram/WT_sgCD_R2_splicing_new_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgCD_R2_splicing_new --output plot_HEK/histogram/WT_sgCD_R2_splicing_new_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgCD_R2_splicing_new --output plot_HEK/histogram/WT_sgCD_R2_splicing_new_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
+python histogram.py --input data_HEK/output/WT_sgCD_R2_splicing_old --output plot_HEK/histogram/WT_sgCD_R2_splicing_old_deletion.png --color "#8080ff" --reverse_pos --label_type relative --variation_type deletion
+python histogram.py --input data_HEK/output/WT_sgCD_R2_splicing_old --output plot_HEK/histogram/WT_sgCD_R2_splicing_old_insertion.png --color "#ffa500" --reverse_pos --label_type relative --variation_type insertion
+python histogram.py --input data_HEK/output/WT_sgCD_R2_splicing_old --output plot_HEK/histogram/WT_sgCD_R2_splicing_old_substitution.png --color "#bfbfbf" --reverse_pos --label_type relative --variation_type substitution
