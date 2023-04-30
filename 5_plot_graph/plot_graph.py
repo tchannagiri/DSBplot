@@ -236,6 +236,18 @@ def make_fractal_layout(graph, reverse_complement=False):
           raise Exception('Impossible.')
   return xy_dict
 
+# Determines how the rows are laid out in the insertion side
+# of the universal layout.
+def get_universal_layout_insertion_row_spec(dist_ref):
+  rows = 2 ** ((dist_ref - 1) // 2)
+  cols = 4 ** dist_ref // rows
+  row_space = 2 / rows
+  return {
+    'rows': rows,
+    'cols': cols,
+    'row_space': row_space,
+  }
+
 def get_pos_universal_layout(
   ref_align,
   read_align,
@@ -253,22 +265,24 @@ def get_pos_universal_layout(
     # in a tree based on the common prefix of the insertion nucleotides.
     # To prevent overlapping the nodes are placed in multiple rows for
     # higher numbers of insertions.
-    kmer_index = kmer_utils.get_kmer_index(alignment_utils.get_insertion_str(
-      ref_align,
-      read_align,
-    ))
+    kmer_index = kmer_utils.get_kmer_index(
+      alignment_utils.get_insertion_str(
+        ref_align,
+        read_align,
+      )
+    )
     
-    row_spec = constants.GRAPH_UNIVERSAL_LAYOUT_INSERTION_ROW_SPEC
-    num_rows = row_spec[dist_ref]['rows']
-    num_cols = row_spec[dist_ref]['cols']
+    row_spec_curr = get_universal_layout_insertion_row_spec(dist_ref)
+    num_rows = row_spec_curr['rows']
+    num_cols = row_spec_curr['cols']
     row = kmer_index % num_rows
     col = kmer_index // num_rows
-    prev_rows_offset = sum(
-      row_spec[i]['rows'] * row_spec[i]['row_space']
-      for i in row_spec
-      if i < dist_ref
-    )
-    curr_row_offset = row * row_spec[dist_ref]['row_space']
+    prev_rows_offset = 0
+    for dist_ref_prev in range(1, dist_ref):
+      row_spec_prev = get_universal_layout_insertion_row_spec(dist_ref_prev)
+      prev_rows_offset += row_spec_prev['rows'] * row_spec_prev['row_space']
+
+    curr_row_offset = row * row_spec_curr['row_space']
     y = 2 + prev_rows_offset + curr_row_offset
     x = (col / num_cols) - 0.5 * (1 - 1 / num_cols)
     return (
@@ -2658,8 +2672,8 @@ def main(
         x_max = np.max([x_max] + [x for x in trace.x if x is not None])
         y_min = np.min([y_min] + [y for y in trace.y if y is not None])
         y_max = np.max([y_max] + [y for y in trace.y if y is not None])
-      log_utils.log(f'Figure {i} x-range: {x_min} to {x_max}')
-      log_utils.log(f'Figure {i} y-range: {y_min} to {y_max}')
+      log_utils.log(f'Figure[{i}] x-range: {x_min} to {x_max}')
+      log_utils.log(f'Figure[{i}] y-range: {y_min} to {y_max}')
     sequence_data = file_utils.read_tsv(
       file_names.sequence_data(data_dir_list[i], subst_type)
     )
