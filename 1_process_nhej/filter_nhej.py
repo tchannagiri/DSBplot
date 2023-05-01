@@ -242,8 +242,8 @@ def main(
   read_data = {}
   total_lines = file_utils.count_lines(sam_file)
   with open(sam_file, 'r') as sam_file_h:
-    for line_num, line in enumerate(sam_file_h):
-      if (line_num % 100000) == 0:
+    for line_num, line in enumerate(sam_file_h, 1):
+      if (line_num % 100000) == 1:
         if not quiet:
           log_utils.log(f"Progress: {line_num} / {total_lines}")
 
