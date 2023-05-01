@@ -39,8 +39,6 @@ LAYOUT_PROPERTIES = {
     'do_pca': False,
     'normalize': False,
     'has_edges': True,
-    'plot_range_x': (-20, 20),
-    'plot_range_y': (-20, 20),
   },
  'universal_layout': {
     'only_2d': True,
