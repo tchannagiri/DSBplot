@@ -59,11 +59,11 @@ The `preprocess.py` script perform alignment and preprocessing of the raw FASTQ 
 
 We expect that the input FASTQ files to `preprocess.py` are *trimmed*, meaning that the adaptors have been removed. We also expected that the region of DNA between these adaptors is exactly the region of DNA represented by the reference sequence. This mean that if a given read represents a perfectly repaired DNA strand, it should identical with the reference sequence (assuming no substitution errors due to library preparation or sequencing). If multiple input FASTQ files are given, it is assumed that they are repeats of the same treatment condition and are processed identically then combined into a single file (see [preprocessing stages](#prepcocessing-stages) below).
 
-#### Substitutions in Bowtie 2
+#### Ignoring substitutions
 
 The preprocessing pipeline produces two different versions of most files: one *ignoring* substitutions (suffix "withoutSubst") and another *keeping* substitutions (suffix "withSubst"). The processing for files that ignore substitutions contains an extra step that replaces alginment subsititions (mismatches) with perfect matches with the reference sequence. We chose to ignore substitutions in our analysis because we noticed a consistent distribution of substitutions occurring in both the experiment group (where DNA double-strand breaks were induced) and the control group (where no DSBs were induced). This suggests that the majority of substitutions were likely caused by DNA damage during library preparation or sequencing errors, rather than the process of repairing double-strand breaks. In the command `graph.py`, the `--subst_type` parameter controls whether to use the output with or without substitutions. The `histogram.py` command only uses the output with substitutions, since it is partly used to examine the distribution of substitutions.
 
-#### Prepcocessing stages
+#### Preprocessing stages
 
 This `preprocess.py` script is broken in separate stages so that each stage can be run separately (potentially on different machines). However, the stages must be run in the correct order indicated by their prefixes. If running the stages separately, the value of the `OUTPUT` directory must the same value on each separate invocation. Two different experiments should not be given the same `OUTPUT` directory or the data from the second will overwrite the first. The following describes each stage in more detail.
 
@@ -84,6 +84,7 @@ This `preprocess.py` script is broken in separate stages so that each stage can 
   * `window_freq_withSubst.tsv`/`window_freq_withoutSubst.tsv`: Frequency tables with separate columns for the separate repeats.
   * `window_freq_filter_withSubst.tsv`/`window_freq_filter_withoutSubst.tsv`: The previous frequency tables with the minimum frequency filter applied.
   * `window_freq_filter_mean_withSubst.tsv`/`window_freq_filter_mean_withoutSubst.tsv`: The previous frequency tables with the separate frequency columns for the repeats collapsed into a single column by taking their mean.
+  3. TODO: SEPARATE OUT THE FILTERING AND TAKING MEAN LIKE IN THE OVERLEAF.
 5. **4_graph**: Precompute data needed to plot the graphs, such as adjacency information and summary statistics of the graphs. The output will be in the subdirectory `4_graph`.
 6. **5_histogram**: Precompute data needed to plot the histograms, such as the position and frequency of the different types of variations. The output will be in the subdirectory `5_histogram`.
 
