@@ -120,14 +120,13 @@ def plot_histogram_impl(
   freq_range,
   freq_log,
   axis,
-  show_title,
   label_type,
   color,
-  tick_modulus = constants.HISTOGRAM_AXIS_TICK_MODULUS,
+  axis_tick_multiplier = constants.HISTOGRAM_AXIS_TICK_MULTIPLIER,
   axis_label_font_size = constants.HISTOGRAM_AXIS_LABEL_FONT_SIZE,
   axis_tick_font_size = constants.HISTOGRAM_AXIS_TICK_FONT_SIZE,
-  font_size_scale = constants.HISTOGRAM_TITLE_FONT_SIZE,
-  label_pad_px = 10,
+  font_size_scale = constants.HISTOGRAM_FONT_SIZE_SCALE,
+  axis_label_pad_px = constants.HISTOGRAM_AXIS_LABEL_PAD_PX,
   reverse_pos = False,
 ):
 
@@ -177,10 +176,10 @@ def plot_histogram_impl(
   else:
     raise Exception('Impossible')
   x_tick_list = list(zip(range(1, ref_length + 1), ref_pos_labels))
-  x_tick_list = [x for x in x_tick_list if (int(x[1]) % tick_modulus) == 0]
+  x_tick_list = [x for x in x_tick_list if (int(x[1]) % axis_tick_multiplier) == 0]
   axis.set_xlabel(
     x_label,
-    labelpad = label_pad_px * font_size_scale,
+    labelpad = axis_label_pad_px * font_size_scale,
     fontsize = axis_label_font_size * font_size_scale,
   )
   axis.set_xticks(
@@ -190,7 +189,7 @@ def plot_histogram_impl(
   y_ticks = [
     y for y in
     range(0, ref_length + 1)
-    if (y % tick_modulus) == 0
+    if (y % axis_tick_multiplier) == 0
   ]
   axis.set_yticks(
     ticks = y_ticks,
@@ -198,7 +197,7 @@ def plot_histogram_impl(
   )
   axis.set_ylabel(
     'Variations',
-    labelpad = label_pad_px * font_size_scale,
+    labelpad = axis_label_pad_px * font_size_scale,
     fontsize = axis_label_font_size * font_size_scale,
   )
 
@@ -213,7 +212,7 @@ def plot_histogram_impl(
 
   axis.set_zlabel(
     'Frequency',
-    labelpad = label_pad_px * 1.5 * font_size_scale,
+    labelpad = axis_label_pad_px * 1.5 * font_size_scale,
     fontsize = axis_label_font_size * font_size_scale,
   )
   axis.set_zlim(freq_range_axis[0], freq_range_axis[1])
@@ -235,12 +234,6 @@ def plot_histogram_impl(
       labels = z_labels,
     )
 
-  if show_title:
-    axis.set_title(
-      constants.LABELS[data_info['control_type']] + ' ' + variation_type.capitalize(),
-      fontsize = constants.HISTOGRAM_TITLE_FONT_SIZE * font_size_scale,
-    )
-
 def plot_histogram(
   file_out,
   data_dir,
@@ -250,8 +243,16 @@ def plot_histogram(
   freq_log,
   label_type,
   color,
-  show_title = False,
   reverse_pos = False,
+  height_px = constants.HISTOGRAM_HEIGHT_PX,
+  width_px = constants.HISTOGRAM_WIDTH_PX,
+  margin_left_px = constants.HISTOGRAM_MARGIN_LEFT_PX,
+  margin_right_px = constants.HISTOGRAM_MARGIN_RIGHT_PX,
+  margin_top_px = constants.HISTOGRAM_MARGIN_TOP_PX,
+  margin_bottom_px = constants.HISTOGRAM_MARGIN_BOTTOM_PX,
+  axis_tick_multiplier = constants.HISTOGRAM_AXIS_TICK_MULTIPLIER,
+  font_size_scale = constants.HISTOGRAM_FONT_SIZE_SCALE,
+  title = constants.HISTOGRAM_TITLE,
 ):
   log_utils.log_input(data_dir)
   if data_info['format'] != 'individual':
@@ -265,19 +266,17 @@ def plot_histogram(
       'proj_type': 'ortho',
     },
     **get_figure_args_pyplot(
-      col_widths_px = [constants.HISTOGRAM_WIDTH_PX],
-      row_heights_px = [constants.HISTOGRAM_HEIGHT_PX],
+      col_widths_px = [width_px],
+      row_heights_px = [height_px],
       col_space_px = 0,
       row_space_px = 0,
-      margin_left_px = constants.HISTOGRAM_MARGIN_LEFT_PX,
-      margin_right_px = constants.HISTOGRAM_MARGIN_RIGHT_PX,
-      margin_top_px = constants.HISTOGRAM_MARGIN_TOP_PX,
-      margin_bottom_px = constants.HISTOGRAM_MARGIN_BOTTOM_PX,
+      margin_left_px = margin_left_px,
+      margin_right_px = margin_right_px,
+      margin_top_px = margin_top_px,
+      margin_bottom_px = margin_bottom_px,
       dpi = constants.HISTOGRAM_DPI,
     ),
   )
-
-  font_size_scale = constants.HISTOGRAM_FONT_SIZE_SCALE
 
   plot_histogram_impl(
     data_dir = data_dir,
@@ -286,17 +285,16 @@ def plot_histogram(
     freq_range = freq_range,
     freq_log = freq_log,
     axis = axis,
-    show_title = False,
     label_type = label_type,
     color = color,
-    tick_modulus = constants.HISTOGRAM_AXIS_TICK_MODULUS,
+    axis_tick_multiplier = axis_tick_multiplier,
     font_size_scale = font_size_scale,
     reverse_pos = reverse_pos,
   )
 
-  if show_title:
+  if title is not None:
     figure.suptitle(
-      constants.get_data_label(data_info) + '\n' + variation_type, 
+      title, 
       fontsize = constants.HISTOGRAM_TITLE_FONT_SIZE * font_size_scale,
     )
 
@@ -371,9 +369,68 @@ def parse_args():
     default = constants.HISTOGRAM_FREQ_SCALE,
     help = 'Whether to use a linear or log scale for the z-axis frequency values.',
   )
+  parser.add_argument(
+    '--height',
+    type = int,
+    default = constants.HISTOGRAM_HEIGHT_PX,
+    help = 'Height of the output image in pixels.',
+  )
+  parser.add_argument(
+    '--width',
+    type = int,
+    default = constants.HISTOGRAM_WIDTH_PX,
+    help = 'Width of the output image in pixels.',
+  )
+  parser.add_argument(
+    '--margin_left',
+    type = int,
+    default = constants.HISTOGRAM_MARGIN_LEFT_PX,
+    help = 'Left margin of the output image in pixels.',
+  )
+  parser.add_argument(
+    '--margin_right',
+    type = int,
+    default = constants.HISTOGRAM_MARGIN_RIGHT_PX,
+    help = 'Right margin of the output image in pixels.',
+  )
+  parser.add_argument(
+    '--margin_top',
+    type = int,
+    default = constants.HISTOGRAM_MARGIN_TOP_PX,
+    help = 'Top margin of the output image in pixels.',
+  )
+  parser.add_argument(
+    '--margin_bottom',
+    type = int,
+    default = constants.HISTOGRAM_MARGIN_BOTTOM_PX,
+    help = 'Bottom margin of the output image in pixels.',
+  )
+  parser.add_argument(
+    '--tick_multiplier',
+    type = int,
+    default = constants.HISTOGRAM_AXIS_TICK_MULTIPLIER,
+    help = (
+      'Multiplier of the axis tick labels.' +
+      ' Only multiples of this value will be shown on the axes.'
+    ),
+  )
+  parser.add_argument(
+    '--font_size_scale',
+    type = float,
+    default = constants.HISTOGRAM_FONT_SIZE_SCALE,
+    help = (
+      'Multiplier of the font sizes for title, axis labels, and axis ticks.' +
+      ' Must adjust margins accordingly.'
+    ),
+  )
+  parser.add_argument(
+    '--title',
+    type = str,
+    help = 'Optional title of the plot. Must adjust top margins accordingly.',
+  )
   args = vars(parser.parse_args())
   if args['color'] is None:
-    constants.VARIATION_TYPES[args['variation_type']]['color_3d']
+    args['color'] = constants.VARIATION_TYPES[args['variation_type']]['color_3d']
   return args
 
 def main(
@@ -385,6 +442,15 @@ def main(
     color,
     freq_range,
     freq_scale,
+    height = constants.HISTOGRAM_HEIGHT_PX,
+    width = constants.HISTOGRAM_WIDTH_PX,
+    margin_left = constants.HISTOGRAM_MARGIN_LEFT_PX,
+    margin_right = constants.HISTOGRAM_MARGIN_RIGHT_PX,
+    margin_top = constants.HISTOGRAM_MARGIN_TOP_PX,
+    margin_bottom = constants.HISTOGRAM_MARGIN_BOTTOM_PX,
+    tick_multiplier = constants.HISTOGRAM_AXIS_TICK_MULTIPLIER,
+    font_size_scale = constants.HISTOGRAM_FONT_SIZE_SCALE,
+    title = constants.HISTOGRAM_TITLE,
   ):
   data_dir = input
   data_info = file_utils.read_tsv_dict(file_names.data_info(input))
@@ -397,8 +463,16 @@ def main(
     freq_log = freq_scale == 'log',
     label_type = label_type,
     color = color,
-    show_title = False,
     reverse_pos = reverse_pos,
+    height_px = height,
+    width_px = width,
+    margin_left_px = margin_left,
+    margin_right_px = margin_right,
+    margin_top_px = margin_top,
+    margin_bottom_px = margin_bottom,
+    axis_tick_multiplier = tick_multiplier,
+    font_size_scale = font_size_scale,
+    title = title,
   )
 
 if __name__ == '__main__':

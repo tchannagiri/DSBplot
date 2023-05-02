@@ -141,11 +141,13 @@ def get_data_label(data_info):
     raise Exception('Unknown format: ' + str(data_info['format']))
 
 ### Constants for 3D variation-position histograms ###
+HISTOGRAM_TITLE = None
 HISTOGRAM_TITLE_FONT_SIZE = 16
 HISTOGRAM_AXIS_LABEL_FONT_SIZE = 12
 HISTOGRAM_AXIS_TICK_FONT_SIZE = 8
-HISTOGRAM_AXIS_TICK_MODULUS = 4
+HISTOGRAM_AXIS_TICK_MULTIPLIER = 4
 HISTOGRAM_FONT_SIZE_SCALE = 6
+HISTOGRAM_AXIS_LABEL_PAD_PX = 10
 HISTOGRAM_WIDTH_PX = 1500
 HISTOGRAM_HEIGHT_PX = 1500
 HISTOGRAM_MARGIN_LEFT_PX = 50
@@ -160,7 +162,6 @@ HISTOGRAM_VARIATION_TYPE_COLORS = [
   VARIATION_TYPES['deletion']['color_3d'],
   VARIATION_TYPES['substitution']['color_3d'],
 ]
-BASE_FIG_SIZE = 12
 
 ### Constants for graphs ###
 GRAPH_LAYOUT_TYPE = 'universal_layout'
