@@ -2026,7 +2026,6 @@ def parse_args():
   parser = argparse.ArgumentParser(
     description = (
       'Layout and plot variation-distance graphs.' +
-      ' Uses the output from "get_graph_data" as input.' +
       ' For more information about the layouts please see the publication FIXME.'
     ),
     formatter_class = argparse.ArgumentDefaultsHelpFormatter,
@@ -2036,7 +2035,7 @@ def parse_args():
     type = common_utils.check_dir,
     nargs = '+',
     help = (
-      'List of directories with the data files produced with "get_graph_data.py".' +
+      'Input data directories.' +
       ' All libraries specified here must have the same windowed reference sequence' +
       ' (i.e., the 20bp section of the reference around the DSB site should be the same' +
       ' in all libraries). All the libraries will be laid out using common x/y-coordinate' +
@@ -2049,12 +2048,12 @@ def parse_args():
     type = common_utils.check_file_output,
     nargs = '+',
     help = (
-      'Output file. If not given no output will be written' +
+      'Output file(s). If not given no output will be written' +
       ' (useful only when using "--interactive").' +
-      ' The file extension should be either ".png" or ".html"' +
-      ' for a static PNG or interactive HTML output respectively.' +
-      ' Should be either 0 arguments or the number of arguments' +
-      ' should match the number of input directories.'
+      ' The file extension should be either ".html" for interactive HTML output' +
+      ' or any image file format supported by the Plotly package.' +
+      ' If not omitted, number of arguments should match' +
+      ' the number of input directories.'
     ),
   )
   parser.add_argument(
@@ -2748,8 +2747,6 @@ def main(
 
     if output_list[i] is not None:
       ext = os.path.splitext(output_list[i])[1]
-      if ext not in ['.png', '.html']:
-        raise Exception('Unknown file extension: ' + str(ext))
       file_utils.write_plotly(figure_list[i], output_list[i])
       log_utils.log_output(output_list[i])
 

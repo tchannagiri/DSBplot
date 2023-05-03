@@ -317,7 +317,10 @@ def parse_args():
   parser.add_argument(
     '--output',
     type = common_utils.check_file_output,
-    help = 'Output image file. Must have extension ".png".',
+    help = (
+      'Output image file.' +
+      ' Must have a file extension supported by the matplotlib package.'
+    ),
     required = True,
   )
   parser.add_argument(

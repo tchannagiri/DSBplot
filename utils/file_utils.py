@@ -52,9 +52,7 @@ def write_plotly(figure, file):
   if type(file) == str:
     make_parent_dir(file)
   ext = os.path.splitext(file)[1]
-  if ext == '.png':
-    figure.write_image(file, engine='kaleido')
-  elif ext == '.html':
+  if ext == '.html':
     figure.write_html(file)
   else:
-    raise Exception('Unknown extension: ' + str(ext))
+    figure.write_image(file, engine='kaleido')

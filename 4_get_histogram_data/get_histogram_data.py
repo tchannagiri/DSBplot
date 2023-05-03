@@ -12,7 +12,6 @@ import log_utils
 import common_utils
 import constants
 
-
 def parse_args():
   parser = argparse.ArgumentParser(
     description = (
