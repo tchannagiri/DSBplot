@@ -65,19 +65,19 @@ LEGENDS = {
   'variation_type': {'type': 'variation_type'},
   'node_type': {'type': 'node_type'},
   'freq_ratio_sense_branch': {
-   'type': 'freq_ratio',
+   'type': 'freq_ratio_continuous',
    'construct_1': 'sense',
    'construct_2': 'branch',
    'color_bar_file': os.path.join(file_names.IMAGE_DIR, 'freq_ratio_sense_branch.png'),
   },
   'freq_ratio_sense_cmv': {
-   'type': 'freq_ratio',
+   'type': 'freq_ratio_continuous',
    'construct_1': 'sense',
    'construct_2': 'cmv',
    'color_bar_file': os.path.join(file_names.IMAGE_DIR, 'freq_ratio_sense_cmv.png'),
   },
   'freq_ratio_antisense_splicing': {
-   'type': 'freq_ratio',
+   'type': 'freq_ratio_continuous',
    'construct_1': 'antisense',
    'construct_2': 'splicing',
    'color_bar_file': os.path.join(file_names.IMAGE_DIR, 'freq_ratio_antisense_splicing.png'),
@@ -239,7 +239,7 @@ def get_slide(
         'item_height_pt': 20,
         'label_height_pt': 20,
       },
-      'freq_ratio': {
+      'freq_ratio_continuous': {
         'stride_pt': 20,
         'title_width_pt': 90,
         'title_height_pt': 40,
@@ -301,7 +301,7 @@ def get_slide(
         'item_height_pt': 5,
         'label_height_pt': 10,
       },
-      'freq_ratio': {
+      'freq_ratio_continuous': {
         'stride_pt': 40,
         'title_width_pt': 120,
         'title_height_pt': 20,
@@ -546,7 +546,7 @@ def get_slide(
           legend_label_font_size_pt = legend_label_font_size_pt,
           orientation = orientation,
         )
-      elif legend['type'] == 'freq_ratio':
+      elif legend['type'] == 'freq_ratio_continuous':
         construct_1 = legend['construct_1']
         construct_2 = legend['construct_2']
         if orientation == 'v':
@@ -561,11 +561,11 @@ def get_slide(
           x_pt = x_pt + legend_x_offset_pt[orientation],
           y_pt = y_legend_pt,
           title = title,
-          title_width_pt = legend_const[orientation]['freq_ratio']['title_width_pt'],
-          title_height_pt = legend_const[orientation]['freq_ratio']['title_height_pt'],
-          title_x_offset_pt = legend_const[orientation]['freq_ratio']['title_x_offset_pt'],
-          label_width_pt = legend_const[orientation]['freq_ratio']['label_width_pt'],
-          label_height_pt = legend_const[orientation]['freq_ratio']['label_height_pt'],
+          title_width_pt = legend_const[orientation]['freq_ratio_continuous']['title_width_pt'],
+          title_height_pt = legend_const[orientation]['freq_ratio_continuous']['title_height_pt'],
+          title_x_offset_pt = legend_const[orientation]['freq_ratio_continuous']['title_x_offset_pt'],
+          label_width_pt = legend_const[orientation]['freq_ratio_continuous']['label_width_pt'],
+          label_height_pt = legend_const[orientation]['freq_ratio_continuous']['label_height_pt'],
           color_bar_minor_axis_pt = LEGEND_FREQ_RATIO_COLOR_BAR_WIDTH_PT,
           color_bar_major_axis_pt = legend_freq_ratio_color_bar_height_pt,
           color_bar_file = color_bar_file,

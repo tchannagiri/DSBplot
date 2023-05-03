@@ -222,7 +222,7 @@ def get_node_color(
   node_fill_color,
   node_variation_type_colors,
 ):
-  if node_color_type == 'freq_group':
+  if node_color_type == 'freq_ratio_discrete':
     if data_info['format'] != 'comparison':
       raise Exception('Need a comparison data set: ' + data_info['label'])
     node_freq_group = get_node_freq_group(node_data, node_freq_ratio_range)
@@ -245,7 +245,7 @@ def get_node_color(
       ),
       index = node_data.index,
     )
-  elif node_color_type == 'freq_ratio':
+  elif node_color_type == 'freq_ratio_continuous':
     if data_info['format'] != 'comparison':
       raise Exception('Need a comparison data set: ' + data_info['label'])
     return pd.Series(
@@ -265,7 +265,7 @@ def get_node_color(
 def get_node_trace_group(node_data, node_group_type, node_freq_ratio_range):
   group_key_lists = []
   group_key_lists.append(node_data['is_ref'])
-  if node_group_type == 'freq_group':
+  if node_group_type == 'freq_ratio_discrete':
     group_key_lists.append(get_node_freq_group(node_data, node_freq_ratio_range))
   elif node_group_type == 'variation_type':
     group_key_lists.append(node_data['variation_type'])
@@ -301,7 +301,7 @@ def make_node_traces(
       if node_group_type == 'variation_type':
         variation_type = group_key[1]
         trace_name = constants.VARIATION_TYPES[variation_type]['label']
-      elif node_group_type == 'freq_group':
+      elif node_group_type == 'freq_ratio_discrete':
         freq_group = group_key[1]
         trace_name = constants.get_freq_ratio_label(
           freq_group,

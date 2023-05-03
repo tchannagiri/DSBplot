@@ -1275,10 +1275,9 @@ def add_plotly_colorbar(
 
 def make_custom_legends(
   figure,
+  legend_list,
   content_height_px,
   data_info,
-  node_size_type,
-  node_color_type,
   node_reference_outline_color,
   node_outline_color,
   node_fill_color,
@@ -1288,7 +1287,6 @@ def make_custom_legends(
   node_size_freq_range,
   node_size_px_range,
   node_freq_ratio_range,
-  edge_show,
   edge_show_types,
   legend_x_shift_px,
   legend_vertical_space_px,
@@ -1301,104 +1299,106 @@ def make_custom_legends(
 ):
   y_shift_curr_px = 0
 
-  y_shift_curr_px = make_outline_legend(
-    figure = figure,
-    node_size_px = node_size_px_range[1],
-    x_anchor = x_anchor_frac,
-    y_anchor = y_anchor_frac,
-    x_shift = legend_x_shift_px,
-    y_shift = y_shift_curr_px,
-    node_reference_outline_color = node_reference_outline_color,
-    node_outline_color = node_outline_color,
-    node_fill_color = node_fill_color,
-    legend_item_scale = legend_item_scale,
-    font_size_scale = font_size_scale,
-    line_width_scale = line_width_scale,
-  )
-  y_shift_curr_px -= legend_vertical_space_px
+  for legend in legend_list:
+    if legend == 'outline':
+      y_shift_curr_px = make_outline_legend(
+        figure = figure,
+        node_size_px = node_size_px_range[1],
+        x_anchor = x_anchor_frac,
+        y_anchor = y_anchor_frac,
+        x_shift = legend_x_shift_px,
+        y_shift = y_shift_curr_px,
+        node_reference_outline_color = node_reference_outline_color,
+        node_outline_color = node_outline_color,
+        node_fill_color = node_fill_color,
+        legend_item_scale = legend_item_scale,
+        font_size_scale = font_size_scale,
+        line_width_scale = line_width_scale,
+      )
+      y_shift_curr_px -= legend_vertical_space_px
 
-  if node_color_type == 'variation_type':
-    y_shift_curr_px = make_variation_color_legend(
-      figure = figure,
-      variation_types = node_filter_variation_types,
-      variation_type_colors = node_variation_type_colors,
-      node_size_px = node_size_px_range[1],
-      x_anchor = x_anchor_frac,
-      y_anchor = y_anchor_frac,
-      x_shift = legend_x_shift_px,
-      y_shift = y_shift_curr_px,
-      legend_item_scale = legend_item_scale,
-      font_size_scale = font_size_scale,
-      line_width_scale = line_width_scale,
-    )
-    y_shift_curr_px -= legend_vertical_space_px
-  elif node_color_type == 'freq_group':
-    y_shift_curr_px = make_freq_group_legend(
-      label_1 = data_info['label_1'],
-      label_2 = data_info['label_2'],
-      color_1 = node_comparison_colors[0],
-      color_2 = node_comparison_colors[1],
-      freq_ratio_1 = node_freq_ratio_range[0],
-      freq_ratio_2 = node_freq_ratio_range[1],
-      figure = figure,
-      node_size_px = node_size_px_range[1],
-      x_anchor = x_anchor_frac,
-      y_anchor = y_anchor_frac,
-      x_shift = legend_x_shift_px,
-      y_shift = y_shift_curr_px,
-      legend_item_scale = legend_item_scale,
-      font_size_scale = font_size_scale,
-      line_width_scale = line_width_scale,
-    )
-    y_shift_curr_px -= legend_vertical_space_px
-  elif node_color_type == 'freq_ratio':
-    y_shift_curr_px = add_plotly_colorbar(
-      figure = figure,
-      label_1 = data_info['label_1'],
-      label_2 = data_info['label_2'],
-      freq_ratio_1 = node_freq_ratio_range[0],
-      freq_ratio_2 = node_freq_ratio_range[1],
-      content_height_px = content_height_px,
-      legend_colorbar_scale = legend_colorbar_scale,
-      legend_x_shift_px = legend_x_shift_px,
-      legend_y_shift_px = y_shift_curr_px,
-      line_width_scale = line_width_scale,
-      font_size_scale = font_size_scale,
-    )
-    y_shift_curr_px -= legend_vertical_space_px
-  else:
-    raise Exception('Unknown node color type: ' + str(node_color_type))
-  
-  if edge_show:
-    y_shift_curr_px = make_edge_legend(
-      figure = figure,
-      edge_type_list = edge_show_types,
-      line_size_px = constants.GRAPH_LEGEND_EDGE_ITEM_LINE_SIZE_PX,
-      line_width_px = constants.GRAPH_LEGEND_EDGE_ITEM_LINE_WIDTH_PX,
-      x_anchor = x_anchor_frac,
-      y_anchor = y_anchor_frac,
-      x_shift = legend_x_shift_px,
-      y_shift = y_shift_curr_px,
-      legend_item_scale = legend_item_scale,
-      font_size_scale = font_size_scale,
-      line_width_scale = line_width_scale,
-    )
-    y_shift_curr_px -= legend_vertical_space_px
+    if legend == 'variation_type':
+      y_shift_curr_px = make_variation_color_legend(
+        figure = figure,
+        variation_types = node_filter_variation_types,
+        variation_type_colors = node_variation_type_colors,
+        node_size_px = node_size_px_range[1],
+        x_anchor = x_anchor_frac,
+        y_anchor = y_anchor_frac,
+        x_shift = legend_x_shift_px,
+        y_shift = y_shift_curr_px,
+        legend_item_scale = legend_item_scale,
+        font_size_scale = font_size_scale,
+        line_width_scale = line_width_scale,
+      )
+      y_shift_curr_px -= legend_vertical_space_px
 
-  if node_size_type == 'freq':
-    y_shift_curr_px = make_size_legend(
-      figure = figure,
-      node_size_freq_range = node_size_freq_range,
-      node_size_px_range = node_size_px_range,
-      x_anchor = x_anchor_frac,
-      y_anchor = y_anchor_frac,
-      x_shift = legend_x_shift_px,
-      y_shift = y_shift_curr_px,
-      legend_item_scale = legend_item_scale,
-      font_size_scale = font_size_scale,
-      line_width_scale = line_width_scale,
-    )
-    y_shift_curr_px -= legend_vertical_space_px
+    if legend == 'freq_ratio_discrete':
+      y_shift_curr_px = make_freq_group_legend(
+        label_1 = data_info['label_1'],
+        label_2 = data_info['label_2'],
+        color_1 = node_comparison_colors[0],
+        color_2 = node_comparison_colors[1],
+        freq_ratio_1 = node_freq_ratio_range[0],
+        freq_ratio_2 = node_freq_ratio_range[1],
+        figure = figure,
+        node_size_px = node_size_px_range[1],
+        x_anchor = x_anchor_frac,
+        y_anchor = y_anchor_frac,
+        x_shift = legend_x_shift_px,
+        y_shift = y_shift_curr_px,
+        legend_item_scale = legend_item_scale,
+        font_size_scale = font_size_scale,
+        line_width_scale = line_width_scale,
+      )
+      y_shift_curr_px -= legend_vertical_space_px
+    
+    if legend == 'freq_ratio_continuous':
+      y_shift_curr_px = add_plotly_colorbar(
+        figure = figure,
+        label_1 = data_info['label_1'],
+        label_2 = data_info['label_2'],
+        freq_ratio_1 = node_freq_ratio_range[0],
+        freq_ratio_2 = node_freq_ratio_range[1],
+        content_height_px = content_height_px,
+        legend_colorbar_scale = legend_colorbar_scale,
+        legend_x_shift_px = legend_x_shift_px,
+        legend_y_shift_px = y_shift_curr_px,
+        line_width_scale = line_width_scale,
+        font_size_scale = font_size_scale,
+      )
+      y_shift_curr_px -= legend_vertical_space_px
+    
+    if legend == 'edge':
+      y_shift_curr_px = make_edge_legend(
+        figure = figure,
+        edge_type_list = edge_show_types,
+        line_size_px = constants.GRAPH_LEGEND_EDGE_ITEM_LINE_SIZE_PX,
+        line_width_px = constants.GRAPH_LEGEND_EDGE_ITEM_LINE_WIDTH_PX,
+        x_anchor = x_anchor_frac,
+        y_anchor = y_anchor_frac,
+        x_shift = legend_x_shift_px,
+        y_shift = y_shift_curr_px,
+        legend_item_scale = legend_item_scale,
+        font_size_scale = font_size_scale,
+        line_width_scale = line_width_scale,
+      )
+      y_shift_curr_px -= legend_vertical_space_px
+
+    if legend == 'size':
+      y_shift_curr_px = make_size_legend(
+        figure = figure,
+        node_size_freq_range = node_size_freq_range,
+        node_size_px_range = node_size_px_range,
+        x_anchor = x_anchor_frac,
+        y_anchor = y_anchor_frac,
+        x_shift = legend_x_shift_px,
+        y_shift = y_shift_curr_px,
+        legend_item_scale = legend_item_scale,
+        font_size_scale = font_size_scale,
+        line_width_scale = line_width_scale,
+      )
+      y_shift_curr_px -= legend_vertical_space_px
   
   return y_shift_curr_px
 
@@ -1769,7 +1769,7 @@ def make_graph_figure_helper(
     figure_list[i].update_traces(showlegend = legend_plotly_show)
 
     ### Format for freq ratio colors ###
-    if node_color_type_list[i] == 'freq_ratio':
+    if node_color_type_list[i] == 'freq_ratio_continuous':
       figure_list[i].update_traces(
         marker = {
           'colorscale': constants.get_freq_ratio_color_scale(
@@ -1830,6 +1830,7 @@ def make_graph_figure(
   title_y_shift_px = constants.GRAPH_TITLE_Y_SHIFT_PX,
   legend_plotly_show = constants.GRAPH_LEGEND_PLOTLY_SHOW,
   legend_custom_show = constants.GRAPH_LEGEND_CUSTOM_SHOW,
+  legend_custom_list = constants.GRAPH_LEGEND_CUSTOM_LIST,
   legend_x_shift_px = constants.GRAPH_LEGEND_X_SHIFT_PX,
   legend_vertical_space_px = constants.GRAPH_LEGEND_VERTICAL_SPACE_PX,
   legend_item_scale = constants.GRAPH_LEGEND_ITEM_SCALE,
@@ -1997,10 +1998,9 @@ def make_graph_figure(
     if legend_custom_show:
       make_custom_legends(
         figure = figure_list[i],
+        legend_list = legend_custom_list,
         content_height_px = figure_size_args['content_height_px'],
         data_info = data_info_list[i],
-        node_size_type = node_size_type,
-        node_color_type = node_color_type_list[i],
         node_reference_outline_color = node_reference_outline_color,
         node_outline_color = node_outline_color,
         node_fill_color = node_fill_color,
@@ -2010,7 +2010,6 @@ def make_graph_figure(
         node_size_freq_range = node_size_freq_range,
         node_size_px_range = node_size_px_range,
         node_freq_ratio_range = node_freq_ratio_range,
-        edge_show = edge_show,
         edge_show_types = edge_show_types,
         legend_x_shift_px = legend_x_shift_px,
         legend_vertical_space_px = legend_vertical_space_px,
@@ -2439,9 +2438,13 @@ def parse_args():
     ),
   )
   parser.add_argument(
-    '--legend',
-    action = 'store_true',
-    help = 'Whether to show a legend on the figure.',
+    '--legends',
+    choices = constants.GRAPH_LEGENDS,
+    nargs = '+',
+    help = (
+      'The types of legends to show.' +
+      ' They are drawn from top to bottom on the right margin in the order specified.'
+    ),
   )
   parser.add_argument(
     '--legend_colorbar_scale',
@@ -2524,9 +2527,9 @@ def parse_args():
   ))
 
   if args['node_comparison_color_type'] == 'continuous':
-    args['node_comparison_color_type'] = 'freq_ratio'
+    args['node_comparison_color_type'] = 'freq_ratio_continuous'
   elif args['node_comparison_color_type'] == 'discrete':
-    args['node_comparison_color_type'] = 'freq_group'
+    args['node_comparison_color_type'] = 'freq_ratio_discrete'
   else:
     raise Exception('Impossible.')
 
@@ -2563,7 +2566,7 @@ def main(
   separate_components,
   line_width_scale,
   font_size_scale,
-  legend,
+  legends,
   legend_colorbar_scale,
   legend_spacing_px,
   range_x,
@@ -2644,7 +2647,8 @@ def main(
     edge_show = edge_show,
     edge_show_types = edge_types,
     edge_width_scale = edge_scale,
-    legend_custom_show = legend,
+    legend_custom_show = legends is not None,
+    legend_custom_list = legends,
     legend_plotly_show = False,
     legend_colorbar_scale = legend_colorbar_scale,
     legend_vertical_space_px = legend_spacing_px,
