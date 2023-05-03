@@ -1289,6 +1289,7 @@ def make_custom_legends(
   node_freq_ratio_range,
   edge_show_types,
   legend_x_shift_px,
+  legend_y_shift_px,
   legend_vertical_space_px,
   legend_item_scale,
   legend_colorbar_scale,
@@ -1297,7 +1298,7 @@ def make_custom_legends(
   x_anchor_frac = constants.GRAPH_LEGEND_CUSTOM_X_ANCHOR_FRAC,
   y_anchor_frac = constants.GRAPH_LEGEND_CUSTOM_Y_ANCHOR_FRAC,
 ):
-  y_shift_curr_px = 0
+  y_shift_curr_px = legend_y_shift_px
 
   for legend in legend_list:
     if legend == 'outline':
@@ -1832,6 +1833,7 @@ def make_graph_figure(
   legend_custom_show = constants.GRAPH_LEGEND_CUSTOM_SHOW,
   legend_custom_list = constants.GRAPH_LEGEND_CUSTOM_LIST,
   legend_x_shift_px = constants.GRAPH_LEGEND_X_SHIFT_PX,
+  legend_y_shift_px = constants.GRAPH_LEGEND_X_SHIFT_PX,
   legend_vertical_space_px = constants.GRAPH_LEGEND_VERTICAL_SPACE_PX,
   legend_item_scale = constants.GRAPH_LEGEND_ITEM_SCALE,
   legend_colorbar_scale = constants.GRAPH_LEGEND_COLORBAR_SCALE,
@@ -1842,8 +1844,8 @@ def make_graph_figure(
   graph_stats_show = constants.GRAPH_STATS_SHOW,
   graph_stats_x_frac = constants.GRAPH_STATS_X_FRAC,
   graph_stats_y_frac = constants.GRAPH_STATS_Y_FRAC,
-  graph_stats_x_shift_px = constants.GRAPH_STATS_X_SHIFT,
-  graph_stats_y_shift_px = constants.GRAPH_STATS_Y_SHIFT,
+  graph_stats_x_shift_px = constants.GRAPH_STATS_X_SHIFT_PX,
+  graph_stats_y_shift_px = constants.GRAPH_STATS_Y_SHIFT_PX,
   graph_stats_x_anchor = constants.GRAPH_STATS_X_ANCHOR,
   graph_stats_y_anchor = constants.GRAPH_STATS_Y_ANCHOR,
   margin_top_px = constants.GRAPH_MARGIN_TOP_MIN_PX,
@@ -2012,6 +2014,7 @@ def make_graph_figure(
         node_freq_ratio_range = node_freq_ratio_range,
         edge_show_types = edge_show_types,
         legend_x_shift_px = legend_x_shift_px,
+        legend_y_shift_px = legend_y_shift_px,
         legend_vertical_space_px = legend_vertical_space_px,
         legend_item_scale = legend_item_scale,
         legend_colorbar_scale = legend_colorbar_scale,
@@ -2342,6 +2345,18 @@ def parse_args():
     help = 'If present, show graph summary statistics in the left margin.',
   )
   parser.add_argument(
+    '--stats_x_shift_px',
+    type = float,
+    default = constants.GRAPH_STATS_X_SHIFT_PX,
+    help = 'How much to shift the stats in the x direction (in pixels).',
+  )
+  parser.add_argument(
+    '--stats_y_shift_px',
+    type = float,
+    default = constants.GRAPH_STATS_Y_SHIFT_PX,
+    help = 'How much to shift the stats in the x direction (in pixels).',
+  )
+  parser.add_argument(
     '--width_px',
     type = int,
     default = constants.GRAPH_WIDTH_PX,
@@ -2445,6 +2460,18 @@ def parse_args():
       'The types of legends to show.' +
       ' They are drawn from top to bottom on the right margin in the order specified.'
     ),
+  )
+  parser.add_argument(
+    '--legend_x_shift_px',
+    type = float,
+    default = constants.GRAPH_LEGEND_X_SHIFT_PX,
+    help = 'How much to shift the legends in the x direction (in pixels).',
+  )
+  parser.add_argument(
+    '--legend_y_shift_px',
+    type = float,
+    default = constants.GRAPH_LEGEND_Y_SHIFT_PX,
+    help = 'How much to shift the legends in the y direction (in pixels).',
   )
   parser.add_argument(
     '--legend_colorbar_scale',
@@ -2563,10 +2590,14 @@ def main(
   margin_left_px,
   margin_right_px,
   stats,
+  stats_x_shift_px,
+  stats_y_shift_px,
   separate_components,
   line_width_scale,
   font_size_scale,
   legends,
+  legend_x_shift_px,
+  legend_y_shift_px,
   legend_colorbar_scale,
   legend_spacing_px,
   range_x,
@@ -2638,6 +2669,8 @@ def main(
     graph_width_px = width_px,
     graph_height_px = height_px,
     graph_stats_show = stats,
+    graph_stats_x_shift_px = stats_x_shift_px,
+    graph_stats_y_shift_px = stats_y_shift_px,
     graph_layout_type = layout,
     graph_layout_separate_components = separate_components,
     margin_top_px = margin_top_px,
@@ -2650,6 +2683,8 @@ def main(
     legend_custom_show = legends is not None,
     legend_custom_list = legends,
     legend_plotly_show = False,
+    legend_x_shift_px = legend_x_shift_px,
+    legend_y_shift_px = legend_y_shift_px,
     legend_colorbar_scale = legend_colorbar_scale,
     legend_vertical_space_px = legend_spacing_px,
     line_width_scale = line_width_scale,
