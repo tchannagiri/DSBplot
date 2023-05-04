@@ -34,8 +34,8 @@ def parse_args():
   parser.add_argument(
     '--stages',
     type = str,
-    choices = preprocess.STAGES_2,
-    default = preprocess.STAGES_2,
+    choices = [x for x in preprocess.STAGES_2 if x != '5_histogram'],
+    default = [x for x in preprocess.STAGES_2 if x != '5_histogram'],
     nargs = '+',
     help = 'Stages to run. See the documentation for "preprocess.py".',
   )
