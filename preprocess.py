@@ -179,7 +179,9 @@ def parse_args():
     type = str,
     help = (
       'Label of the experiment to be used in plot legends.' +
-      'Required only for stage 3_window.'
+      ' If not provided, the label is the basename of the OUTPUT directory.' +
+      ' Required only for stage 3_window' +
+      ' (but can be omitted because of default).'
     ),
   )
   parser.add_argument(
@@ -280,7 +282,7 @@ def do_3_window(
   if freq_min is None:
     raise Exception('FREQ_MIN must be provided for stage 3_window.')
   if label is None:
-    raise Exception('LABEL must be provided for stage 3_window.')
+    label = os.path.basename(output)
 
   combine_repeat_file = file_names.combine_repeat_file(output)
   window_dir = file_names.window_dir(output)
