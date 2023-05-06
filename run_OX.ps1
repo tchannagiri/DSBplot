@@ -81,6 +81,7 @@ foreach ($cell in ("OX", "WT")) {
       python graph.py `
       --input ./data_OX/output/${cell}_${construct1}_${construct2}_${strand}/ `
       --output ./plot_OX/graph/${cell}_${construct1}_${construct2}_${strand}.png `
+      --node_comparison_colors "#cf191b" "#33a02c" `
       --layout universal_layout --width 2400 --height 1800 `
       --range_x -12 12 --range_y -19 24 `
       --universal_layout_x_axis_deletion_y_pos -18.5 `
