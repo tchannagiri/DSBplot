@@ -4,7 +4,9 @@ import os
 import pandas as pd
 
 def make_parent_dir(file_name):
-  os.makedirs(os.path.dirname(file_name), exist_ok=True)
+  dir_name = os.path.dirname(file_name)
+  if dir_name != '':
+    os.makedirs(os.path.dirname(file_name), exist_ok=True)
 
 def write_tsv(data, file, **args):
   if type(file) == str:

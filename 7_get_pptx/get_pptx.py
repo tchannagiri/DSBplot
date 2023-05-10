@@ -8,11 +8,8 @@ import numpy as np
 
 import common_utils
 import file_utils
-import file_names
 import log_utils
-import constants
 import get_pptx_helpers
-import get_pptx_legend
 
 import pptx
 import pptx.util
@@ -23,66 +20,6 @@ import pptx.dml.effect
 import PIL
 
 PPTX_TEMPLATE_FILE = os.path.join(os.path.dirname(__file__), 'template.pptx') # make this an arg!
-
-FORMAT_LEGENDS = {
-  'comparison': [
-    'node_size',
-    'node_outline',
-    'edge_type',
-  ],
-  'individual': [
-    'node_size',
-    'node_outline',
-    'edge_type',
-    'variation_type',
-  ],
-  'both': [
-    'node_size',
-    'node_outline',
-    'edge_type',
-    'variation_type',
-  ],
-}
-
-FREQ_RATIO_LEGENDS = {
-  '1DSB': [
-    'freq_ratio_sense_branch',
-    'freq_ratio_sense_cmv',
-  ],
-  '2DSB': [
-    'freq_ratio_sense_branch',
-    'freq_ratio_sense_cmv',
-  ],
-  '2DSBanti': [
-    'freq_ratio_antisense_splicing',
-  ],
-}
-
-LEGENDS = {
-  'node_size': {'type': 'node_size'},
-  'node_outline': {'type': 'node_outline'},
-  'edge_type': {'type': 'edge_type'},
-  'variation_type': {'type': 'variation_type'},
-  'node_type': {'type': 'node_type'},
-  'freq_ratio_sense_branch': {
-   'type': 'freq_ratio_continuous',
-   'construct_1': 'sense',
-   'construct_2': 'branch',
-   'color_bar_file': os.path.join(file_names.IMAGE_DIR, 'freq_ratio_sense_branch.png'),
-  },
-  'freq_ratio_sense_cmv': {
-   'type': 'freq_ratio_continuous',
-   'construct_1': 'sense',
-   'construct_2': 'cmv',
-   'color_bar_file': os.path.join(file_names.IMAGE_DIR, 'freq_ratio_sense_cmv.png'),
-  },
-  'freq_ratio_antisense_splicing': {
-   'type': 'freq_ratio_continuous',
-   'construct_1': 'antisense',
-   'construct_2': 'splicing',
-   'color_bar_file': os.path.join(file_names.IMAGE_DIR, 'freq_ratio_antisense_splicing.png'),
-  },
-}
 
 ### Font sizes ###
 IMAGE_LABEL_FONT_SIZE_PT = 8
@@ -102,23 +39,9 @@ MARGIN_LEFT_WIDTH_PT = 60
 MARGIN_LEFT_SPILL_OVER_PT = 10
 MARGIN_RIGHT_SPILL_OVER_PT = 10
 MARGIN_RIGHT_WIDTH_PT = 100
-
-LEGEND_TITLE_HEIGHT_PT = 20
-LEGEND_ITEM_HEIGHT_PT = 20
-LEGEND_SIZE_NODE_OUTLINE_WIDTH_PT = 0.5
-LEGEND_NODE_SIZE_PT = 10
-LEGEND_NODE_OUTLINE_WIDTH_PT = 0.5
-LEGEND_EDGE_LINE_SIZE_PT = 10
-LEGEND_EDGE_LINE_WIDTH_PT = 1
-LEGEND_FREQ_RATIO_COLOR_BAR_WIDTH_PT = 10
-LEGEND_FREQ_RATIO_COLOR_BAR_HEIGHT_PT = 75
-
-LEGEND_HEIGHT_SPACING_PT = 25
-
-HEIGHT_SPACING_PT = 10
-WIDTH_SPACING_PT = 5
-MULTIPLE_GRIDS_SPACING_PT = 40
-CONTENT_LEGEND_SPACING_PT = 20
+IMAGE_HEIGHT_SPACING_PT = 10
+IMAGE_WIDTH_SPACING_PT = 5
+GRID_HEIGHT_SPACING_PT = 40
 
 def get_slide(
   prs,
@@ -131,15 +54,6 @@ def get_slide(
   image_label_font_size_pt = IMAGE_LABEL_FONT_SIZE_PT,
   image_label_width_pt = IMAGE_LABEL_WIDTH_PT,
   image_label_height_pt = IMAGE_LABEL_HEIGHT_PT,
-  node_size_min_freq = None,
-  node_size_max_freq = None,
-  node_size_min_px = None,
-  node_size_max_px = None,
-  legend_list = [],
-  legend_height_spacing_pt = LEGEND_HEIGHT_SPACING_PT,
-  legend_freq_ratio_color_bar_height_pt = LEGEND_FREQ_RATIO_COLOR_BAR_HEIGHT_PT,
-  legend_title_font_size_pt = LEGEND_TITLE_FONT_SIZE_PT,
-  legend_label_font_size_pt = LEGEND_LABEL_FONT_SIZE_PT,
   margin_label_top_list = None,
   margin_label_left_list = None,
   margin_top_font_size_pt = MARGIN_TOP_LABEL_FONT_SIZE_PT,
@@ -148,6 +62,9 @@ def get_slide(
   margin_left_width_pt = MARGIN_LEFT_WIDTH_PT,
   margin_left_spill_over_pt = MARGIN_LEFT_SPILL_OVER_PT,
   margin_right_spill_over_pt = MARGIN_RIGHT_SPILL_OVER_PT,
+  image_height_spacing_pt = IMAGE_HEIGHT_SPACING_PT,
+  image_width_spacing_pt = IMAGE_WIDTH_SPACING_PT,
+  grid_height_spacing_pt = GRID_HEIGHT_SPACING_PT,
 ):
   num_grids = len(image_grid_list)
 
@@ -164,15 +81,15 @@ def get_slide(
   margin_show_top = margin_label_top_list is not None
   margin_show_left = margin_label_left_list is not None
   if margin_show_left:
-    if (margin_label_left_list is None) or (len(margin_label_left_list) != num_grids):
+    if len(margin_label_left_list) != num_grids:
       raise Exception(
         f"Incorrect number of left margin lists: {len(margin_label_left_list)}." +
         f" Expected {num_grids}."
       )
   if margin_show_top:
-    if (margin_label_left_list is None) or (len(margin_label_left_list) != num_grids):
+    if len(margin_label_top_list) != num_grids:
       raise Exception(
-        f"Incorrect number of top margin lists: {len(margin_label_left_list)}." +
+        f"Incorrect number of top margin lists: {len(margin_label_top_list)}." +
         f" Expected {num_grids}."
       )
 
@@ -183,140 +100,6 @@ def get_slide(
 
   y_pt = 0
   x_pt = 0
-  y_legend_pt = 0
-  x_legend_pt = slide_width_pt
-
-  ## Legend constants ###
-  legend_const = {
-    'v': {
-      'node_size': {
-        'stride_pt': 20,
-        'title_width_pt': 100,
-        'title_height_pt': 10,
-        'title_x_offset_pt': 0,
-        'item_width_pt': 10,
-        'label_width_pt': 50,
-        'item_height_pt': 20,
-        'label_height_pt': 10,
-      },
-      'node_outline': {
-        'stride_pt': 12,
-        'title_width_pt': 80,
-        'title_height_pt': 10,
-        'title_x_offset_pt': -10,
-        'item_width_pt': 10,
-        'label_width_pt': 70,
-        'item_height_pt': 20,
-        'label_height_pt': 10,
-      },
-      'variation_type': {
-        'stride_pt': 12,
-        'title_width_pt': 80,
-        'title_height_pt': 10,
-        'title_x_offset_pt': -10,
-        'item_width_pt': 10,
-        'label_width_pt': 50,
-        'item_height_pt': 20,
-        'label_height_pt': 20,
-      },
-      'node_type': {
-        'stride_pt': 12,
-        'title_width_pt': 80,
-        'title_height_pt': 10,
-        'title_x_offset_pt': -10,
-        'item_width_pt': 10,
-        'label_width_pt': 50,
-        'item_height_pt': 20,
-        'label_height_pt': 20,
-      },
-      'edge_type': {
-        'stride_pt': 10,
-        'title_width_pt': 80,
-        'title_height_pt': 10,
-        'title_x_offset_pt': -10,
-        'item_width_pt': 20,
-        'label_width_pt': 60,
-        'item_height_pt': 20,
-        'label_height_pt': 20,
-      },
-      'freq_ratio_continuous': {
-        'stride_pt': 20,
-        'title_width_pt': 90,
-        'title_height_pt': 40,
-        'title_x_offset_pt': -10,
-        'item_width_pt': 30,
-        'label_width_pt': 40,
-        'item_height_pt': 20,
-        'label_height_pt': 20,
-      },
-    },
-    'h': {
-      'node_size': {
-        'stride_pt': 20,
-        'title_width_pt': 100,
-        'title_height_pt': 10,
-        'title_x_offset_pt': 10,
-        'item_width_pt': 30,
-        'label_width_pt': 50,
-        'item_height_pt': 20,
-        'label_height_pt': 10,
-      },
-      'node_outline': {
-        'stride_pt': 50,
-        'title_width_pt': 90,
-        'title_height_pt': 10,
-        'title_x_offset_pt': 10,
-        'item_width_pt': 30,
-        'label_width_pt': 70,
-        'item_height_pt': 10,
-        'label_height_pt': 10,
-      },
-      'variation_type': {
-        'stride_pt': 30,
-        'title_width_pt': 90,
-        'title_height_pt': 10,
-        'title_x_offset_pt': 0,
-        'item_width_pt': 30,
-        'label_width_pt': 50,
-        'item_height_pt': 10,
-        'label_height_pt': 10,
-      },
-      'node_type': {
-        'stride_pt': 35,
-        'title_width_pt': 90,
-        'title_height_pt': 10,
-        'title_x_offset_pt': 5,
-        'item_width_pt': 30,
-        'label_width_pt': 50,
-        'item_height_pt': 10,
-        'label_height_pt': 10,
-      },
-      'edge_type': {
-        'stride_pt': 40,
-        'title_width_pt': 80,
-        'title_height_pt': 10,
-        'title_x_offset_pt': 0,
-        'item_width_pt': 30,
-        'label_width_pt': 60,
-        'item_height_pt': 5,
-        'label_height_pt': 10,
-      },
-      'freq_ratio_continuous': {
-        'stride_pt': 40,
-        'title_width_pt': 120,
-        'title_height_pt': 20,
-        'title_x_offset_pt': -20,
-        'item_width_pt': 30,
-        'label_width_pt': 40,
-        'item_height_pt': 20,
-        'label_height_pt': 20,
-      },
-    },
-  }
-  legend_x_offset_pt = {
-    'v': 0,
-    'h': 100,
-  }
 
   # Title
   if title is not None:
@@ -324,7 +107,7 @@ def get_slide(
       slide = slide,
       text = title,
       x_pt = 0,
-      y_pt = y_legend_pt,
+      y_pt = 0,
       width_pt = slide_width_pt,
       height_pt = title_height_pt,
       font_size_pt =  title_font_size_pt,
@@ -355,8 +138,14 @@ def get_slide(
 
     content_x_pt = x_pt
     content_y_pt = y_pt
-    content_height_pt = image_grid_list[i].shape[0] * cell_height_pt
-    content_width_pt = image_grid_list[i].shape[1] * cell_width_pt
+    content_height_pt = (
+      (image_grid_list[i].shape[0] * cell_height_pt) + 
+      ((image_grid_list[i].shape[0] - 1) * image_height_spacing_pt)
+    )
+    content_width_pt = (
+      (image_grid_list[i].shape[1] * cell_width_pt) + 
+      ((image_grid_list[i].shape[1] - 1) * image_width_spacing_pt)
+    )
 
     if margin_show_top:
       content_y_pt += margin_top_height_pt
@@ -371,8 +160,8 @@ def get_slide(
       y_pt = content_y_pt,
       cell_width_pt = cell_width_pt,
       cell_height_pt = cell_height_pt,
-      cell_width_spacing_pt = 0,
-      cell_height_spacing_pt = 0,
+      cell_width_spacing_pt = image_width_spacing_pt,
+      cell_height_spacing_pt = image_height_spacing_pt,
     )
 
     if image_label_show:
@@ -389,8 +178,8 @@ def get_slide(
         y_pt = content_y_pt,
         cell_width_pt = cell_width_pt,
         cell_height_pt = cell_height_pt,
-        cell_width_spacing_pt = 0,
-        cell_height_spacing_pt = 0,
+        cell_width_spacing_pt = image_width_spacing_pt,
+        cell_height_spacing_pt = image_height_spacing_pt,
         text_width_pt = image_label_width_pt,
         text_height_pt = image_label_height_pt,
         font_size_pt = image_label_font_size_pt,
@@ -402,12 +191,12 @@ def get_slide(
       get_pptx_helpers.add_textbox_grid_pptx(
         slide = slide,
         text_grid = np.array(margin_label_top_list[i]).reshape(1, -1),
-        x_pt = margin_left_width_pt,
+        x_pt = content_x_pt,
         y_pt = y_pt,
         cell_width_pt = cell_width_pt,
         cell_height_pt = margin_top_height_pt,
-        cell_width_spacing_pt = 0,
-        cell_height_spacing_pt = 0,
+        cell_width_spacing_pt = image_width_spacing_pt,
+        cell_height_spacing_pt = image_height_spacing_pt,
         text_height_pt = margin_top_height_pt,
         text_width_pt = cell_width_pt,
         font_size_pt = margin_top_font_size_pt,
@@ -427,194 +216,37 @@ def get_slide(
         y_pt = content_y_pt,
         cell_width_pt = cell_width_pt_left_margin,
         cell_height_pt = cell_height_pt,
-        cell_width_spacing_pt = 0,
-        cell_height_spacing_pt = 0,
+        cell_width_spacing_pt = image_width_spacing_pt,
+        cell_height_spacing_pt = image_height_spacing_pt,
         text_height_pt = cell_height_pt,
         text_width_pt = cell_width_pt_left_margin,
         font_size_pt = margin_left_font_size_pt,
       )
 
-    y_pt = content_x_pt + content_height_pt
-    
-    # Size legends
-    if any(legend['type'] == 'node_size' for legend in legend_list):
-      for orientation in ['h', 'v']:
-        y_legend_new_pt = get_pptx_legend.get_size_legend_pptx(
-          slide = slide,
-          x_pt = x_legend_pt + legend_x_offset_pt[orientation],
-          y_pt = y_legend_pt,
-          stride_pt = legend_const[orientation]['node_size']['stride_pt'],
-          title_width_pt = legend_const[orientation]['node_size']['title_width_pt'],
-          title_height_pt = legend_const[orientation]['node_size']['title_height_pt'],
-          title_x_offset_pt = legend_const[orientation]['node_size']['title_x_offset_pt'],
-          item_width_pt = legend_const[orientation]['node_size']['item_width_pt'],
-          item_height_pt = legend_const[orientation]['node_size']['item_height_pt'],
-          label_width_pt = legend_const[orientation]['node_size']['label_width_pt'],
-          label_height_pt = legend_const[orientation]['node_size']['label_height_pt'],
-          node_size_min_freq = node_size_min_freq,
-          node_size_max_freq = node_size_max_freq,
-          node_size_min_pt = node_size_min_px * ratio_pt_px,
-          node_size_max_pt = node_size_max_px * ratio_pt_px,
-          line_width_pt = LEGEND_SIZE_NODE_OUTLINE_WIDTH_PT,
-          legend_title_font_size_pt = legend_title_font_size_pt,
-          legend_label_font_size_pt = legend_label_font_size_pt,
-          orientation = orientation,
-        )
-      y_legend_pt = y_legend_new_pt
-
-  x_pt = slide_width_pt # place legends outside the actual slide
-
-  # Legends
-  for legend in legend_list:
-    for orientation in ['h', 'v']:
-      if legend['type'] == 'node_size':
-        pass # already handled above
-      elif legend['type'] == 'node_outline':
-        y_legend_new_pt = get_pptx_legend.get_outline_legend_pptx(
-          slide = slide,
-          x_pt = x_pt + legend_x_offset_pt[orientation],
-          y_pt = y_legend_pt,
-          stride_pt = legend_const[orientation]['node_outline']['stride_pt'],
-          title_width_pt = legend_const[orientation]['node_outline']['title_width_pt'],
-          title_height_pt = legend_const[orientation]['node_outline']['title_height_pt'],
-          title_x_offset_pt = legend_const[orientation]['node_outline']['title_x_offset_pt'],
-          item_width_pt = legend_const[orientation]['node_outline']['item_width_pt'],
-          item_height_pt = legend_const[orientation]['node_outline']['item_height_pt'],
-          label_width_pt = legend_const[orientation]['node_outline']['label_width_pt'],
-          label_height_pt = legend_const[orientation]['node_outline']['label_height_pt'],
-          node_size_pt = LEGEND_NODE_SIZE_PT,
-          line_width_pt = LEGEND_NODE_OUTLINE_WIDTH_PT,
-          legend_title_font_size_pt = legend_title_font_size_pt,
-          legend_label_font_size_pt = legend_label_font_size_pt,
-          orientation = orientation,
-        )
-      elif legend['type'] == 'edge_type':
-        y_legend_new_pt = get_pptx_legend.get_edge_legend_pptx(
-          slide = slide,
-          x_pt = x_pt + legend_x_offset_pt[orientation],
-          y_pt = y_legend_pt,
-          stride_pt = legend_const[orientation]['edge_type']['stride_pt'],
-          title_width_pt = legend_const[orientation]['edge_type']['title_width_pt'],
-          title_height_pt = legend_const[orientation]['edge_type']['title_height_pt'],
-          title_x_offset_pt = legend_const[orientation]['edge_type']['title_x_offset_pt'],
-          item_width_pt = legend_const[orientation]['edge_type']['item_width_pt'],
-          item_height_pt = legend_const[orientation]['edge_type']['item_height_pt'],
-          label_width_pt = legend_const[orientation]['edge_type']['label_width_pt'],
-          label_height_pt = legend_const[orientation]['edge_type']['label_height_pt'],
-          line_size_pt = LEGEND_EDGE_LINE_SIZE_PT,
-          line_width_pt = LEGEND_EDGE_LINE_WIDTH_PT,
-          legend_title_font_size_pt = legend_title_font_size_pt,
-          legend_label_font_size_pt = legend_label_font_size_pt,
-          orientation = orientation,
-        )
-      elif legend['type'] == 'variation_type':
-        y_legend_new_pt = get_pptx_legend.get_variation_color_legend_pptx(
-          slide = slide,
-          x_pt = x_pt + legend_x_offset_pt[orientation],
-          y_pt = y_legend_pt,
-          stride_pt = legend_const[orientation]['variation_type']['stride_pt'],
-          title_width_pt = legend_const[orientation]['variation_type']['title_width_pt'],
-          title_height_pt = legend_const[orientation]['variation_type']['title_height_pt'],
-          title_x_offset_pt = legend_const[orientation]['variation_type']['title_x_offset_pt'],
-          item_width_pt = legend_const[orientation]['variation_type']['item_width_pt'],
-          item_height_pt = legend_const[orientation]['variation_type']['item_height_pt'],
-          label_width_pt = legend_const[orientation]['variation_type']['label_width_pt'],
-          label_height_pt = legend_const[orientation]['variation_type']['label_height_pt'],
-          variation_types = ['insertion', 'deletion', 'none'],
-          node_size_pt = LEGEND_NODE_SIZE_PT,
-          line_width_pt = LEGEND_NODE_OUTLINE_WIDTH_PT,
-          legend_title_font_size_pt = legend_title_font_size_pt,
-          legend_label_font_size_pt = legend_label_font_size_pt,
-          orientation = orientation,
-        )
-      elif legend['type'] == 'node_type':
-        y_legend_new_pt = get_pptx_legend.get_node_legend_pptx(
-          slide = slide,
-          x_pt = x_pt + legend_x_offset_pt[orientation],
-          y_pt = y_legend_pt,
-          stride_pt = legend_const[orientation]['node_type']['stride_pt'],
-          title_width_pt = legend_const[orientation]['node_type']['title_width_pt'],
-          title_height_pt = legend_const[orientation]['node_type']['title_height_pt'],
-          title_x_offset_pt = legend_const[orientation]['node_type']['title_x_offset_pt'],
-          item_width_pt = legend_const[orientation]['node_type']['item_width_pt'],
-          item_height_pt = legend_const[orientation]['node_type']['item_height_pt'],
-          label_width_pt = legend_const[orientation]['node_type']['label_width_pt'],
-          label_height_pt = legend_const[orientation]['node_type']['label_height_pt'],
-          node_size_pt = LEGEND_NODE_SIZE_PT,
-          line_width_pt = LEGEND_NODE_OUTLINE_WIDTH_PT,
-          legend_title_font_size_pt = legend_title_font_size_pt,
-          legend_label_font_size_pt = legend_label_font_size_pt,
-          orientation = orientation,
-        )
-      elif legend['type'] == 'freq_ratio_continuous':
-        construct_1 = legend['construct_1']
-        construct_2 = legend['construct_2']
-        if orientation == 'v':
-          title = f'Ratio\n[{constants.LABELS[construct_1]} / {constants.LABELS[construct_2]}]'
-        elif orientation == 'h':
-          title = f'Ratio [{constants.LABELS[construct_1]} / {constants.LABELS[construct_2]}]'
-        else:
-          raise Exception('Impossible')
-        color_bar_file = legend['color_bar_file']
-        y_legend_new_pt = get_pptx_legend.get_freq_ratio_legend_pptx(
-          slide = slide,
-          x_pt = x_pt + legend_x_offset_pt[orientation],
-          y_pt = y_legend_pt,
-          title = title,
-          title_width_pt = legend_const[orientation]['freq_ratio_continuous']['title_width_pt'],
-          title_height_pt = legend_const[orientation]['freq_ratio_continuous']['title_height_pt'],
-          title_x_offset_pt = legend_const[orientation]['freq_ratio_continuous']['title_x_offset_pt'],
-          label_width_pt = legend_const[orientation]['freq_ratio_continuous']['label_width_pt'],
-          label_height_pt = legend_const[orientation]['freq_ratio_continuous']['label_height_pt'],
-          color_bar_minor_axis_pt = LEGEND_FREQ_RATIO_COLOR_BAR_WIDTH_PT,
-          color_bar_major_axis_pt = legend_freq_ratio_color_bar_height_pt,
-          color_bar_file = color_bar_file,
-          legend_title_font_size_pt = legend_title_font_size_pt,
-          legend_label_font_size_pt = legend_label_font_size_pt,
-          orientation = orientation,
-        )
-      else:
-        raise Exception('Unknown legend type: ' + str(legend))
-    y_legend_pt = y_legend_new_pt
-    y_legend_pt += legend_height_spacing_pt
-
+    y_pt = content_y_pt + content_height_pt + grid_height_spacing_pt
+  # End grid for loop
 
 def parse_args():
   parser = argparse.ArgumentParser(
-    description = 'Create powerpoint figures from images.'
+    description = 'Create powerpoint figures from images.',
+    formatter_class = argparse.ArgumentDefaultsHelpFormatter,
   )
   parser.add_argument(
     '--input',
     nargs = '+',
     type = common_utils.check_file,
-    help = 'List of images to include in the grid',
-    required = True,
-  )
-  parser.add_argument(
-    '--labels',
-    nargs = '+',
-    help = 'Labels of images in the grid',
-  )
-  parser.add_argument(
-    '--top_margin_labels',
-    nargs = '+',
-    help = 'Labels in the top margins of the grids',
-  )
-  parser.add_argument(
-    '--left_margin_labels',
-    nargs = '+',
-    help = 'Labels in the left margins of the grids',
-  )
-  parser.add_argument(
-    '--output',
-    help = 'Output PPTX file.',
+    help = (
+      'List of images to include in the grid.' +
+      ' The number of arguments should match the number of grids' +
+      ' and their dimensions.'
+    ),
     required = True,
   )
   parser.add_argument(
     '--num_grids',
     required = True,
     type = int,
-    help = 'Number of separate grids to create',
+    help = 'Number of separate grids to create.',
   )
   parser.add_argument(
     '--num_rows',
@@ -637,7 +269,116 @@ def parse_args():
     ),
   )
   parser.add_argument(
-    '--total_width',
+    '--image_height_spacing_pt',
+    type = float,
+    default = IMAGE_HEIGHT_SPACING_PT,
+    help = (
+      'How much vertical spacing between rows of images' +
+      ' in the same grid in pt.'
+    ),
+  )
+  parser.add_argument(
+    '--image_width_spacing_pt',
+    type = float,
+    default = IMAGE_WIDTH_SPACING_PT,
+    help = (
+      'How much horizontal spacing between columns of images' +
+      ' in the same grid in pt.'
+    ),
+  )
+  parser.add_argument(
+    '--grid_height_spacing_pt',
+    type = float,
+    default = GRID_HEIGHT_SPACING_PT,
+    help = 'How much vertical spacing between different grids in pt.',
+  )
+  parser.add_argument(
+    '--image_labels',
+    nargs = '+',
+    help = (
+      'Labels of images in the grid.' +
+      ' The number of arguments should match the number of grids' +
+      ' and their dimensions.' +
+      ' The label textboxs will be positioned so that the top left corner' +
+      ' of the textbox is at the top left corner of the image.'
+    ),
+  )
+  parser.add_argument(
+    '--image_label_width_pt',
+    type = float,
+    default = IMAGE_LABEL_WIDTH_PT,
+    help = 'Width of image label box in pt.',
+  )
+  parser.add_argument(
+    '--image_label_height_pt',
+    type = float,
+    default = IMAGE_LABEL_HEIGHT_PT,
+    help = 'Height of image label box in pt.',
+  )
+  parser.add_argument(
+    '--image_label_font_size_pt',
+    type = float,
+    default = IMAGE_LABEL_FONT_SIZE_PT,
+    help = 'Size of image label font in pt.',
+  )
+  parser.add_argument(
+    '--margin_labels_top',
+    nargs = '+',
+    help = (
+      'Labels in the top margins of the grids.' +
+      ' The number of arguments must be sum of the number of columns in each grid.'
+    ),
+  )
+  parser.add_argument(
+    '--margin_top_height_pt',
+    type = float,
+    default = MARGIN_TOP_HEIGHT_PT,
+    help = (
+      'Height of top margin in pt.' +
+      ' The top margin is where the top labels are placed.'
+    ),
+  )
+  parser.add_argument(
+    '--margin_top_font_size_pt',
+    type = float,
+    default = MARGIN_TOP_LABEL_FONT_SIZE_PT,
+    help = 'Size of top margin label font in pt.',
+  )
+  parser.add_argument(
+    '--margin_labels_left',
+    nargs = '+',
+    help = (
+      'Labels in the left margins of the grids,' +
+      ' The number of arguments must be sum of the number of rows in each grid.'
+    ),
+  )
+  parser.add_argument(
+    '--margin_left_width_pt',
+    type = float,
+    default = MARGIN_LEFT_WIDTH_PT,
+    help = (
+      'Width of left margin in pt.' +
+      ' The left margin is where the left labels are placed.'
+    ),
+  )
+  parser.add_argument(
+    '--margin_left_spill_over_pt',
+    type = float,
+    nargs = 2,
+    default = MARGIN_LEFT_SPILL_OVER_PT,
+    help = (
+      'How much to extend the left label boxes on the left and right in pt.' +
+      ' This is to help centering the labels.'
+    ),
+  )
+  parser.add_argument(
+    '--margin_left_font_size_pt',
+    type = float,
+    default = MARGIN_LEFT_LABEL_FONT_SIZE_PT,
+    help = 'Size of left margin label font in pt.',
+  )
+  parser.add_argument(
+    '--total_width_frac',
     nargs = '+',
     type = float,
     help = (
@@ -646,180 +387,192 @@ def parse_args():
     ),
   )
   parser.add_argument(
-    '--node_max_freq',
-    type = float,
-    help = (
-      'Max frequency to determine node size.' +
-      ' Higher frequencies are clipped to this value.'
-    ),
-    default = constants.GRAPH_NODE_SIZE_MAX_FREQ,
-  )
-  parser.add_argument(
-    '--node_min_freq',
-    type = float,
-    help = (
-      'Min frequency to determine node size.' +
-      ' Lower frequencies are clipped to this value.'
-    ),
-    default = constants.GRAPH_NODE_SIZE_MIN_FREQ,
-  )
-  parser.add_argument(
-    '--node_max_px',
-    type = float,
-    help = 'Largest node size as determined by the frequency.',
-    default = constants.GRAPH_NODE_SIZE_MAX_PX,
-  )
-  parser.add_argument(
-    '--node_min_px',
-    type = float,
-    help = 'Smallest node size as determined by the frequency.',
-    default = constants.GRAPH_NODE_SIZE_MIN_PX,
-  )
-  parser.add_argument(
     '--title',
-    default = None,
-    help = 'Page title',
+    help = 'Page title.',
   )
   parser.add_argument(
-    '--legends',
-    nargs = '+',
-    choices = list(LEGENDS),
-    default = None,
-    help = 'Legends to draw outside the page.',
+    '--title_height_pt',
+    type = float,
+    default = TITLE_HEIGHT_PT,
+    help = (
+      'Height of title box in pt.' +
+      ' The title box spans the whole page width.'
+    ),
+  )
+  parser.add_argument(
+    '--title_font_size_pt',
+    type = float,
+    default = TITLE_FONT_SIZE_PT,
+    help = 'Size of title font in pt.',
   )
   parser.add_argument(
     '--template',
     default = os.path.join(os.path.dirname(__file__), 'template.pptx'),
-    help = 'The PPTX file to use as a template. Controls the page size.',
+    help = 'The PPTX file to use as a template. This determines the page size.',
   )
-  args = parser.parse_args()
-  return args
+  parser.add_argument(
+    '--output',
+    help = 'Output PPTX file.',
+    required = True,
+  )
+  return vars(parser.parse_args())
 
-if __name__ == '__main__':
-  args = parse_args()
-
-  if args.num_grids != len(args.num_rows):
+def main(
+  input,
+  num_grids,
+  num_rows,
+  num_cols,
+  image_height_spacing_pt,
+  image_width_spacing_pt,
+  grid_height_spacing_pt,
+  image_labels,
+  image_label_width_pt,
+  image_label_height_pt,
+  image_label_font_size_pt,
+  margin_labels_top,
+  margin_top_height_pt,
+  margin_top_font_size_pt,
+  margin_labels_left,
+  margin_left_width_pt,
+  margin_left_spill_over_pt,
+  margin_left_font_size_pt,
+  total_width_frac,
+  title,
+  title_height_pt,
+  title_font_size_pt,
+  template,
+  output,
+):
+  if num_grids != len(num_rows):
     raise Exception(
-      f'Incorrect num rows specification: {args.num_rows}.' +
-      f' Expected {args.num_grids} values.' 
+      f'Incorrect num rows specification: {num_rows}.' +
+      f' Expected {num_grids} values.' 
     )
   
-  if args.num_grids != len(args.num_cols):
+  if num_grids != len(num_cols):
     raise Exception(
-      f'Incorrect num columns specification: {args.num_cols}.' +
-      f' Expected {args.num_grids} values.' 
+      f'Incorrect num columns specification: {num_cols}.' +
+      f' Expected {num_grids} values.' 
     )
 
-  if args.total_width is None:
-    args.total_width = [1] * args.num_grids
-  if len(args.total_width) != args.num_grids:
+  if total_width_frac is None:
+    total_width_frac = [1] * num_grids
+  if len(total_width_frac) != num_grids:
     raise Exception(
-      f'Incorrect number of total widths: {args.total_width}.' +
-      f' Expected {args.num_grids} values.' 
+      f'Incorrect number of total widths: {total_width_frac}.' +
+      f' Expected {num_grids} values.' 
     )
 
-  num_images_total = sum(r * c for r, c in zip(args.num_rows, args.num_cols))
-  if num_images_total != len(args.input):
+  num_images_total = sum(r * c for r, c in zip(num_rows, num_cols))
+  if num_images_total != len(input):
     raise Exception(
-      f'Incorrect number of input files: {len(args.input)}.' +
+      f'Incorrect number of input files: {len(input)}.' +
       f' Expected {num_images_total} values.' 
     )
 
   image_grid_list = []
   image_index = 0
-  for i in range(args.num_grids):
-    num_images = args.num_rows[i] * args.num_cols[i]
+  for i in range(num_grids):
+    num_images = num_rows[i] * num_cols[i]
     image_grid = np.array(
-      [args.input[image_index + j] for j in range(num_images)]
+      [input[image_index + j] for j in range(num_images)]
     )
-    image_grid = image_grid.reshape((args.num_rows[i], args.num_cols[i]))
+    image_grid = image_grid.reshape((num_rows[i], num_cols[i]))
     image_grid_list.append(image_grid)
     image_index += num_images
 
   label_grid_list = None
-  if args.labels is not None:
-    if len(args.labels) != num_images_total:
+  if image_labels is not None:
+    if len(image_labels) != num_images_total:
       raise Exception(
-        f'Incorrect number of input labels: {len(args.input)}.' +
+        f'Incorrect number of input labels: {len(input)}.' +
         f' Expected {num_images_total} values.' 
       )
     label_grid_list = []
     index = 0
-    for i in range(args.num_grids):
-      num_labels = args.num_rows[i] * args.num_cols[i]
+    for i in range(num_grids):
+      num_labels = num_rows[i] * num_cols[i]
       label_grid = np.array(
-        [args.labels[index + j] for j in range(num_labels)]
+        [image_labels[index + j] for j in range(num_labels)]
       )
-      label_grid = label_grid.reshape((args.num_rows[i], args.num_cols[i]))
+      label_grid = label_grid.reshape((num_rows[i], num_cols[i]))
       label_grid_list.append(label_grid)
       index += num_labels
   
   margin_label_left_list = None
-  if args.left_margin_labels is not None:
-    num_left_margin_labels = sum(args.num_rows[i] for i in range(args.num_grids))
-    if len(args.left_margin_labels) != num_left_margin_labels:
+  if margin_labels_left is not None:
+    num_margin_labels_left = sum(num_rows[i] for i in range(num_grids))
+    if len(margin_labels_left) != num_margin_labels_left:
       raise Exception(
-        f'Incorrect number of left margin labels: {len(args.left_margin_labels)}.' +
-        f' Expected {num_left_margin_labels} values.' 
+        f'Incorrect number of left margin labels: {len(margin_labels_left)}.' +
+        f' Expected {num_margin_labels_left} values.' 
       )
     margin_label_left_list = []
     index = 0
-    for i in range(args.num_grids):
-      num_labels = args.num_rows[i]
-      label_list = [args.left_margin_labels[index + j] for j in range(num_labels)]
+    for i in range(num_grids):
+      num_labels = num_rows[i]
+      label_list = [margin_labels_left[index + j] for j in range(num_labels)]
       margin_label_left_list.append(label_list)
       index += num_labels
   
   margin_label_top_list = None
-  if args.top_margin_labels is not None:
-    num_top_margin_labels = sum(args.num_cols[i] for i in range(args.num_grids))
-    if len(args.top_margin_labels) != num_top_margin_labels:
+  if margin_labels_top is not None:
+    num_margin_labels_top = sum(num_cols[i] for i in range(num_grids))
+    if len(margin_labels_top) != num_margin_labels_top:
       raise Exception(
-        f'Incorrect number of top margin labels: {len(args.top_margin_labels)}.' +
-        f' Expected {num_top_margin_labels} values.' 
+        f'Incorrect number of top margin labels: {len(margin_labels_top)}.' +
+        f' Expected {num_margin_labels_top} values.' 
       )
     margin_label_top_list = []
     index = 0
-    for i in range(args.num_grids):
-      num_labels = args.num_cols[i]
-      label_list = [args.top_margin_labels[index + j] for j in range(num_labels)]
+    for i in range(num_grids):
+      num_labels = num_cols[i]
+      label_list = [margin_labels_top[index + j] for j in range(num_labels)]
       margin_label_top_list.append(label_list)
       index += num_labels
 
-  legend_list = []
-  if args.legends is not None:
-    legend_list = [LEGENDS[x] for x in args.legends]
-
   # replace \n with newline characters in case using Windows
-  for i in range(args.num_grids):
+  for i in range(num_grids):
     if label_grid_list is not None:
-      for r in range(args.num_rows[i]):
-        for c in range(args.num_cols[i]):
+      for r in range(num_rows[i]):
+        for c in range(num_cols[i]):
           label_grid_list[i][r, c] = label_grid_list[i][r, c].replace('\\n', '\n')
     if margin_label_left_list is not None:
-      for r in range(args.num_rows[i]):
+      for r in range(num_rows[i]):
         margin_label_left_list[i][r] = margin_label_left_list[i][r].replace('\\n', '\n')
     if margin_label_top_list is not None:
-      for c in range(args.num_cols[i]):
+      for c in range(num_cols[i]):
         margin_label_top_list[i][c] = margin_label_top_list[i][c].replace('\\n', '\n')
 
   prs = pptx.Presentation(PPTX_TEMPLATE_FILE)
 
   get_slide(
     prs,
-    title = args.title,
+    total_width_frac_list = total_width_frac,
+    title = title,
+    title_height_pt = title_height_pt,
+    title_font_size_pt = title_font_size_pt,
     image_grid_list = image_grid_list,
     image_label_grid_list = label_grid_list,
+    image_label_font_size_pt = image_label_font_size_pt,
+    image_label_width_pt = image_label_width_pt,
+    image_label_height_pt = image_label_height_pt,
+    margin_top_font_size_pt = margin_top_font_size_pt,
+    margin_left_font_size_pt = margin_left_font_size_pt,
+    margin_top_height_pt = margin_top_height_pt,
+    margin_left_width_pt = margin_left_width_pt,
+    margin_left_spill_over_pt = margin_left_spill_over_pt[0],
+    margin_right_spill_over_pt = margin_left_spill_over_pt[1],
     margin_label_left_list = margin_label_left_list,
     margin_label_top_list = margin_label_top_list,
-    node_size_max_freq = args.node_max_freq,
-    node_size_min_freq = args.node_min_freq,
-    node_size_max_px = args.node_max_px,
-    node_size_min_px = args.node_min_px,
-    legend_list = legend_list,
-    total_width_frac_list = args.total_width,
+    image_height_spacing_pt = image_height_spacing_pt,
+    image_width_spacing_pt = image_width_spacing_pt,
+    grid_height_spacing_pt = grid_height_spacing_pt,
   )
   
-  log_utils.log(args.output)
-  file_utils.make_parent_dir(args.output)
-  prs.save(args.output)
+  log_utils.log(output)
+  file_utils.make_parent_dir(output)
+  prs.save(output)
+
+if __name__ == '__main__':
+  main(**parse_args())
