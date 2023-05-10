@@ -97,6 +97,10 @@ def get_slide(
   slide = prs.slides.add_slide(title_slide_layout)
   
   slide_width_pt = prs.slide_width / pptx.util.Pt(1)
+  slide_height_pt = prs.slide_height / pptx.util.Pt(1)
+
+  log_utils.log(f"Slide width: {slide_width_pt} pt")
+  log_utils.log(f"Slide height: {slide_height_pt} pt")
 
   y_pt = 0
   x_pt = 0
