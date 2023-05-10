@@ -2205,7 +2205,10 @@ def parse_args():
     nargs = 2,
     type = float,
     default = constants.GRAPH_NODE_SIZE_PX_RANGE,
-    help = 'Largest node size as determined by the frequency.',
+    help = (
+      'Min and max node size in pixels as determined by the frequency.' +
+      ' For no size scaling, set both values to the same number.'
+    )
   )
   parser.add_argument(
     '--node_outline_scale',
