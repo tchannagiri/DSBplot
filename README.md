@@ -31,9 +31,10 @@ XXX
 
 To install the package, use the command
 ```
-pip install XXX
+pip install dsbplot
 ```
 The required dependencies are
+* Python >= ?
 * Plotly
 * NetworkX
 * PIL
@@ -42,6 +43,8 @@ The required dependencies are
 * pandas
 * SciKit-Learn
 * Levenshtein
+* Pillow
+* matplotlib
 (TODO)
 
 Bowtie 2 (version >= XX) should be installed and available on the PATH. Particularly, the executables `bowtie2-build-s` and `bowtie2-align-s` should be available as commands.
