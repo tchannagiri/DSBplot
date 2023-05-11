@@ -37,7 +37,6 @@ The required dependencies are
 * Python >= ?
 * Plotly
 * NetworkX
-* PIL
 * python-pptx
 * numpy
 * pandas
@@ -45,6 +44,7 @@ The required dependencies are
 * Levenshtein
 * Pillow
 * matplotlib
+* kaleido==0.1.0.post1
 (TODO)
 
 Bowtie 2 (version >= XX) should be installed and available on the PATH. Particularly, the executables `bowtie2-build-s` and `bowtie2-align-s` should be available as commands.
