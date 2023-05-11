@@ -1,5 +1,5 @@
 
-import get_pptx.get_pptx as get_pptx
+import DSBplot.get_pptx.get_pptx as get_pptx
 
 def parse_args():
   return get_pptx.parse_args()

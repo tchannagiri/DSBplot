@@ -1,15 +1,15 @@
-import utils.common_utils as common_utils
-import utils.file_utils as file_utils
-import utils.log_utils as log_utils
-import utils.alignment_utils as alignment_utils
-import utils.fasta_utils as fasta_utils
-import utils.constants as constants
-import utils.file_names as file_names
-import get_window_data.alignment_window as alignment_window
-import get_window_data.remove_substitution as remove_substitution
-
 import pandas as pd
 import argparse
+
+import DSBplot.utils.common_utils as common_utils
+import DSBplot.utils.file_utils as file_utils
+import DSBplot.utils.log_utils as log_utils
+import DSBplot.utils.alignment_utils as alignment_utils
+import DSBplot.utils.fasta_utils as fasta_utils
+import DSBplot.utils.constants as constants
+import DSBplot.utils.file_names as file_names
+import DSBplot.get_window_data.alignment_window as alignment_window
+import DSBplot.get_window_data.remove_substitution as remove_substitution
 
 def parse_args():
   parser = argparse.ArgumentParser(

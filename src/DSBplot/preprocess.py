@@ -3,19 +3,19 @@ import os
 import argparse
 import glob
 
-import utils.file_names as file_names
-import utils.common_utils as common_utils
-import utils.file_utils as file_utils
-import utils.log_utils as log_utils
-import utils.constants as constants
+import DSBplot.utils.file_names as file_names
+import DSBplot.utils.common_utils as common_utils
+import DSBplot.utils.file_utils as file_utils
+import DSBplot.utils.log_utils as log_utils
+import DSBplot.utils.constants as constants
 
-import get_nhej_data.filter_nhej as filter_nhej
-import get_nhej_data.combine_repeat as combine_repeat
-import get_window_data.get_window as get_window
-import get_window_data.get_freq as get_freq
-import get_window_data.get_freq_comparison as get_freq_comparison
-import get_graph_data.get_graph_data as get_graph_data
-import get_histogram_data.get_histogram_data as get_histogram_data
+import DSBplot.get_nhej_data.filter_nhej as filter_nhej
+import DSBplot.get_nhej_data.combine_repeat as combine_repeat
+import DSBplot.get_window_data.get_window as get_window
+import DSBplot.get_window_data.get_freq as get_freq
+import DSBplot.get_window_data.get_freq_comparison as get_freq_comparison
+import DSBplot.get_graph_data.get_graph_data as get_graph_data
+import DSBplot.get_histogram_data.get_histogram_data as get_histogram_data
 
 STAGES_1 = ['0_align', '1_filter', '2_combine', '3_window']
 STAGES_2 = ['3_comparison', '4_graph', '5_histogram']

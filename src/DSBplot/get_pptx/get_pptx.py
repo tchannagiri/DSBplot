@@ -3,10 +3,10 @@ import argparse
 
 import numpy as np
 
-import utils.common_utils as common_utils
-import utils.file_utils as file_utils
-import utils.log_utils as log_utils
-import get_pptx.get_pptx_helpers as get_pptx_helpers
+import DSBplot.utils.common_utils as common_utils
+import DSBplot.utils.file_utils as file_utils
+import DSBplot.utils.log_utils as log_utils
+import DSBplot.get_pptx.get_pptx_helpers as get_pptx_helpers
 
 import pptx
 import pptx.util

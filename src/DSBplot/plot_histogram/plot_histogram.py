@@ -1,17 +1,13 @@
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../utils/'))) # allow importing the utils dir
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import argparse
 
-import utils.common_utils as common_utils
-import utils.file_utils as file_utils
-import utils.log_utils as log_utils
-import utils.file_names as file_names
-import utils.constants as constants
+import DSBplot.utils.common_utils as common_utils
+import DSBplot.utils.file_utils as file_utils
+import DSBplot.utils.log_utils as log_utils
+import DSBplot.utils.file_names as file_names
+import DSBplot.utils.constants as constants
 
 def get_figure_args_pyplot(
   col_widths_px,

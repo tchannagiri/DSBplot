@@ -1,5 +1,5 @@
-import utils.file_names as file_names
-import plot_histogram.plot_histogram as plot_histogram
+import DSBplot.utils.file_names as file_names
+import DSBplot.plot_histogram.plot_histogram as plot_histogram
 
 def parse_args():
   args = plot_histogram.parse_args()

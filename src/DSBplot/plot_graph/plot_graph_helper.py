@@ -1,10 +1,10 @@
-import utils.constants as constants
-import utils.kmer_utils as kmer_utils
-
 import plotly.graph_objects as go
 import plotly.colors as pc
 import pandas as pd
 import numpy as np
+
+import DSBplot.utils.constants as constants
+import DSBplot.utils.kmer_utils as kmer_utils
 
 HOVER_TEMPLATE = '%{hovertext}<extra></extra>' # use pre-formatted hovertext field and disable extra margin
 

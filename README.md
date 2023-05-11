@@ -34,8 +34,13 @@ To install the package, use the command
 pip install XXX
 ```
 The required dependencies are
-* XX
-* YY
+* Plotly
+* NetworkX
+* PIL
+* python-pptx
+* numpy
+* pandas
+* SciKit-Learn
 (TODO)
 
 Bowtie 2 (version >= XX) should be installed and available on the PATH. Particularly, the executables `bowtie2-build-s` and `bowtie2-align-s` should be available as commands.

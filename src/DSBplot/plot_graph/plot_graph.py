@@ -14,15 +14,15 @@ import sklearn.manifold
 
 import PIL.Image
 
-import utils.constants as constants
-import utils.common_utils as common_utils
-import utils.log_utils as log_utils
-import utils.graph_utils as graph_utils
-import utils.file_utils as file_utils
-import utils.kmer_utils as kmer_utils
-import utils.alignment_utils as alignment_utils
-import utils.file_names as file_names
-import plot_graph.plot_graph_helper as plot_graph_helper
+import DSBplot.utils.constants as constants
+import DSBplot.utils.common_utils as common_utils
+import DSBplot.utils.log_utils as log_utils
+import DSBplot.utils.graph_utils as graph_utils
+import DSBplot.utils.file_utils as file_utils
+import DSBplot.utils.kmer_utils as kmer_utils
+import DSBplot.utils.alignment_utils as alignment_utils
+import DSBplot.utils.file_names as file_names
+import DSBplot.plot_graph.plot_graph_helper as plot_graph_helper
 
 LAYOUT_PROPERTIES = {
  'mds_layout': {

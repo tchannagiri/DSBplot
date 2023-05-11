@@ -1,8 +1,7 @@
 import argparse
 
-import utils.common_utils as common_utils
-
-import preprocess
+import DSBplot.utils.common_utils as common_utils
+import DSBplot.preprocess as preprocess
 
 def parse_args():
   parser = argparse.ArgumentParser(

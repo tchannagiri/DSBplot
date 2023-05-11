@@ -1,16 +1,12 @@
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../utils/'))) # allow importing the utils dir
-
 import pandas as pd
 import argparse
 
-import utils.file_names as file_names
-import utils.file_utils as file_utils
-import utils.alignment_utils as alignment_utils
-import utils.log_utils as log_utils
-import utils.common_utils as common_utils
-import utils.constants as constants
+import DSBplot.utils.file_names as file_names
+import DSBplot.utils.file_utils as file_utils
+import DSBplot.utils.alignment_utils as alignment_utils
+import DSBplot.utils.log_utils as log_utils
+import DSBplot.utils.common_utils as common_utils
+import DSBplot.utils.constants as constants
 
 def parse_args():
   parser = argparse.ArgumentParser(

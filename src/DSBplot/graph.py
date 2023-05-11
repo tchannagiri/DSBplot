@@ -1,5 +1,5 @@
-import utils.file_names as file_names
-import plot_graph.plot_graph as plot_graph
+import DSBplot.utils.file_names as file_names
+import DSBplot.plot_graph.plot_graph as plot_graph
 
 def parse_args():
   args = plot_graph.parse_args()

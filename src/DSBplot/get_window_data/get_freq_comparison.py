@@ -1,13 +1,12 @@
 import pandas as pd
 import argparse
 
-import utils.common_utils as common_utils
-import utils.constants as constants
-import utils.file_names as file_names
-import utils.file_utils as file_utils
-import utils.log_utils as log_utils
-
-import get_window_data.get_window as get_window
+import DSBplot.utils.common_utils as common_utils
+import DSBplot.utils.constants as constants
+import DSBplot.utils.file_names as file_names
+import DSBplot.utils.file_utils as file_utils
+import DSBplot.utils.log_utils as log_utils
+import DSBplot.get_window_data.get_window as get_window
 
 def parse_args():
   parser = argparse.ArgumentParser(

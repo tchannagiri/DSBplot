@@ -2,12 +2,12 @@ import argparse
 
 import pandas as pd
 
-import utils.file_utils as file_utils
-import utils.common_utils as common_utils
-import utils.sam_utils as sam_utils
-import utils.fasta_utils as fasta_utils
-import utils.alignment_utils as alignment_utils
-import utils.log_utils as log_utils
+import DSBplot.utils.file_utils as file_utils
+import DSBplot.utils.common_utils as common_utils
+import DSBplot.utils.sam_utils as sam_utils
+import DSBplot.utils.fasta_utils as fasta_utils
+import DSBplot.utils.alignment_utils as alignment_utils
+import DSBplot.utils.log_utils as log_utils
 
 def is_consecutive(ins_pos, del_pos):
   if len(ins_pos) + len(del_pos) == 0: # no in/dels

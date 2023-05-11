@@ -1,11 +1,11 @@
 import argparse
 import sys
 
-import preprocess
-import comparison
-import graph
-import histogram
-import pptx
+import DSBplot.preprocess as preprocess
+import DSBplot.comparison as comparison
+import DSBplot.graph as graph
+import DSBplot.histogram as histogram
+import DSBplot.pptx1 as pptx1
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(
@@ -39,7 +39,7 @@ if __name__ == '__main__':
   elif args.command == 'histogram':
     histogram.main(**histogram.parse_args())
   elif args.command == 'pptx':
-    pptx.main(**pptx.parse_args())
+    pptx1.main(**pptx1.parse_args())
   else:
     raise Exception('Error: Unrecognized command.' + args.command)
 
