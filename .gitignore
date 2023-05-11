@@ -160,9 +160,5 @@ cython_debug/
 #.idea/
 
 .vscode/
-data_demo/output/
-plot_demo/
-data_OX/output/
-plot_OX/
-data_HEK/output/
-plot_HEK/
+demo/data/output/
+demo/plots/
