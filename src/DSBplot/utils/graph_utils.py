@@ -1,11 +1,10 @@
-import utils.file_names as file_names
-import utils.file_utils as file_utils
-import utils.constants as constants
-import utils.alignment_utils as alignment_utils
-
 import Levenshtein
 import networkx as nx
 import numpy as np
+
+import DSBplot.utils.file_names as file_names
+import DSBplot.utils.file_utils as file_utils
+import DSBplot.utils.alignment_utils as alignment_utils
 
 def get_extended_align(ref_align, read_align):
   ord_map = {

@@ -1,5 +1,6 @@
 import os
-import utils.constants as constants
+
+import DSBplot.utils.constants as constants
 
 IMAGE_DIR = 'images'
 

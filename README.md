@@ -41,6 +41,7 @@ The required dependencies are
 * numpy
 * pandas
 * SciKit-Learn
+* Levenshtein
 (TODO)
 
 Bowtie 2 (version >= XX) should be installed and available on the PATH. Particularly, the executables `bowtie2-build-s` and `bowtie2-align-s` should be available as commands.

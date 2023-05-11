@@ -1,4 +1,3 @@
-import sys
 import datetime
   
 def log(s):
