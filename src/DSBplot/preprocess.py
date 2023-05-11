@@ -207,7 +207,7 @@ def do_0_align(
     file_utils.make_parent_dir(sam_file)
     os.system(f'bowtie2-align-s -x {bowtie2_build_file} {input_1} -S {sam_file} --quiet')
     log_utils.log_output('Bowtie2 SAM file: ' + sam_file)
-    log_utils.new_line()
+    log_utils.blank_line()
 
 def do_1_filter_nhej(
   output,

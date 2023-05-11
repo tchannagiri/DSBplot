@@ -121,7 +121,7 @@ def main(
   file_utils.write_tsv(pd.DataFrame(data_info, index=[0]), output_data_info_file)
   log_utils.log_output(output_data_info_file)
 
-  log_utils.new_line()
+  log_utils.blank_line()
 
 if __name__ == '__main__':
   main(**parse_args())

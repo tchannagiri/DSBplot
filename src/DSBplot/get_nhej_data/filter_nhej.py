@@ -382,7 +382,7 @@ def main(
     log_utils.log(f'        Too short: {rejected_too_short}')
     log_utils.log(f'        DSB not touch: {rejected_dsb_not_touch}')
     log_utils.log(f'        Not consecutive: {rejected_not_consecutive}')
-  log_utils.new_line()
+  log_utils.blank_line()
 
 if __name__ == '__main__':
   main(**parse_args())

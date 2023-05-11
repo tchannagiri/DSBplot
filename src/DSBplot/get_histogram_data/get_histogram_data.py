@@ -168,7 +168,7 @@ def main(
 
   write_variation(input, output, subst_type)
   write_variation_grouped(output, subst_type)
-  log_utils.new_line()
+  log_utils.blank_line()
 
 if __name__ == '__main__':
   main(**parse_args())

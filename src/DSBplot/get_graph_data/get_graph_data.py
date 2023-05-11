@@ -234,7 +234,7 @@ def main(
   write_distance_matrix(output, subst_type)
   write_graph_stats(output, subst_type)
 
-  log_utils.new_line()
+  log_utils.blank_line()
 
 if __name__ == '__main__':
   main(**parse_args())

@@ -82,7 +82,7 @@ def main(input, column_names, output, quiet = True):
     log_utils.log(f"Num sequences combined: {data_combined.shape[0]}")
   file_utils.write_tsv(data_combined, output)
   log_utils.log_output(output)
-  log_utils.new_line()
+  log_utils.blank_line()
   
 if __name__ == '__main__':
   main(**parse_args())

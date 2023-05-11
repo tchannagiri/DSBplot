@@ -2805,7 +2805,7 @@ def main(
         bottom = crop_y[1] * height_px
 
         image.crop((left, top, right, bottom)).save(output_list[i])
-  log_utils.new_line()
+  log_utils.blank_line()
 
 if __name__ == '__main__':
   main(**parse_args())

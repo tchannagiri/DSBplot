@@ -121,7 +121,7 @@ def main(input, output, subst_type, total_reads, freq_min):
   )
   log_utils.log_output(output_file)
 
-  log_utils.new_line()
+  log_utils.blank_line()
   
 if __name__ == '__main__':
   main(**parse_args())

@@ -296,7 +296,7 @@ def plot_histogram(
 
   file_utils.write_pyplot(figure, file_out)
   log_utils.log_output(file_out)
-  log_utils.new_line()
+  log_utils.blank_line()
 
 
 def parse_args():

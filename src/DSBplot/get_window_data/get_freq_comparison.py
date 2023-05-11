@@ -114,7 +114,7 @@ def main(input, output, subst_type):
     ref_seqs = [data_info_1['ref_seq'], data_info_2['ref_seq']],
     ref_seq_window = data_info_1['ref_seq_window'],
   )
-  log_utils.new_line()
+  log_utils.blank_line()
 
 if __name__ == '__main__':
   main(**parse_args())

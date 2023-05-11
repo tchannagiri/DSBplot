@@ -9,5 +9,5 @@ def log_input(s):
 def log_output(s):
   log('(output) ' + str(s))
 
-def new_line():
+def blank_line():
   print()
