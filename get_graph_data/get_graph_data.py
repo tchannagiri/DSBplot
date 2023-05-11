@@ -6,13 +6,13 @@ import itertools
 import pandas as pd
 import argparse
 
-import file_names
-import file_utils
-import alignment_utils
-import log_utils
-import common_utils
-import constants
-import graph_utils
+import utils.file_names as file_names
+import utils.file_utils as file_utils
+import utils.alignment_utils as alignment_utils
+import utils.log_utils as log_utils
+import utils.common_utils as common_utils
+import utils.constants as constants
+import utils.graph_utils as graph_utils
 
 def parse_args():
   parser = argparse.ArgumentParser(

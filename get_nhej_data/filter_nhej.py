@@ -1,17 +1,13 @@
 import argparse
-import sys
-import os
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../utils/'))) # allow importing the utils dir
 
 import pandas as pd
 
-import file_utils
-import common_utils
-import sam_utils
-import fasta_utils
-import alignment_utils
-import log_utils
+import utils.file_utils as file_utils
+import utils.common_utils as common_utils
+import utils.sam_utils as sam_utils
+import utils.fasta_utils as fasta_utils
+import utils.alignment_utils as alignment_utils
+import utils.log_utils as log_utils
 
 def is_consecutive(ins_pos, del_pos):
   if len(ins_pos) + len(del_pos) == 0: # no in/dels

@@ -1,1 +1,2 @@
 TODO: SETUP A VENV AND GET THE EXACT VERSIONS OF PACKAGES BEING USED!
+TODO: Add the dummy code to test script. Make a test script that uses a lot of the arguments of graphing/histograms.

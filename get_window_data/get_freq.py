@@ -1,15 +1,10 @@
 import argparse
-import sys
-import os
-import pandas as pd
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../utils/'))) # allow importing the utils dir
-
-import file_utils
-import common_utils
-import log_utils
-import file_names
-import constants
+import utils.file_utils as file_utils
+import utils.common_utils as common_utils
+import utils.log_utils as log_utils
+import utils.file_names as file_names
+import utils.constants as constants
 
 def parse_args():
   parser = argparse.ArgumentParser(

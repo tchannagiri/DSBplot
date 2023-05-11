@@ -1,5 +1,4 @@
-import cigar_utils
-import re
+import utils.cigar_utils as cigar_utils
 
 def get_alignment(ref_seq, read_seq, ref_pos, cigar):
   """

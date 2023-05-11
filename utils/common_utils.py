@@ -1,4 +1,3 @@
-import pandas as pd
 import os
 
 def check_file(file_name):

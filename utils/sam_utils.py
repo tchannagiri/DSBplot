@@ -1,4 +1,3 @@
-
 SAM_MANDATORY_FIELDS = [
   'QNAME',
   'FLAG',

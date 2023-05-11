@@ -5,12 +5,12 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../util
 import pandas as pd
 import argparse
 
-import file_names
-import file_utils
-import alignment_utils
-import log_utils
-import common_utils
-import constants
+import utils.file_names as file_names
+import utils.file_utils as file_utils
+import utils.alignment_utils as alignment_utils
+import utils.log_utils as log_utils
+import utils.common_utils as common_utils
+import utils.constants as constants
 
 def parse_args():
   parser = argparse.ArgumentParser(

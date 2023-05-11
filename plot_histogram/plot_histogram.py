@@ -7,11 +7,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import argparse
 
-import common_utils
-import file_utils
-import log_utils
-import file_names
-import constants
+import utils.common_utils as common_utils
+import utils.file_utils as file_utils
+import utils.log_utils as log_utils
+import utils.file_names as file_names
+import utils.constants as constants
 
 def get_figure_args_pyplot(
   col_widths_px,

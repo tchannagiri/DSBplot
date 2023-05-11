@@ -1,6 +1,5 @@
 import sys
 import datetime
-
   
 def log(s):
   print(datetime.datetime.now().strftime("%H:%M:%S: ") + str(s))

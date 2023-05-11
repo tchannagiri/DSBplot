@@ -1,11 +1,5 @@
-import os
-import sys
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'utils'))) # allow importing
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '6_plot_histogram'))) # allow importing
-
-import file_names
-import plot_histogram
+import utils.file_names as file_names
+import plot_histogram.plot_histogram as plot_histogram
 
 if __name__ == '__main__':
   # Test code:

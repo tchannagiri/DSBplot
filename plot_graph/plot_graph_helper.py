@@ -1,9 +1,5 @@
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), './utils/'))) # allow importing the utils dir
-
-import constants
-import kmer_utils
+import utils.constants as constants
+import utils.kmer_utils as kmer_utils
 
 import plotly.graph_objects as go
 import plotly.colors as pc

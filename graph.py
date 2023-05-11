@@ -1,11 +1,5 @@
-import os
-import sys
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'utils'))) # allow importing
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '5_plot_graph'))) # allow importing
-
-import file_names
-import plot_graph
+import utils.file_names as file_names
+import plot_graph.plot_graph as plot_graph
 
 if __name__ == '__main__':
   # Testing code:

@@ -1,7 +1,7 @@
-import file_names
-import file_utils
-import constants
-import alignment_utils
+import utils.file_names as file_names
+import utils.file_utils as file_utils
+import utils.constants as constants
+import utils.alignment_utils as alignment_utils
 
 import Levenshtein
 import networkx as nx

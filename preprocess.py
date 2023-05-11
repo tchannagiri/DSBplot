@@ -1,30 +1,21 @@
 import os
-import sys
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'utils'))) # allow importing
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '1_process_nhej'))) # allow importing
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '2_get_window_data'))) # allow importing
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '3_get_graph_data'))) # allow importing
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '4_get_histogram_data'))) # allow importing
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '5_plot_graph'))) # allow importing
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '6_plot_histogram'))) # allow importing
 
 import argparse
 import glob
 
-import file_names
-import common_utils
-import file_utils
-import log_utils
-import constants
+import utils.file_names as file_names
+import utils.common_utils as common_utils
+import utils.file_utils as file_utils
+import utils.log_utils as log_utils
+import utils.constants as constants
 
-import filter_nhej
-import combine_repeat
-import get_window
-import get_freq
-import get_freq_comparison
-import get_graph_data
-import get_histogram_data
+import get_nhej_data.filter_nhej as filter_nhej
+import get_nhej_data.combine_repeat as combine_repeat
+import get_window_data.get_window as get_window
+import get_window_data.get_freq as get_freq
+import get_window_data.get_freq_comparison as get_freq_comparison
+import get_graph_data.get_graph_data as get_graph_data
+import get_histogram_data.get_histogram_data as get_histogram_data
 
 STAGES_1 = ['0_align', '1_filter', '2_combine', '3_window']
 STAGES_2 = ['3_comparison', '4_graph', '5_histogram']

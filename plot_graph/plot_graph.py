@@ -1,6 +1,4 @@
-import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../utils/'))) # allow importing the utils dir
 
 import argparse
 
@@ -16,15 +14,15 @@ import sklearn.manifold
 
 import PIL.Image
 
-import constants
-import common_utils
-import log_utils
-import graph_utils
-import file_utils
-import kmer_utils
-import alignment_utils
-import file_names
-import plot_graph_helper
+import utils.constants as constants
+import utils.common_utils as common_utils
+import utils.log_utils as log_utils
+import utils.graph_utils as graph_utils
+import utils.file_utils as file_utils
+import utils.kmer_utils as kmer_utils
+import utils.alignment_utils as alignment_utils
+import utils.file_names as file_names
+import plot_graph.plot_graph_helper as plot_graph_helper
 
 LAYOUT_PROPERTIES = {
  'mds_layout': {

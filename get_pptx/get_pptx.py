@@ -1,15 +1,12 @@
 import os
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../utils/'))) # allow importing the utils dir
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../2_graph_processing/'))) # allow importing the graphs dir
 import argparse
 
 import numpy as np
 
-import common_utils
-import file_utils
-import log_utils
-import get_pptx_helpers
+import utils.common_utils as common_utils
+import utils.file_utils as file_utils
+import utils.log_utils as log_utils
+import get_pptx.get_pptx_helpers as get_pptx_helpers
 
 import pptx
 import pptx.util

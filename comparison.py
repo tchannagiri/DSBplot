@@ -1,11 +1,6 @@
-import os
-import sys
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'utils'))) # allow importing
-
 import argparse
 
-import common_utils
+import utils.common_utils as common_utils
 
 import preprocess
 

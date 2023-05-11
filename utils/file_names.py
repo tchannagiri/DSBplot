@@ -1,5 +1,5 @@
 import os
-import constants
+import utils.constants as constants
 
 IMAGE_DIR = 'images'
 
