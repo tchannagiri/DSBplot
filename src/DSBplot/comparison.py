@@ -46,5 +46,9 @@ def main(
     stages = stages,
   )
 
+# This allows the "DSBplot-comparison" command to be run from the command line.
+def entry_point():
+  main(**parse_args())
+
 if __name__ == '__main__':
   main(**parse_args())

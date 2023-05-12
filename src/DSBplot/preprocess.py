@@ -427,6 +427,10 @@ def main(
     stages = stages,
   )
   do_stages_2(output = output, stages = stages)
- 
-if __name__ == '__main__':
+
+# This allows the "DSBplot-preprocess" command to be run from the command line.
+def entry_point():
   main(**parse_args())
+
+if __name__ == '__main__':
+  entry_point()

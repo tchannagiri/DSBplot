@@ -1,24 +1,45 @@
 [project]
-name = "dsbplot"
+name = "DSBplot"
 version = "0.0.1"
 authors = [
   { name="Tejasvi Channagiri", email="tchannagiri@gmail.com" },
 ]
 description = "A package for visualizing alignment variations in DNA-seq data from double-strand break (DSB) experiments."
+keywords = "visualization genomic DNA-seq DSB double-strand break alignment graph histogram"
 readme = "README.md"
 requires-python = ">=3.7"
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+dependencies = [
+  "kaleido==0.1.0.post1",
+  "Levenshtein>=0.21.0",
+  "matplotlib>=3.7.1",
+  "networkx>=3.1",
+  "numpy>=1.24.3",
+  "pandas>=2.0.1",
+  "Pillow>=9.5.0",
+  "plotly>=5.14.1",
+  "python-pptx>=0.6.21",
+  "scikit-learn>=1.2.2",
 ]
 
 [project.urls]
 "Homepage" = "https://github.com/tchannagiri/DSBplot"
 "Bug Tracker" = "https://github.com/tchannagiri/DSBplot/issues"
 
+[project.scripts]
+DSBplot = "DSBplot.__main__:entry_point"
+DSBplot-preprocess = "DSBplot.preprocess:entry_point"
+DSBplot-comparison = "DSBplot.comparison:entry_point"
+DSBplot-graph = "DSBplot.graph:entry_point"
+DSBplot-histogram = "DSBplot.histogram:entry_point"
+DSBplot-pptx = "DSBplot.pptx:entry_point"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-"dsbplot.get_pptx" = ["template.pptx"]
+"DSBplot.get_pptx" = ["template.pptx"]

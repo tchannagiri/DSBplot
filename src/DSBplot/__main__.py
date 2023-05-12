@@ -7,7 +7,8 @@ import DSBplot.graph as graph
 import DSBplot.histogram as histogram
 import DSBplot.pptx1 as pptx1
 
-if __name__ == '__main__':
+# This allows the "DSBplot" command to be run from the command line.
+def entry_point():
   parser = argparse.ArgumentParser(
     description = (
       'DSBplot main command.' +
@@ -31,15 +32,22 @@ if __name__ == '__main__':
     raise Exception('Error: "sys.argv[1]" != "args.command".')
   sys.argv.pop(1)
   if args.command == 'preprocess':
-    preprocess.main(**preprocess.parse_args())
+    sys.argv[0] = preprocess.__file__
+    preprocess.entry_point()
   elif args.command == 'comparison':
-    comparison.main(**comparison.parse_args())
+    sys.argv[0] = comparison.__file__
+    comparison.entry_point()
   elif args.command == 'graph':
-    graph.main(**graph.parse_args())
+    sys.argv[0] = graph.__file__
+    graph.entry_point()
   elif args.command == 'histogram':
-    histogram.main(**histogram.parse_args())
+    sys.argv[0] = histogram.__file__
+    histogram.entry_point()
   elif args.command == 'pptx':
-    pptx1.main(**pptx1.parse_args())
+    sys.argv[0] = pptx1.__file__
+    pptx1.entry_point()
   else:
     raise Exception('Error: Unrecognized command.' + args.command)
 
+if __name__ == '__main__':
+  entry_point()

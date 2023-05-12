@@ -6,5 +6,9 @@ def parse_args():
 def main(**args):
   get_pptx.main(**args)
 
-if __name__ == '__main__':
+# This allows the "DSBplot-pptx" command to be run from the command line.
+def entry_point():
   main(**parse_args())
+
+if __name__ == '__main__':
+  entry_point()
