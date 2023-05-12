@@ -1316,7 +1316,10 @@ def make_custom_legends(
       )
       y_shift_curr_px -= legend_vertical_space_px
 
-    if legend == 'variation_type':
+    if (
+      (legend == 'variation_type') and
+      (data_info['format'] == constants.DATA_INDIVIDUAL)
+    ):
       y_shift_curr_px = make_variation_color_legend(
         figure = figure,
         variation_types = node_filter_variation_types,
@@ -1332,7 +1335,10 @@ def make_custom_legends(
       )
       y_shift_curr_px -= legend_vertical_space_px
 
-    if legend == 'freq_ratio_discrete':
+    if (
+      (legend == 'freq_ratio_discrete') and
+      (data_info['format'] == constants.DATA_COMPARISON)
+    ):
       y_shift_curr_px = make_freq_group_legend(
         label_1 = data_info['label_1'],
         label_2 = data_info['label_2'],
@@ -1352,7 +1358,10 @@ def make_custom_legends(
       )
       y_shift_curr_px -= legend_vertical_space_px
     
-    if legend == 'freq_ratio_continuous':
+    if (
+      (legend == 'freq_ratio_continuous') and
+      (data_info['format'] == constants.DATA_COMPARISON)
+    ):
       y_shift_curr_px = add_plotly_colorbar(
         figure = figure,
         label_1 = data_info['label_1'],

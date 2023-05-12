@@ -55,13 +55,19 @@ DSBplot-histogram --input data/output/dcmv_R2 --output plots/histogram/png/dcmv_
 DSBplot-histogram --input data/output/dcmv_R2 --output plots/histogram/png/dcmv_R2_insertion.png --color "#ffa500" --variation_type insertion --label_type relative
 DSBplot-histogram --input data/output/dcmv_R2 --output plots/histogram/png/dcmv_R2_deletion.png --color "#8080ff" --variation_type deletion --label_type relative
 
+### Plot graphs with common Universal layout (PNG) ###
+DSBplot-graph `
+  --input data/output/db_R1 data/output/db_R2 data/output/sense_R1 data/output/sense_R2 data/output/dcmv_R1 data/output/dcmv_R2 data/output/sense_db_R1 data/output/sense_db_R2 data/output/sense_dcmv_R1 data/output/sense_dcmv_R2 `
+  --output plots/graph/png/universal_common/db_R1.png plots/graph/png/universal_common/db_R2.png plots/graph/png/universal_common/sense_R1.png plots/graph/png/universal_common/sense_R2.png plots/graph/png/universal_common/dcmv_R1.png plots/graph/png/universal_common/dcmv_R2.png plots/graph/png/universal_common/sense_db_R1.png plots/graph/png/universal_common/sense_db_R2.png plots/graph/png/universal_common/sense_dcmv_R1.png plots/graph/png/universal_common/sense_dcmv_R2.png `
+  --reverse_complement 0 1 0 1 0 1 0 1 0 1 --layout kamada_layout --width 2400 --height 1800
+
 ### Plot graphs with common Kamada layout (PNG) ###
 DSBplot-graph `
   --input data/output/db_R1 data/output/db_R2 data/output/sense_R1 data/output/sense_R2 data/output/dcmv_R1 data/output/dcmv_R2 data/output/sense_db_R1 data/output/sense_db_R2 data/output/sense_dcmv_R1 data/output/sense_dcmv_R2 `
   --output plots/graph/png/kamada_common/db_R1.png plots/graph/png/kamada_common/db_R2.png plots/graph/png/kamada_common/sense_R1.png plots/graph/png/kamada_common/sense_R2.png plots/graph/png/kamada_common/dcmv_R1.png plots/graph/png/kamada_common/dcmv_R2.png plots/graph/png/kamada_common/sense_db_R1.png plots/graph/png/kamada_common/sense_db_R2.png plots/graph/png/kamada_common/sense_dcmv_R1.png plots/graph/png/kamada_common/sense_dcmv_R2.png `
   --reverse_complement 0 1 0 1 0 1 0 1 0 1 --layout kamada_layout --width 2400 --height 1800
 
-### Plot graphs with common radial layout (PNG) ###
+### Plot graphs with common Radial layout (PNG) ###
 DSBplot-graph `
   --input data/output/db_R1 data/output/db_R2 data/output/sense_R1 data/output/sense_R2 data/output/dcmv_R1 data/output/dcmv_R2 data/output/sense_db_R1 data/output/sense_db_R2 data/output/sense_dcmv_R1 data/output/sense_dcmv_R2 `
   --output plots/graph/png/radial_common/db_R1.png plots/graph/png/radial_common/db_R2.png plots/graph/png/radial_common/sense_R1.png plots/graph/png/radial_common/sense_R2.png plots/graph/png/radial_common/dcmv_R1.png plots/graph/png/radial_common/dcmv_R2.png plots/graph/png/radial_common/sense_db_R1.png plots/graph/png/radial_common/sense_db_R2.png plots/graph/png/radial_common/sense_dcmv_R1.png plots/graph/png/radial_common/sense_dcmv_R2.png `
@@ -76,10 +82,10 @@ DSBplot-graph --input data/output/dcmv_R1 --output plots/graph/pdf/universal/dcm
 DSBplot-graph --input data/output/dcmv_R2 --output plots/graph/pdf/universal/dcmv_R2.pdf --title "pCMVΔ (R2)" --legends size variation_type --legend_x_shift_px 100 --legend_y_shift_px 0 --margin_right_px 750 --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
 
 ### Plot the comparison graphs (PDF) ###
-DSBplot-graph --input data/output/sense_db_R1 --node_comparison_colors "#cf191b" "#33a02c" --output plots/graph/pdf/universal/sense_db_R1.pdf --title "Sense / BranchΔ (R1)"--legend_colorbar_scale 3 --legend_x_shift_px 100 --legend_y_shift_px -100 --margin_right_px 750 --legends freq_ratio_continuous --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
-DSBplot-graph --input data/output/sense_db_R2 --node_comparison_colors "#cf191b" "#33a02c" --output plots/graph/pdf/universal/sense_db_R2.pdf --title "Sense / BranchΔ (R2)"--legend_colorbar_scale 3 --legend_x_shift_px 100 --legend_y_shift_px -100 --margin_right_px 750 --legends freq_ratio_continuous --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
-DSBplot-graph --input data/output/sense_dcmv_R1 --output plots/graph/pdf/universal/sense_dcmv_R1.pdf --node_comparison_colors "#cf191b" "#ffe669" --title "Sense / pCMVΔ (R1)"--legend_colorbar_scale 3 --legend_x_shift_px 100 --legend_y_shift_px -100 --margin_right_px 750 --legends freq_ratio_continuous --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
-DSBplot-graph --input data/output/sense_dcmv_R2 --output plots/graph/pdf/universal/sense_dcmv_R2.pdf --node_comparison_colors "#cf191b" "#ffe669" --title "Sense / pCMVΔ (R2)"--legend_colorbar_scale 3 --legend_x_shift_px 100 --legend_y_shift_px -100 --margin_right_px 750 --legends freq_ratio_continuous --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
+DSBplot-graph --input data/output/sense_db_R1 --node_comparison_colors "#cf191b" "#33a02c" --output plots/graph/pdf/universal/sense_db_R1.pdf --title "Sense / BranchΔ (R1)" --legend_colorbar_scale 3 --legend_x_shift_px 100 --legend_y_shift_px -100 --margin_right_px 750 --legends freq_ratio_continuous --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
+DSBplot-graph --input data/output/sense_db_R2 --node_comparison_colors "#cf191b" "#33a02c" --output plots/graph/pdf/universal/sense_db_R2.pdf --title "Sense / BranchΔ (R2)" --legend_colorbar_scale 3 --legend_x_shift_px 100 --legend_y_shift_px -100 --margin_right_px 750 --legends freq_ratio_continuous --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
+DSBplot-graph --input data/output/sense_dcmv_R1 --output plots/graph/pdf/universal/sense_dcmv_R1.pdf --node_comparison_colors "#cf191b" "#ffe669" --title "Sense / pCMVΔ (R1)" --legend_colorbar_scale 3 --legend_x_shift_px 100 --legend_y_shift_px -100 --margin_right_px 750 --legends freq_ratio_continuous --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
+DSBplot-graph --input data/output/sense_dcmv_R2 --output plots/graph/pdf/universal/sense_dcmv_R2.pdf --node_comparison_colors "#cf191b" "#ffe669" --title "Sense / pCMVΔ (R2)" --legend_colorbar_scale 3 --legend_x_shift_px 100 --legend_y_shift_px -100 --margin_right_px 750 --legends freq_ratio_continuous --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
 
 ### Plot the 3D histograms (PDF) ###
 DSBplot-histogram --input data/output/db_R1 --output plots/histogram/pdf/db_R1_substitution.pdf --title "BranchΔ (R1)`nSubstitution" --margin_top 250 --color "#bfbfbf" --variation_type substitution --label_type relative
@@ -101,16 +107,40 @@ DSBplot-histogram --input data/output/dcmv_R2 --output plots/histogram/pdf/dcmv_
 DSBplot-histogram --input data/output/dcmv_R2 --output plots/histogram/pdf/dcmv_R2_insertion.pdf --title "pCMVΔ (R2)`nInsertion" --margin_top 250 --color "#ffa500" --variation_type insertion --label_type relative
 DSBplot-histogram --input data/output/dcmv_R2 --output plots/histogram/pdf/dcmv_R2_deletion.pdf --title "pCMVΔ (R2)`nDeletion" --margin_top 250 --color "#8080ff" --variation_type deletion --label_type relative
 
+### Plot graphs with common Universal layout (PDF) ###
+DSBplot-graph `
+  --input data/output/db_R1 data/output/db_R2 data/output/sense_R1 data/output/sense_R2 data/output/dcmv_R1 data/output/dcmv_R2 data/output/sense_db_R1 data/output/sense_db_R2 data/output/sense_dcmv_R1 data/output/sense_dcmv_R2 `
+  --title "BranchΔ (R1)" "BranchΔ (R2)" "SenseΔ (R1)" "pCMVΔ (R1)" "pCMVΔ (R2)" "pCMVΔ (R2)" "SenseΔ / BranchΔ (R1)" "SenseΔ / BranchΔ (R2)" "SenseΔ / pCMVΔ (R1)" "SenseΔ / pCMVΔ (R2)" `
+  --output plots/graph/pdf/universal_common/db_R1.pdf plots/graph/pdf/universal_common/db_R2.pdf plots/graph/pdf/universal_common/sense_R1.pdf plots/graph/pdf/universal_common/sense_R2.pdf plots/graph/pdf/universal_common/dcmv_R1.pdf plots/graph/pdf/universal_common/dcmv_R2.pdf plots/graph/pdf/universal_common/sense_db_R1.pdf plots/graph/pdf/universal_common/sense_db_R2.pdf plots/graph/pdf/universal_common/sense_dcmv_R1.pdf plots/graph/pdf/universal_common/sense_dcmv_R2.pdf `
+  --range_x -12 13 --range_y -23 20 `
+  --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_y_axis_insertion_max_tick 6 `
+  --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_deletion_max_tick 19 `
+  --legends freq_ratio_continuous variation_type `
+  --legend_colorbar_scale 3 --legend_x_shift_px 100 --legend_y_shift_px -100 `
+  --margin_right_px 1000 --margin_top_px 400 `
+  --font_size_scale 4 --legend_colorbar_scale 3 `
+  --reverse_complement 0 1 0 1 0 1 0 1 0 1 --layout universal_layout --width 2400 --height 1800
+
 ### Plot graphs with common Kamada layout (PDF) ###
 DSBplot-graph `
   --input data/output/db_R1 data/output/db_R2 data/output/sense_R1 data/output/sense_R2 data/output/dcmv_R1 data/output/dcmv_R2 data/output/sense_db_R1 data/output/sense_db_R2 data/output/sense_dcmv_R1 data/output/sense_dcmv_R2 `
+  --title "BranchΔ (R1)" "BranchΔ (R2)" "SenseΔ (R1)" "pCMVΔ (R1)" "pCMVΔ (R2)" "pCMVΔ (R2)" "SenseΔ / BranchΔ (R1)" "SenseΔ / BranchΔ (R2)" "SenseΔ / pCMVΔ (R1)" "SenseΔ / pCMVΔ (R2)" `
   --output plots/graph/pdf/kamada_common/db_R1.pdf plots/graph/pdf/kamada_common/db_R2.pdf plots/graph/pdf/kamada_common/sense_R1.pdf plots/graph/pdf/kamada_common/sense_R2.pdf plots/graph/pdf/kamada_common/dcmv_R1.pdf plots/graph/pdf/kamada_common/dcmv_R2.pdf plots/graph/pdf/kamada_common/sense_db_R1.pdf plots/graph/pdf/kamada_common/sense_db_R2.pdf plots/graph/pdf/kamada_common/sense_dcmv_R1.pdf plots/graph/pdf/kamada_common/sense_dcmv_R2.pdf `
+  --range_x 0.15 0.85 --range_y 0.15 0.85 `
+  --legends freq_ratio_continuous variation_type `
+  --font_size_scale 4 --legend_colorbar_scale 3 `
+  --margin_top_px 400 --margin_right_px 1000 `
   --reverse_complement 0 1 0 1 0 1 0 1 0 1 --layout kamada_layout --width 2400 --height 1800
 
-### Plot graphs with common radial layout (PDF) ###
+### Plot graphs with common Radial layout (PDF) ###
 DSBplot-graph `
   --input data/output/db_R1 data/output/db_R2 data/output/sense_R1 data/output/sense_R2 data/output/dcmv_R1 data/output/dcmv_R2 data/output/sense_db_R1 data/output/sense_db_R2 data/output/sense_dcmv_R1 data/output/sense_dcmv_R2 `
+  --title "BranchΔ (R1)" "BranchΔ (R2)" "SenseΔ (R1)" "pCMVΔ (R1)" "pCMVΔ (R2)" "pCMVΔ (R2)" "SenseΔ / BranchΔ (R1)" "SenseΔ / BranchΔ (R2)" "SenseΔ / pCMVΔ (R1)" "SenseΔ / pCMVΔ (R2)" `
   --output plots/graph/pdf/radial_common/db_R1.pdf plots/graph/pdf/radial_common/db_R2.pdf plots/graph/pdf/radial_common/sense_R1.pdf plots/graph/pdf/radial_common/sense_R2.pdf plots/graph/pdf/radial_common/dcmv_R1.pdf plots/graph/pdf/radial_common/dcmv_R2.pdf plots/graph/pdf/radial_common/sense_db_R1.pdf plots/graph/pdf/radial_common/sense_db_R2.pdf plots/graph/pdf/radial_common/sense_dcmv_R1.pdf plots/graph/pdf/radial_common/sense_dcmv_R2.pdf `
+  --range_x 0.15 0.85 --range_y 0.15 0.85 `
+  --legends freq_ratio_continuous variation_type `
+  --font_size_scale 4 --legend_colorbar_scale 3 `
+  --margin_top_px 400 --margin_right_px 1000 `
   --reverse_complement 0 1 0 1 0 1 0 1 0 1 --range_x -20 20 --range_y -20 20 --layout radial_layout --width 2400 --height 1800
 
 ### Plot the graphs (HTML) ###
@@ -127,13 +157,19 @@ DSBplot-graph --input data/output/sense_db_R2 --node_comparison_colors "#cf191b"
 DSBplot-graph --input data/output/sense_dcmv_R1 --output plots/graph/html/universal/sense_dcmv_R1.html --node_comparison_colors "#cf191b" "#ffe669" --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
 DSBplot-graph --input data/output/sense_dcmv_R2 --output plots/graph/html/universal/sense_dcmv_R2.html --node_comparison_colors "#cf191b" "#ffe669" --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
 
+### Plot graphs with common Universal layout (HTML) ###
+DSBplot-graph `
+  --input data/output/db_R1 data/output/db_R2 data/output/sense_R1 data/output/sense_R2 data/output/dcmv_R1 data/output/dcmv_R2 data/output/sense_db_R1 data/output/sense_db_R2 data/output/sense_dcmv_R1 data/output/sense_dcmv_R2 `
+  --output plots/graph/html/universal_common/db_R1.html plots/graph/html/universal_common/db_R2.html plots/graph/html/universal_common/sense_R1.html plots/graph/html/universal_common/sense_R2.html plots/graph/html/universal_common/dcmv_R1.html plots/graph/html/universal_common/dcmv_R2.html plots/graph/html/universal_common/sense_db_R1.html plots/graph/html/universal_common/sense_db_R2.html plots/graph/html/universal_common/sense_dcmv_R1.html plots/graph/html/universal_common/sense_dcmv_R2.html `
+  --reverse_complement 0 1 0 1 0 1 0 1 0 1 --layout kamada_layout --width 2400 --height 1800
+
 ### Plot graphs with common Kamada layout (HTML) ###
 DSBplot-graph `
   --input data/output/db_R1 data/output/db_R2 data/output/sense_R1 data/output/sense_R2 data/output/dcmv_R1 data/output/dcmv_R2 data/output/sense_db_R1 data/output/sense_db_R2 data/output/sense_dcmv_R1 data/output/sense_dcmv_R2 `
   --output plots/graph/html/kamada_common/db_R1.html plots/graph/html/kamada_common/db_R2.html plots/graph/html/kamada_common/sense_R1.html plots/graph/html/kamada_common/sense_R2.html plots/graph/html/kamada_common/dcmv_R1.html plots/graph/html/kamada_common/dcmv_R2.html plots/graph/html/kamada_common/sense_db_R1.html plots/graph/html/kamada_common/sense_db_R2.html plots/graph/html/kamada_common/sense_dcmv_R1.html plots/graph/html/kamada_common/sense_dcmv_R2.html `
   --reverse_complement 0 1 0 1 0 1 0 1 0 1 --layout kamada_layout --width 2400 --height 1800
 
-### Plot graphs with common radial layout (HTML) ###
+### Plot graphs with common Radial layout (HTML) ###
 DSBplot-graph `
   --input data/output/db_R1 data/output/db_R2 data/output/sense_R1 data/output/sense_R2 data/output/dcmv_R1 data/output/dcmv_R2 data/output/sense_db_R1 data/output/sense_db_R2 data/output/sense_dcmv_R1 data/output/sense_dcmv_R2 `
   --output plots/graph/html/radial_common/db_R1.html plots/graph/html/radial_common/db_R2.html plots/graph/html/radial_common/sense_R1.html plots/graph/html/radial_common/sense_R2.html plots/graph/html/radial_common/dcmv_R1.html plots/graph/html/radial_common/dcmv_R2.html plots/graph/html/radial_common/sense_db_R1.html plots/graph/html/radial_common/sense_db_R2.html plots/graph/html/radial_common/sense_dcmv_R1.html plots/graph/html/radial_common/sense_dcmv_R2.html `
