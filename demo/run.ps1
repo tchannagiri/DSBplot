@@ -118,7 +118,7 @@ DSBplot-graph `
   --legends freq_ratio_continuous variation_type `
   --legend_colorbar_scale 3 --legend_x_shift_px 100 --legend_y_shift_px -100 `
   --margin_right_px 1000 --margin_top_px 400 `
-  --font_size_scale 4 --legend_colorbar_scale 3 `
+  --font_size_scale 3 --legend_colorbar_scale 3 `
   --reverse_complement 0 1 0 1 0 1 0 1 0 1 --layout universal_layout --width 2400 --height 1800
 
 ### Plot graphs with common Kamada layout (PDF) ###

@@ -369,7 +369,8 @@ def make_universal_layout_y_axis(
   max_tick_deletion,
   y_range = [float('nan'), float('nan')],
   tick_length = 0.25,
-  label_font_size = constants.GRAPH_AXES_TICK_FONT_SIZE,
+  title_font_size = constants.GRAPH_AXES_TITLE_FONT_SIZE,
+  tick_font_size = constants.GRAPH_AXES_TICK_FONT_SIZE,
   font_size_scale = constants.GRAPH_FONT_SIZE_SCALE,
   line_width_px = 4,
   x_scale_insertion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
@@ -429,12 +430,16 @@ def make_universal_layout_y_axis(
 
     # tick label
     figure.add_annotation(
-      x = x_pos + 1.5 * tick_length,
+      # set left anchor at tick end
+      x = x_pos + tick_length,
       y = tick['y_pos'],
       text = str(tick['dist_ref']),
       showarrow = False,
-      font_size = label_font_size * font_size_scale,
+      font_size = tick_font_size * font_size_scale,
       xanchor = 'left',
+      yanchor = 'middle',
+      # shift left anchor slighly to the right of tick
+      xshift = 0.25 * tick_font_size * font_size_scale
     )
 
   if np.isnan(y_range[0]):
@@ -442,6 +447,7 @@ def make_universal_layout_y_axis(
   if np.isnan(y_range[1]):
     y_range[1] = max(tick['y_pos'] for tick in tick_list)
 
+  # axis line
   figure.add_shape(
     type = 'line',
     x0 = x_pos,
@@ -451,7 +457,22 @@ def make_universal_layout_y_axis(
     line_width = line_width_px,
     line_color = 'black',
   )
+  # axis title
+  figure.add_annotation(
+    # set anchor at bottom of the axis
+    x = x_pos,
+    y = y_range[0],
+    text = str('Number of variations'),
+    showarrow = False,
+    font_size = title_font_size * font_size_scale,
+    xanchor = 'right',
+    yanchor = 'bottom',
+    # shift left anchor slighly to the right of axis
+    xshift = -0.25 * title_font_size * font_size_scale,
+    textangle = -90,
+  )
 
+# FIXME: should allow line_width_scale parameter
 def make_universal_layout_x_axis(
   figure,
   var_type,
@@ -461,9 +482,10 @@ def make_universal_layout_x_axis(
   x_range = [float('nan'), float('nan')],
   insertion_axis_type = 'bracket', # tick or bracket
   deletion_label_type = 'relative', # relative or absolute
-  deletion_tick_type = 'start',
+  deletion_tick_type = 'start', # start or midpoint
   base_tick_length = 0.25,
-  label_font_size = None,
+  title_font_size = constants.GRAPH_AXES_TITLE_FONT_SIZE,
+  tick_font_size = constants.GRAPH_AXES_TICK_FONT_SIZE,
   font_size_scale = constants.GRAPH_FONT_SIZE_SCALE,
   line_width_px = 4,
   x_scale_insertion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
@@ -475,13 +497,8 @@ def make_universal_layout_x_axis(
     raise Exception('Invalid insertion axis type: ' + str(insertion_axis_type))
   if deletion_label_type not in ['absolute', 'relative']:
     raise Exception('Invalid deletion label type: ' + str(deletion_label_type))
-  if label_font_size is None:
-    if var_type == 'insertion':
-      label_font_size = 2 * constants.GRAPH_AXES_TICK_FONT_SIZE
-    elif var_type == 'deletion':
-      label_font_size = constants.GRAPH_AXES_TICK_FONT_SIZE
-    else:
-      raise Exception('Unknown variation type: ' + str(var_type))
+  if var_type == 'insertion':
+    tick_font_size = 2 * tick_font_size
   tick_list = []
   if var_type == 'insertion':
     for insertion_letter in 'ACGT':
@@ -526,9 +543,7 @@ def make_universal_layout_x_axis(
         })
   elif var_type == 'deletion':
     tick_list_negative = []
-    pos_labels = constants.get_position_labels(
-      deletion_label_type,ref_length,
-    )
+    pos_labels = constants.get_position_labels(deletion_label_type, ref_length)
     for deletion_start in range(1, (ref_length // 2) + 1):
       dist_ref = 1 + (ref_length // 2) - deletion_start
       if (deletion_tick_type == 'midpoint') and ((dist_ref % 2) != 1):
@@ -597,12 +612,15 @@ def make_universal_layout_x_axis(
     if 'text' in tick:
       figure.add_annotation(
         x = tick['x_pos'],
-        y = y_pos - 1.5 * tick_length,
+        # set top anchor at the tick
+        y = y_pos - tick_length,
         text = str(tick['text']),
         showarrow = False,
-        font_size = label_font_size * font_size_scale,
+        font_size = tick_font_size * font_size_scale, 
         xanchor = 'center',
-        yshift = -label_font_size,
+        yanchor = 'top',
+        # shift top anchor slightly under the tick
+        yshift = -0.25 * tick_font_size * font_size_scale,
       )
 
   if np.isnan(x_range[0]):
@@ -611,6 +629,7 @@ def make_universal_layout_x_axis(
     x_range[1] = -float('inf')
   x_range[0] = min(x_range[0], min(tick['x_pos'] for tick in tick_list))
   x_range[1] = max(x_range[1], max(tick['x_pos'] for tick in tick_list))
+  # axis line
   figure.add_shape(
     type = 'line',
     x0 = x_range[0],
@@ -619,6 +638,19 @@ def make_universal_layout_x_axis(
     y1 = y_pos,
     line_width = line_width_px,
     line_color = 'black',
+  )
+  # axis title
+  figure.add_annotation(
+    x = x_range[0],
+    # set bottom anchor exactly at axis
+    y = y_pos,
+    text = 'Deletion position' if var_type == 'deletion' else 'Insertion first letter',
+    showarrow = False,
+    font_size = title_font_size * font_size_scale,
+    xanchor = 'left',
+    yanchor = 'bottom',
+    # shift bottom anchor slightly above axis
+    yshift = 0.25 * title_font_size * font_size_scale,
   )
 
 def make_mds_layout(graph, distance_matrix):
@@ -2761,6 +2793,7 @@ def main(
           y_scale_insertion = universal_layout_y_scale_insertion,
           x_scale_deletion = universal_layout_x_scale_deletion,
           y_scale_deletion = universal_layout_y_scale_deletion,
+          font_size_scale = font_size_scale,
         )
       if universal_layout_x_axis_deletion_y_pos is not None:
         make_universal_layout_x_axis(
@@ -2775,6 +2808,7 @@ def main(
           y_scale_insertion = universal_layout_y_scale_insertion,
           x_scale_deletion = universal_layout_x_scale_deletion,
           y_scale_deletion = universal_layout_y_scale_deletion,
+          font_size_scale = font_size_scale,
         )
       if universal_layout_x_axis_insertion_y_pos is not None:
         make_universal_layout_x_axis(
@@ -2788,6 +2822,7 @@ def main(
           y_scale_insertion = universal_layout_y_scale_insertion,
           x_scale_deletion = universal_layout_x_scale_deletion,
           y_scale_deletion = universal_layout_y_scale_deletion,
+          font_size_scale = font_size_scale,
         )
 
     if interactive:
