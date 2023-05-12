@@ -116,8 +116,8 @@ DSBplot-graph `
   --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_y_axis_insertion_max_tick 6 `
   --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_deletion_max_tick 19 `
   --legends freq_ratio_continuous variation_type `
-  --legend_colorbar_scale 3 --legend_x_shift_px 100 --legend_y_shift_px -100 `
-  --margin_top_px 300 --margin_right_px 800 --margin_left_px 0 --margin_bottom_px 0 `
+  --legend_x_shift_px 100 --legend_y_shift_px -100 `
+  --margin_top_px 300 --margin_right_px 900 --margin_left_px 0 --margin_bottom_px 0 `
   --font_size_scale 3 --legend_colorbar_scale 3 `
   --reverse_complement 0 1 0 1 0 1 0 1 0 1 --layout universal_layout --width 2400 --height 1800
 
@@ -128,7 +128,8 @@ DSBplot-graph `
   --output plots/graph/pdf/kamada_common/db_R1.pdf plots/graph/pdf/kamada_common/db_R2.pdf plots/graph/pdf/kamada_common/sense_R1.pdf plots/graph/pdf/kamada_common/sense_R2.pdf plots/graph/pdf/kamada_common/dcmv_R1.pdf plots/graph/pdf/kamada_common/dcmv_R2.pdf plots/graph/pdf/kamada_common/sense_db_R1.pdf plots/graph/pdf/kamada_common/sense_db_R2.pdf plots/graph/pdf/kamada_common/sense_dcmv_R1.pdf plots/graph/pdf/kamada_common/sense_dcmv_R2.pdf `
   --range_x 0.15 0.85 --range_y 0.15 0.85 `
   --legends freq_ratio_continuous variation_type `
-  --font_size_scale 4 --legend_colorbar_scale 3 `
+  --legend_x_shift_px 100 --legend_y_shift_px -100 `
+  --font_size_scale 3 --legend_colorbar_scale 3 `
   --margin_top_px 300 --margin_right_px 900 --margin_left_px 0 --margin_bottom_px 0 `
   --reverse_complement 0 1 0 1 0 1 0 1 0 1 --layout kamada_layout --width 2400 --height 1800
 
@@ -137,9 +138,10 @@ DSBplot-graph `
   --input data/output/db_R1 data/output/db_R2 data/output/sense_R1 data/output/sense_R2 data/output/dcmv_R1 data/output/dcmv_R2 data/output/sense_db_R1 data/output/sense_db_R2 data/output/sense_dcmv_R1 data/output/sense_dcmv_R2 `
   --title "BranchΔ (R1)" "BranchΔ (R2)" "Sense (R1)" "pCMVΔ (R1)" "pCMVΔ (R2)" "pCMVΔ (R2)" "Sense / BranchΔ (R1)" "Sense / BranchΔ (R2)" "Sense / pCMVΔ (R1)" "Sense / pCMVΔ (R2)" `
   --output plots/graph/pdf/radial_common/db_R1.pdf plots/graph/pdf/radial_common/db_R2.pdf plots/graph/pdf/radial_common/sense_R1.pdf plots/graph/pdf/radial_common/sense_R2.pdf plots/graph/pdf/radial_common/dcmv_R1.pdf plots/graph/pdf/radial_common/dcmv_R2.pdf plots/graph/pdf/radial_common/sense_db_R1.pdf plots/graph/pdf/radial_common/sense_db_R2.pdf plots/graph/pdf/radial_common/sense_dcmv_R1.pdf plots/graph/pdf/radial_common/sense_dcmv_R2.pdf `
-  --range_x -18 19 --range_y -16 7 `
+  --range_x -18 18 --range_y -16 7 `
   --legends freq_ratio_continuous variation_type `
-  --font_size_scale 4 --legend_colorbar_scale 3 `
+  --legend_x_shift_px 100 --legend_y_shift_px -100 `
+  --font_size_scale 3 --legend_colorbar_scale 3 `
   --margin_top_px 300 --margin_right_px 900 --margin_left_px 0 --margin_bottom_px 0 `
   --reverse_complement 0 1 0 1 0 1 0 1 0 1 --layout radial_layout --width 2400 --height 1800
 
