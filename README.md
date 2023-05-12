@@ -1,4 +1,4 @@
-# Variation-Distance Graphs
+# DSBplot
 
 ## Introduction
 
@@ -33,52 +33,58 @@ To install the package, use the command
 ```
 pip install dsbplot
 ```
-The required dependencies are
-* Python >= ?
-* Plotly
-* NetworkX
-* python-pptx
-* numpy
-* pandas
-* SciKit-Learn
-* Levenshtein
-* Pillow
-* matplotlib
-* kaleido==0.1.0.post1
-(TODO)
+The required Python version is >=3.11.0. The required dependencies are:
+* kaleido==0.1.0.post1 (Only this version will work, please see [here](https://github.com/plotly/Kaleido/issues/134)).
+* Levenshtein>=0.21.0
+* matplotlib>=3.7.1
+* networkx>=3.1
+* numpy>=1.24.3
+* pandas>=2.0.1
+* Pillow>=9.5.0
+* plotly>=5.14.1
+* python-pptx>=0.6.21
+* scikit-learn>=1.2.2
+To install these dependencies use the command
+```
+pip install kaleido==0.1.0.post1 Levenshtein>=0.21.0 matplotlib>=3.7.1 networkx>=3.1 numpy>=1.24.3 pandas>=2.0.1 Pillow>=9.5.0 plotly>=5.14.1 python-pptx>=0.6.21 scikit-learn>=1.2.2
+```
+For a full list of requirements, please see `requirements.txt`.
 
-Bowtie 2 (version >= XX) should be installed and available on the PATH. Particularly, the executables `bowtie2-build-s` and `bowtie2-align-s` should be available as commands.
+Bowtie 2 (version >= 2.5.0) should be installed and available on the system path. Particularly, the executables `bowtie2-build-s` and `bowtie2-align-s` should be available as commands (internall, we use the Python function `os.system()` to run Bowtie 2).
 
 ## Commands
 
 This package is based on the following four commands:
 
-* `preprocess.py`: takes as input the trimmed FASTQ reads files and a FASTA file containing the reference sequence, and creates the intermediate tables needed for plotting the graphs and histograms. The input directories should represent replicate experiments (e.g., biological replicates).
-* `comparison.py`: takes as input two directories created by `preprocess.py` and creates a directory that contains the intermediate tables needed for plotting comparison graphs. Both of the directories must have been created with the same reference sequence.
-* `graph.py`: takes as input a collection of the output directories of either `preprocess.py` or `comparison.py`, lays out alignment-sequences in all inputs, and plots a separate graph for each input.
-* `histogram.py`: takes as input an output directories of `preprocess.py` (outputs of `comparison.py` are not valid) and plots a histogram showing the type and position of variations (insertions, deletion, or substitutions) in the alignment-sequences.
+* `preprocess`: takes as input the trimmed FASTQ reads files and a FASTA file containing the reference sequence, and creates the intermediate tables of DNA sequences needed for plotting the graphs and histograms. The input directories should represent replicate experiments (e.g., biological replicates).
+* `comparison`: takes as input two directories created by `preprocess` and creates a directory that contains the intermediate tables needed for plotting comparison graphs. Both of the directories must have been created with the same reference sequence.
+* `graph`: takes as input a collection of the output directories of either `preprocess` or `comparison`, lays out sequences in all inputs, and plots a separate graph for each input.
+* `histogram`: takes as input an output directories of `preprocess` (outputs of `comparison` are not valid) and plots a histogram showing the type and position of variations (insertions, deletion, or substitutions) in the sequences.
 
-More information about each command is given in the following subsections. The the exposition, we use the notation `NAME` to refer to the value of a command-line parameter set by the user and the notation `--name` to refer to the parameter itself. The notation `file_name.ext` is also used to refer to file names, though the meaning should be clear from context.
+Once DSBplot is installed, the commands may be run using `python -m dsbplot COMMAND`, where `COMMAND` should be replaced by `preprocess`, `comparison`, `graph`, `histogram`, or `pptx`.
 
-### `preprocess.py`
+More information about each command is given in the following subsections. The the exposition, we use the notation `NAME` to refer to the value of a command-line parameter set by the user and the notation `--name` to refer to the parameter itself. The notation `file_name.ext` is also used to refer to file names.
 
-The `preprocess.py` script perform alignment and preprocessing of the raw FASTQ data.
+### `preprocess`
+
+The `preprocess` command perform alignment and preprocessing of the raw FASTQ data.
 
 #### Input
 
-We expect that the input FASTQ files to `preprocess.py` are *trimmed*, meaning that the adaptors have been removed. We also expected that the region of DNA between these adaptors is exactly the region of DNA represented by the reference sequence. This mean that if a given read represents a perfectly repaired DNA strand, it should identical with the reference sequence (assuming no substitution errors due to library preparation or sequencing). If multiple input FASTQ files are given, it is assumed that they are repeats of the same treatment condition and are processed identically then combined into a single file (see [preprocessing stages](#prepcocessing-stages) below).
+We expect that the input FASTQ files to `preprocess` are *trimmed*, meaning that the sequencing adaptors have been removed. We also expected that the region of DNA between these adaptors is exactly the region of DNA represented by the reference sequence. This mean that if a given read represents a perfectly repaired DNA strand, it should identical with the reference sequence (assuming no substitution errors due to library preparation or sequencing). If multiple input FASTQ files are given, it is assumed that they are repeats of the same treatment condition. They are all processed identically and then combined into a single file (see [preprocessing stages](#prepcocessing-stages) below).
 
 #### Ignoring substitutions
 
-The preprocessing pipeline produces two different versions of most files: one *ignoring* substitutions (suffix "withoutSubst") and another *keeping* substitutions (suffix "withSubst"). The processing for files that ignore substitutions contains an extra step that replaces alginment subsititions (mismatches) with perfect matches with the reference sequence. We chose to ignore substitutions in our analysis because we noticed a consistent distribution of substitutions occurring in both the experiment group (where DNA double-strand breaks were induced) and the control group (where no DSBs were induced). This suggests that the majority of substitutions were likely caused by DNA damage during library preparation or sequencing errors, rather than the process of repairing double-strand breaks. In the command `graph.py`, the `--subst_type` parameter controls whether to use the output with or without substitutions. The `histogram.py` command only uses the output with substitutions, since it is partly used to examine the distribution of substitutions.
+The preprocessing pipeline produces two different versions of most files: one *ignoring* substitutions (suffix "withoutSubst") and another *keeping* substitutions (suffix "withSubst"). The processing for files that ignore substitutions contains an extra step that replaces alignment substitutions (mismatches) with perfect matches with the reference sequence. We chose to ignore substitutions in our analysis because we noticed a similar distribution of substitutions occurring in both the experiment group (where DNA double-strand breaks were induced) and the control group (where no DSBs were induced). This suggests that the majority of substitutions were likely caused by DNA damage during library preparation or sequencing errors, rather than the process of repairing double-strand breaks. In the command `graph.py`, the `--subst_type` parameter controls whether to use the output with or without substitutions. The `histogram.py` command only uses the output with substitutions, since it is used to examine the distribution of substitutions.
 
 #### Preprocessing stages
 
-This `preprocess.py` script is broken in separate stages so that each stage can be run separately (potentially on different machines). However, the stages must be run in the correct order indicated by their prefixes. If running the stages separately, the value of the `OUTPUT` directory must the same value on each separate invocation. Two different experiments should not be given the same `OUTPUT` directory or the data from the second will overwrite the first. The following describes each stage in more detail.
+This `preprocess` command is broken in separate stages so that each stage can be run separately (potentially on different machines). However, the stages must be run in the correct order indicated by their prefixes. When running the stages separately, the value of the `OUTPUT` directory must the same value on each separate invocation. Two different experiments should not be given the same `OUTPUT` directory or the data from the second will overwrite the first. The following describes each stage in more detail.
 
-1. **0_align**: Align FASTQ reads against FASTA reference sequence. This stage requires multiple input FASTQ files representing independent repeats or biological/tehchnical replicates of the treatment condition. The alignment is done independently for each of the input FASTQs. The output of this step is a set of [SAM](https://samtools.github.io/hts-specs/SAMv1.pdf) files. Please ensure that [Bowtie 2](https://bowtie-bio.sourceforge.net/bowtie2/index.shtml) is installed and that the commands `bowtie2-build-s` and `bowtie2-align-s` are available on the PATH (using the Python command `os.system()`). The output directories of this stage are:
+1. **0_align**: Align FASTQ reads against FASTA reference sequence. This stage requires multiple input FASTQ files representing independent replicates of the same treatment condition. The alignment is done independently for each of the input FASTQs. The output of this step is a set of [SAM](https://samtools.github.io/hts-specs/SAMv1.pdf) files. Please ensure that [Bowtie 2](https://bowtie-bio.sourceforge.net/bowtie2/index.shtml) is installed and that the commands `bowtie2-build-s` and `bowtie2-align-s` are available on the system path (using the Python command `os.system()`). The output directories of this stage are:
     * `0_bowtie2_build`: The Bowtie 2 index files built with `bowtie2-build-s`.
     * `0_sam`: The SAM file output from the alignment by `bowtie2-align-s`.
+CONTINUE HERE
 2. **1_filter**: Filter each SAM file independently using various heuristics to discard alignments that don't represent NHEJ repair. The filtering process involves the following steps:
     1. Discard alignments that represent a failed/invalid aligment in the SAM format.
     2. Discard alignments where the read sequence has length less than `MIN_LENGTH`.
@@ -103,15 +109,15 @@ This `preprocess.py` script is broken in separate stages so that each stage can 
 
 For more information about the parameters, please use the command `python preprocess.py --help`. For more details about the preprocessing, please refer to CITATION.
 
-### `comparison.py`
+### `comparison`
 
-This stages creates data needed to compare two different sequencing libraries. Specifically, it takes as input two directories that were created using the `preprocess.py` script, and will output a third directory that contains analogous data for creating comparison graphs of the two samples. For meaningful comparisons, it is important that the reference sequences (after restricting to the specified window) are identical between the two libraries. The output data will contain the same columns as that output from `preprocess.py` (i.e., it will have the same information about the variations around the DSBs), but will have two additional columns (with suffixes `_1` and `_2`) for the frequencies of the two different samples being compared. The original frequency column, with no suffix, will contain the maximum of these two frequencies. The output will be in the subdirectories `3_window` and `4_graph`. Note that the histogram data is not recomputed because the comparison data should not be used to create histograms. For more details about the parameters, please use the command `python comparison.py --help`.
+This command creates data needed to compare two different sequencing libraries. Specifically, it takes as input two directories that were created using the `preprocess` command, and will output a third directory that contains analogous data for creating comparison graphs of the two samples. For meaningful comparisons, it is important that the reference sequences (after restricting to the specified window) are identical between the two libraries. The output data will contain the same columns as that output from `preprocess.py` (i.e., it will have the same information about the variations around the DSBs), but will have two additional columns (with suffixes `_1` and `_2`) for the frequencies of the two different samples being compared. The original frequency column, with no suffix, will contain the maximum of these two frequencies. The output will be in the subdirectories `3_window` and `4_graph`. Note that the histogram data is not recomputed because the comparison data should not be used to create histograms. For more details about the parameters, please use the command `python comparison.py --help`.
 
-### `graph.py`
+### `graph`
 
 This command performs the vertex layout and final plotting of the variation-distance graphs. Multiple inputs may be specified to layout the vertices jointly, as long as their windowed reference sequences are identical. See the [Graphs](#graphs) section for a description of the meaning of different visual properties of the graph (e.g., edges, vertex sizes, colors, etc.). For more details about the parameters, please use the command `python graph.py --help`.
 
-### `histogram.py`
+### `histogram`
 
 This commands plots the 3D histograms, which summarize the distribution of the variations in the windows around the DSB site. Each histogram shows a single type of variation (insertion, deletion, or substitution), which is determined by the `--variation_type` parameter. The axes are described in the following.
 
@@ -122,6 +128,8 @@ This commands plots the 3D histograms, which summarize the distribution of the v
 To understand how the frequencies are calculated, consider the following example: Suppose an alignment in the data had one insertion at position 5, two deletions at positions 6 and 7, and an overall frequency of 0.1. Let's assume that the DSB is between positions 5 and 6, and that we are using relative labeling on the $x$-axis. In the insertion histogram, the alignment would contribute +0.1 to the z-value of the bar at the $x$-$y$-coordinate (-1, 3).  In the deletion histogram, the alignment would contribute +0.1 to the z-value of the bars at the $x$-$y$-coordinates (1, 3) and (2, 3). If we used absolute labeling, then the respective $x$-$y$-coordinates would be (5, 3), (6, 3), and (7, 3), since the positions are now labeled according to their absolute positions on the reference sequence.
 
 For more details about the parameters, please use the command `python histogram.py --help`.
+
+## `pptx`
 
 ## Graphs
 

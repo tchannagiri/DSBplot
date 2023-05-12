@@ -16,7 +16,7 @@ import pptx.dml.color
 import pptx.dml.effect
 import PIL
 
-PPTX_TEMPLATE_FILE = os.path.join(os.path.dirname(__file__), 'template.pptx') # make this an arg!
+PPTX_TEMPLATE_FILE = os.path.join(os.path.dirname(__file__), 'template.pptx')
 
 ### Font sizes ###
 IMAGE_LABEL_FONT_SIZE_PT = 8
@@ -123,6 +123,7 @@ def get_slide(
     # All images should be the same width/height
     for row in range(image_grid_list[i].shape[0]):
       for col in range(image_grid_list[i].shape[1]):
+        log_utils.log_input(image_grid_list[i][row][col])
         image = PIL.Image.open(image_grid_list[i][row][col])
         max_image_width_px = max(max_image_width_px, image.width)
         max_image_height_px = max(max_image_height_px, image.height)
@@ -545,6 +546,7 @@ def main(
       for c in range(num_cols[i]):
         margin_label_top_list[i][c] = margin_label_top_list[i][c].replace('\\n', '\n')
 
+  log_utils.log_input(PPTX_TEMPLATE_FILE)
   prs = pptx.Presentation(PPTX_TEMPLATE_FILE)
 
   get_slide(
@@ -571,7 +573,7 @@ def main(
     grid_height_spacing_pt = grid_height_spacing_pt,
   )
   
-  log_utils.log(output)
+  log_utils.log_output(output)
   file_utils.make_parent_dir(output)
   prs.save(output)
 
