@@ -23,10 +23,6 @@ def edge_data(dir, subst_type):
   constants.check_subst_type(subst_type)
   return make_file_name(dir, 'edge_data', subst_type, ext = 'tsv')
 
-def distance_matrix(dir, subst_type):
-  constants.check_subst_type(subst_type)
-  return make_file_name(dir, 'distance_matrix', subst_type, ext = 'tsv')
-
 def graph_stats(dir, subst_type):
   constants.check_subst_type(subst_type)
   return make_file_name(dir, 'graph_stats', subst_type, ext = 'tsv')

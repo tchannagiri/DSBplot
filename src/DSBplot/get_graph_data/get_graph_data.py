@@ -13,8 +13,8 @@ import DSBplot.utils.graph_utils as graph_utils
 def parse_args():
   parser = argparse.ArgumentParser(
     description = (
-      'Precompute the necessary data for the variation-distance graphs.' +
-      ' Uses as input the output of the "get_window_data" stage.'
+      'Precompute the necessary data for the plotting graphs.' +
+      ' Uses as input the output of the "get_window_data.py" script.'
     )
   )
   parser.add_argument(
@@ -165,43 +165,6 @@ def write_edge_data(output_dir, subst_type):
   file_utils.write_tsv(edge_data, out_file_name)
   log_utils.log_output(out_file_name)
 
-def get_distance_matrix(sequence_data):
-  """
-    Get pairwise distances between vertices.
-  """
-  distance_matrix = {
-    'id_a': [],
-    'id_b': [],
-    'dist': [],
-  }
-  for row_a, row_b in itertools.combinations(sequence_data.to_dict('records'), 2):
-    read_align_a = row_a['read_align']
-    read_align_b = row_b['read_align']
-    distance_matrix['id_a'].append(row_a['id'])
-    distance_matrix['id_b'].append(row_b['id'])
-    distance_matrix['dist'].append(
-      graph_utils.get_alignment_distance_2(
-        read_align_a,
-        read_align_b,
-      )
-    )
-    
-  return pd.DataFrame(distance_matrix)
-
-def write_distance_matrix(output_dir, subst_type):
-  """
-    Get distance matrix and write to file.
-    Sequence data should have been created already.
-  """
-
-  in_file_name = file_names.sequence_data(output_dir, subst_type)
-  out_file_name = file_names.distance_matrix(output_dir, subst_type)
-
-  sequence_data = file_utils.read_tsv(in_file_name)
-  distance_matrix = get_distance_matrix(sequence_data)
-  file_utils.write_tsv(distance_matrix, out_file_name)
-  log_utils.log_output(out_file_name)
-
 def write_graph_stats(output_dir, subst_type):
   """
     Get graph summary statistics and write to file.
@@ -231,7 +194,6 @@ def main(
 
   write_sequence_data(input, output, subst_type)
   write_edge_data(output, subst_type)
-  write_distance_matrix(output, subst_type)
   write_graph_stats(output, subst_type)
 
   log_utils.blank_line()

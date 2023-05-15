@@ -10,7 +10,6 @@ import pandas as pd
 import numpy as np
 
 import sklearn.decomposition
-import sklearn.manifold
 
 import PIL.Image
 
@@ -25,13 +24,6 @@ import DSBplot.utils.file_names as file_names
 import DSBplot.plot_graph.plot_graph_helper as plot_graph_helper
 
 LAYOUT_PROPERTIES = {
- 'mds_layout': {
-    'only_2d': True,
-    'do_pca': True,
-    'normalize': True,
-    'has_edges': True,
-    'distance_matrix': True,
-  },
  'radial_layout': {
     'only_2d': True,
     'do_pca': False,
@@ -653,54 +645,17 @@ def make_universal_layout_x_axis(
     yshift = 0.25 * title_font_size * font_size_scale,
   )
 
-def make_mds_layout(graph, distance_matrix):
-  seq_ids = list(graph.nodes())
-  seq_ids_set = set(seq_ids)
-  distance_matrix = distance_matrix.loc[
-    distance_matrix['id_a'].isin(seq_ids_set) &
-    distance_matrix['id_b'].isin(seq_ids_set)
-  ]
-  distance_matrix_transpose = distance_matrix.copy()
-  distance_matrix_transpose[['id_b', 'id_a']] = distance_matrix[['id_a', 'id_b']]
-  distance_matrix_diag = pd.DataFrame({
-    'id_a': seq_ids,
-    'id_b': seq_ids,
-    'dist': 0,
-  })
-  distance_matrix = pd.concat(
-    [distance_matrix, distance_matrix_transpose, distance_matrix_diag],
-    axis = 'index'
-  )
-  distance_matrix = pd.pivot(distance_matrix, index='id_a', columns='id_b', values='dist')
-
-  seq_ids = list(seq_ids)
-  distance_matrix = distance_matrix.reindex(seq_ids)
-  distance_matrix = distance_matrix[seq_ids]
-  
-  mds_out = (
-    sklearn.manifold.MDS(n_components=2, dissimilarity='precomputed')
-      .fit_transform(distance_matrix)
-  )
-
-  xy_dict = {}
-  for i in range(len(seq_ids)):
-    xy_dict[seq_ids[i]] = (mds_out[i, 0], mds_out[i, 1])
-  return xy_dict
-
 def make_graph_layout_single(
   data_info,
   graph,
   layout_type,
-  distance_matrix = None,
   reverse_complement = False,
   universal_layout_x_scale_insertion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
   universal_layout_y_scale_insertion = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
   universal_layout_x_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
   universal_layout_y_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
-  if layout_type == 'mds_layout':
-    layout = make_mds_layout(graph, distance_matrix)
-  elif layout_type == 'radial_layout':
+  if layout_type == 'radial_layout':
     layout = make_radial_layout(graph)
   elif layout_type == 'universal_layout':
     layout = make_universal_layout(
@@ -880,18 +835,11 @@ def make_graph_layout(
       node_groups = None
       subgraph_list = [graph]
 
-    if LAYOUT_PROPERTIES[layout_type].get('distance_matrix', False):
-      distance_matrix = file_utils.read_tsv(
-        file_names.distance_matrix(data_dir, node_subst_type)
-      )
-    else:
-      distance_matrix = None
     layout_list = [
       make_graph_layout_single(
         data_info = data_info,
         graph = subgraph,
         layout_type = layout_type,
-        distance_matrix = distance_matrix,
         reverse_complement = reverse_complement,
         universal_layout_x_scale_insertion = universal_layout_x_scale_insertion,
         universal_layout_y_scale_insertion = universal_layout_y_scale_insertion,
@@ -1724,8 +1672,7 @@ def make_graph_figure_helper(
     file_names.data_info(data_dir_list[0])
   )
   graph_layout_common = make_graph_layout(
-    # FIXME: This mean FAIL for MDS layout! Mention in the args strings!
-    data_dir = data_dir_list[0] if (len(data_dir_list) == 0) else None,
+    data_dir = data_dir_list[0] if (len(data_dir_list) == 1) else None,
     data_info = data_info_list[0],
     node_subst_type = node_subst_type,
     graph = graph,
