@@ -1,6 +1,0 @@
-TODO: SETUP A VENV AND GET THE EXACT VERSIONS OF PACKAGES BEING USED!
-TODO: Add the dummy code to test script. Make a test script that uses a lot of the arguments of graphing/histograms.
-TODO: remove the 2DSB demo ref seqs
-TODO: Keep reading the tutorial on making Python packages and figure out if install Miniconda is the correct thing to do
-TODO: Make a __main__.py script for the package to allow running with py -m dsbplot
-TODO: Figure out how what to do with the other data sets

@@ -4,18 +4,9 @@
 
 This tool is intended to allow processing and visualizing high-throughput sequencing data obtained for the purpose of studying double-strand break (DSB) repair due to the nonhomologous end-joining (NHEJ) repair mechanism. The accompanying article can be found at LINK. This protocol was original used in the study Jeon et al. ([link](https://doi.org/10.1101/2022.11.01.514688)) for studying DSB repair in human cells. That publication contains several examples of the graphs in the supplementary figures, as well as a discussion of insights gained from the resulting figures.
 
-The overall functionality of the package is to (1) preprocess DNA-seq reads that have been obtained from DSB (double-strand break) repair experiments; (2) quantify the variations (insertions, deletions, and substitutions) near the DSB site using sequence alignment; (3) visualize the resulting variations using two types of visualizations: *variation-distance graphs* and *variation-position histograms*.
+The overall functionality of the package is to (1) preprocess DNA-seq reads that have been obtained from DSB (double-strand break) repair experiments; (2) quantify the variations (insertions, deletions, and substitutions) near the DSB site using sequence alignment; (3) visualize the resulting variations using two types of visualizations: *sequence graphs* and *variation histograms*.
 
 The expected inputs are DNA-seq libraries that have been treated in a very specific manner to properly allowing infering the variation with alignments. For a more detailed description of the expected input, see section [Commands](#commands) and the publication associated with this software (LINK).
-
-## Terminology
-
-* We use the terms "vertex" and "node" interchageably for the vertices of graphs.
-* We sometimes also use the term "sequence" and "alignment" interchangeably with "vertex" and "node", since, as we describe later, there is a one-to-one correspondence between these four things in the constructed graphs. For example all of the following statements may be equivalent when we refer to a single vertex in a graph:
-    * The vertex has two insertions.
-    * The node has two insertions.
-    * The sequence has two insertions.
-    * The alignment has two insertions.
 
 ## Citation
 
