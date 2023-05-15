@@ -5,7 +5,7 @@ authors = [
   { name="Tejasvi Channagiri", email="tchannagiri@gmail.com" },
 ]
 description = "A package for visualizing alignment variations in DNA-seq data from double-strand break (DSB) experiments."
-keywords = "visualization genomic DNA-seq DSB double-strand break alignment graph histogram"
+keywords = ["visualization", "genomics", "DNA-seq", "DSB", "double-strand break", "alignment", "graph", "histogram"]
 readme = "README.md"
 requires-python = ">=3.7"
 classifiers = [
@@ -22,7 +22,6 @@ dependencies = [
   "pandas>=2.0.1",
   "Pillow>=9.5.0",
   "plotly>=5.14.1",
-  "python-pptx>=0.6.21",
   "scikit-learn>=1.2.2",
 ]
 
@@ -36,10 +35,6 @@ DSBplot-preprocess = "DSBplot.preprocess:entry_point"
 DSBplot-comparison = "DSBplot.comparison:entry_point"
 DSBplot-graph = "DSBplot.graph:entry_point"
 DSBplot-histogram = "DSBplot.histogram:entry_point"
-DSBplot-pptx = "DSBplot.pptx:entry_point"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-
-[tool.setuptools.package-data]
-"DSBplot.get_pptx" = ["template.pptx"]

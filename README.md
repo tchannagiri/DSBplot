@@ -42,11 +42,10 @@ The required Python version is >=3.11.0. The required dependencies are:
 * pandas>=2.0.1
 * Pillow>=9.5.0
 * plotly>=5.14.1
-* python-pptx>=0.6.21
 * scikit-learn>=1.2.2
 To install these dependencies use the command
 ```
-pip install kaleido==0.1.0.post1 Levenshtein>=0.21.0 matplotlib>=3.7.1 networkx>=3.1 numpy>=1.24.3 pandas>=2.0.1 Pillow>=9.5.0 plotly>=5.14.1 python-pptx>=0.6.21 scikit-learn>=1.2.2
+pip install kaleido==0.1.0.post1 Levenshtein>=0.21.0 matplotlib>=3.7.1 networkx>=3.1 numpy>=1.24.3 pandas>=2.0.1 Pillow>=9.5.0 plotly>=5.14.1 scikit-learn>=1.2.2
 ```
 For a full list of requirements, please see `requirements.txt`.
 
@@ -61,7 +60,7 @@ This package is based on the following four commands:
 * `graph`: takes as input a collection of the output directories of either `preprocess` or `comparison`, lays out sequences in all inputs, and plots a separate graph for each input.
 * `histogram`: takes as input an output directories of `preprocess` (outputs of `comparison` are not valid) and plots a histogram showing the type and position of variations (insertions, deletion, or substitutions) in the sequences.
 
-Once DSBplot is installed, the commands may be run using `python -m dsbplot COMMAND`, where `COMMAND` should be replaced by `preprocess`, `comparison`, `graph`, `histogram`, or `pptx`.
+Once DSBplot is installed, the commands may be run using `python -m dsbplot COMMAND`, where `COMMAND` should be replaced by `preprocess`, `comparison`, `graph`, or `histogram`.
 
 More information about each command is given in the following subsections. The the exposition, we use the notation `NAME` to refer to the value of a command-line parameter set by the user and the notation `--name` to refer to the parameter itself. The notation `file_name.ext` is also used to refer to file names.
 
@@ -128,8 +127,6 @@ This commands plots the 3D histograms, which summarize the distribution of the v
 To understand how the frequencies are calculated, consider the following example: Suppose an alignment in the data had one insertion at position 5, two deletions at positions 6 and 7, and an overall frequency of 0.1. Let's assume that the DSB is between positions 5 and 6, and that we are using relative labeling on the $x$-axis. In the insertion histogram, the alignment would contribute +0.1 to the z-value of the bar at the $x$-$y$-coordinate (-1, 3).  In the deletion histogram, the alignment would contribute +0.1 to the z-value of the bars at the $x$-$y$-coordinates (1, 3) and (2, 3). If we used absolute labeling, then the respective $x$-$y$-coordinates would be (5, 3), (6, 3), and (7, 3), since the positions are now labeled according to their absolute positions on the reference sequence.
 
 For more details about the parameters, please use the command `python histogram.py --help`.
-
-## `pptx`
 
 ## Graphs
 
