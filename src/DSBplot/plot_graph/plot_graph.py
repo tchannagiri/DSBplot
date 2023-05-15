@@ -2066,7 +2066,9 @@ def parse_args():
     help = (
       'If present, shows a y-axis at the given x position' +
       ' showing the distances to the reference.' +
-      ' Univeral layout only.'
+      ' Universal layout only.'
+      ' To determine appropriate values to set please see the console log, which' +
+      ' shows the range of x-values of the nodes.'
     ),
   )
   parser.add_argument(
@@ -2075,7 +2077,9 @@ def parse_args():
     help = (
       'If present, shows an x-axis for deletions at the given y position' +
       ' showing the approximate position of the deleted ranges.' +
-      ' Univeral layout only.'
+      ' Universal layout only.'
+      ' To determine appropriate values to set please see the console log, which' +
+      ' shows the range of y-values of the nodes.'
     ),
   )
   parser.add_argument(
@@ -2095,7 +2099,9 @@ def parse_args():
     help = (
       'If present, shows a x-axis for insertions at the given y position' +
       ' showing the first nucleotide of inserted sequences.' +
-      ' Univeral layout only.'
+      ' Universal layout only.' +
+      ' To determine appropriate values to set please see the console log, which' +
+      ' shows the range of y-values of the nodes.'
     ),
   )
   parser.add_argument(
@@ -2105,7 +2111,9 @@ def parse_args():
     default = [float('nan'), float('nan')],
     help = (
       'If showing an y-axis for the universal layout,' +
-      ' the min and max y-position of the line.'
+      ' the min and max y-position of the line.' +
+      ' To determine appropriate values to set please see the console log, which' +
+      ' shows the range of y-values of the nodes.'
     ),
   )
   parser.add_argument(
@@ -2115,7 +2123,9 @@ def parse_args():
     default = [float('nan'), float('nan')],
     help = (
       'If showing an x-axis for the universal layout,' +
-      ' the min and max x-position of the line.'
+      ' the min and max x-position of the line.' +
+      ' To determine appropriate values to set please see the console log, which' +
+      ' shows the range of x-values of the nodes.'
     ),
   )
   parser.add_argument(
@@ -2427,7 +2437,9 @@ def parse_args():
     help = (
       'Range of x-axis for plotting.'
       'If not specified chosen automatically to either show all nodes or a preset value'
-      ' for the layout.'
+      ' for the layout.' +
+      ' To determine appropriate values to set please see the console log, which' +
+      ' shows the range of x-values of the nodes.'
     ),
   )
   parser.add_argument(
@@ -2438,7 +2450,9 @@ def parse_args():
     help = (
       'Range of y-axis for plotting.'
       'If not specified chosen automatically to either show all nodes or a preset value'
-      ' for the layout.'
+      ' for the layout.' +
+      ' To determine appropriate values to set please see the console log, which' +
+      ' shows the range of y-values of the nodes.'
     ),
   )
   parser.add_argument(
