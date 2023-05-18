@@ -38,7 +38,13 @@ def parse_args():
     nargs = '+',
     type = common_utils.check_file,
     help = (
-      'Input FASTQ files of raw reads.' +
+      'Input files of raw reads.' +
+      ' The following file entensions are allowed: ' +
+      ' FASTQ: ".fastq", ".fq."; FASTA: "fasta", ".fa", "fna";' +
+      ' text: all others. FASTQ files are processed the ' +
+      ' Bowtie 2 flag "-q", FASTA files are processed with the Bowtie 2 flag "-f",' +
+      ' and text files are processed with the Bowtie 2 flag "-r".' +
+      ' Please see the Bowtie 2 manual at http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml.' +
       ' Each file is considered a repeat of the same experiment.' +
       ' Required only for stages 0_align.'
     ),
@@ -205,8 +211,16 @@ def do_0_align(
   for i, input_1 in enumerate(input, 1):
     sam_file = get_sam_file(output, i)
     file_utils.make_parent_dir(sam_file)
-    os.system(f'bowtie2-align-s -x {bowtie2_build_file} {input_1} -S {sam_file} --quiet')
-    log_utils.log_output('Bowtie2 SAM file: ' + sam_file)
+    input_ext = os.path.splitext(input_1)[1]
+    if input_ext in ['.fastq', '.fq']:
+      flags = '-q'
+    elif input_ext in ['.fasta', '.fa', '.fna']:
+      flags = '-f'
+    else:
+      flags = '-r'
+    bowtie2_command = f'bowtie2-align-s {flags} -x {bowtie2_build_file} {input_1} -S {sam_file} --quiet'
+    log_utils.log('Bowtie 2 command: ' + bowtie2_command)
+    os.system(f'bowtie2-align-s {flags} -x {bowtie2_build_file} {input_1} -S {sam_file} --quiet')
     log_utils.blank_line()
 
 def do_1_filter_nhej(
@@ -227,6 +241,7 @@ def do_1_filter_nhej(
   input_num = len(glob.glob(os.path.join(file_names.sam_dir(output), '*.sam')))
 
   for i in range(1, input_num + 1):
+    debug_file = os.path.join(file_names.filter_nhej_dir(output), f'debug_{i}.txt')
     filter_nhej.main(
       ref_seq_file = ref_seq_file,
       sam_file = get_sam_file(output, i),
@@ -234,6 +249,7 @@ def do_1_filter_nhej(
       dsb_pos = dsb_pos,
       min_length = min_length,
       quiet = quiet,
+      debug_file = debug_file,
     )
 
 def do_2_combine_repeat(

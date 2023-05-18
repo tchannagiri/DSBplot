@@ -9,8 +9,8 @@ import DSBplot.utils.fasta_utils as fasta_utils
 import DSBplot.utils.alignment_utils as alignment_utils
 import DSBplot.utils.log_utils as log_utils
 
-def is_consecutive(ins_pos, del_pos):
-  if len(ins_pos) + len(del_pos) == 0: # no in/dels
+def check_consecutive_indel(ins_pos, del_pos):
+  if (len(ins_pos) == 0) and (len(del_pos) == 0): # no in/dels
     return True
   
   ins_pos = list(sorted(set(ins_pos)))
@@ -29,6 +29,13 @@ def is_consecutive(ins_pos, del_pos):
   
   # all checks passed
   return True
+
+def check_dsb_touches_indel(dsb_pos, ins_pos, del_pos):
+  return (
+    (dsb_pos in ins_pos) or # insertions at DSB
+    (dsb_pos in del_pos) or # deletion on left of DSB
+    ((dsb_pos + 1) in del_pos) # deletion on right of DSB
+  )
 
 def count_mismatch(ref_seq, read_seq, ref_pos):
   num_mismatch = 0
@@ -147,13 +154,6 @@ def check_deletion_special_case(
 
   return new_read_align
 
-def check_dsb_touches_indel(dsb_pos, ins_pos, del_pos):
-  return (
-    (dsb_pos in ins_pos) or # insertions at DSB
-    (dsb_pos in del_pos) or # deletion on left of DSB
-    ((dsb_pos + 1) in del_pos) # deletion on right of DSB
-  )
-
 def parse_args():
   parser = argparse.ArgumentParser(
     description = 'Filter sequences having mutations near DSB site.'
@@ -204,6 +204,14 @@ def parse_args():
     help = 'Do not output log messages.',
     action = 'store_true',
   )
+  parser.add_argument(
+    '--debug_file',
+    type = common_utils.check_file_output,
+    help = (
+      'File to output debugging messages.' +
+      'If omitted, the messages are printed to the console (unless --quiet is used).'
+    ),
+  )
   args = vars(parser.parse_args())
   args['min_length'] = max(args['dsb_pos'] + 1, args['min_length'])
   return args
@@ -215,6 +223,7 @@ def main(
   dsb_pos,
   min_length,
   quiet = True,
+  debug_file = None,
 ):
   # parse command line arguments
   log_utils.log_input(sam_file)
@@ -225,14 +234,17 @@ def main(
   # For logging
   rejected_header = 0
   rejected_no_alignment = 0
-  rejected_pos_not_1 = 0
+  rejected_not_pos_1 = 0
   rejected_not_consecutive = 0
-  rejected_dsb_not_touch = 0
+  rejected_not_dsb_touch = 0
+  rejected_not_consecutive_and_not_dsb_touch = 0
   rejected_too_short = 0
-  accepted_new = 0
   accepted_repeat = 0
-  accepted_deletion_special = 0
-  accepted_insertion_special = 0
+  accepted_new_deletion_special = 0
+  accepted_new_insertion_special = 0
+  accepted_new_insertion_and_deletion_special = 0
+  accepted_new_indel_other = 0
+  accepted_new_no_indel = 0
 
   # categorize
   read_data = {}
@@ -255,7 +267,7 @@ def main(
         continue
 
       if int(mandatory['POS']) != 1:
-        rejected_pos_not_1 += 1
+        rejected_not_pos_1 += 1
         continue
 
       read_seq = mandatory['SEQ']
@@ -286,11 +298,13 @@ def main(
       if num_subst_sam != num_subst:
           raise Exception('Incorrect count of substitutions')
 
-      if num_ins + num_del > 0:
+      if (num_ins > 0) or (num_del > 0):
+        consecutive = check_consecutive_indel(ins_pos, del_pos)
         dsb_touches = check_dsb_touches_indel(dsb_pos, ins_pos, del_pos)
-        if not dsb_touches:
+        insertion_special_case = False
+        deletion_special_case = False
+        if not (consecutive and dsb_touches):
           if num_ins > 0:
-            # insertions special case
             new_ref_align, new_read_align = check_insertion_special_case(
               ref_align,
               read_align,
@@ -305,12 +319,8 @@ def main(
               num_ins = len(ins_pos)
               num_del = len(del_pos)
               num_subst = len(subst_pos)
-              dsb_touches = True
-              accepted_insertion_special += 1
-            # FIXME: should we also check if the deletion special case applies
-            # if the alignment has both insertions and deletions?
-          elif num_del > 0:
-            # deletions and no insertions special case
+              insertion_special_case = True
+          if num_del > 0:
             new_read_align = check_deletion_special_case(
               ref_align,
               read_align,
@@ -325,17 +335,33 @@ def main(
               num_ins = len(ins_pos)
               num_del = len(del_pos)
               num_subst = len(subst_pos)
-              dsb_touches = True
-              accepted_deletion_special += 1
+              deletion_special_case = True
+          if insertion_special_case or deletion_special_case:
+            # if special case used, check again
+            consecutive = check_consecutive_indel(ins_pos, del_pos)
+            dsb_touches = check_dsb_touches_indel(dsb_pos, ins_pos, del_pos)
 
-        # If still DSB does not touch after special case check, reject
-        if not dsb_touches:
-          rejected_dsb_not_touch += 1
+        if consecutive and dsb_touches:
+          if insertion_special_case and deletion_special_case:
+            accepted_new_insertion_and_deletion_special += 1
+          elif insertion_special_case:
+            accepted_new_insertion_special += 1
+          elif deletion_special_case:
+            accepted_new_deletion_special += 1
+          else:
+            accepted_new_indel_other += 1
+        else:
+          if (not consecutive) and (not dsb_touches): 
+            rejected_not_consecutive_and_not_dsb_touch += 1
+          elif not consecutive:
+            rejected_not_consecutive += 1
+          elif not dsb_touches:
+            rejected_not_dsb_touch += 1
+          else:
+            raise Exception('Impossible to reach.')
           continue
-      
-      if not is_consecutive(ins_pos, del_pos):
-        rejected_not_consecutive += 1
-        continue
+      else:
+        accepted_new_no_indel += 1
 
       read_data[read_seq] = {
         'Sequence': read_seq,
@@ -343,45 +369,65 @@ def main(
         'Num_Subst': num_subst,
         'CIGAR': cigar,
       }
-      accepted_new += 1
 
   if len(read_data) == 0:
-    raise Exception('No reads captured')
+    raise Exception('No reads captured. Check input file.')
 
   read_data = pd.DataFrame.from_records(list(read_data.values()))
   read_data = read_data.sort_values('Count', ascending = False)
   file_utils.write_tsv(read_data, output)
   log_utils.log_output(output)
 
+  accepted_new = (
+    accepted_new_deletion_special +
+    accepted_new_insertion_special +
+    accepted_new_insertion_and_deletion_special +
+    accepted_new_indel_other +
+    accepted_new_no_indel
+  )
   total_accepted = sum(read_data['Count'])
   if total_accepted != (accepted_repeat + accepted_new):
     raise Exception('Accepted reads not summing correctly')
   total_rejected = (
     rejected_header +
     rejected_no_alignment + 
-    rejected_pos_not_1 +
+    rejected_not_pos_1 +
     rejected_too_short +
-    rejected_dsb_not_touch +
-    rejected_not_consecutive
+    rejected_not_consecutive +
+    rejected_not_dsb_touch +
+    rejected_not_consecutive_and_not_dsb_touch
   )
-  if total_rejected != (total_lines - total_accepted):
+  if (total_rejected + total_accepted) != total_lines:
     raise Exception('Line counts of accepted + rejected != total lines')
 
-  if not quiet:
-    log_utils.log(f'Total lines: {total_lines}')
-    log_utils.log(f'    Accepted: {total_accepted}')
-    log_utils.log(f'        Accepted new: {accepted_new}')
-    log_utils.log(f'            Insertion special case: {accepted_insertion_special}')
-    log_utils.log(f'            Deletion special case: {accepted_deletion_special}')
-    log_utils.log(f'            Other: {accepted_new - accepted_deletion_special - accepted_insertion_special}')
-    log_utils.log(f'        Accepted repeat: {accepted_repeat}')
-    log_utils.log(f'    Rejected: {total_rejected}')
-    log_utils.log(f'        Header: {rejected_header}')
-    log_utils.log(f'        No alignment: {rejected_no_alignment}')
-    log_utils.log(f'        POS != 1: {rejected_pos_not_1}')
-    log_utils.log(f'        Too short: {rejected_too_short}')
-    log_utils.log(f'        DSB not touch: {rejected_dsb_not_touch}')
-    log_utils.log(f'        Not consecutive: {rejected_not_consecutive}')
+  debug_lines = [
+    f'Total lines: {total_lines}',
+    f'    Accepted: {total_accepted}',
+    f'        Accepted new: {accepted_new}',
+    f'            Insertion special case: {accepted_new_insertion_special}',
+    f'            Deletion special case: {accepted_new_deletion_special}',
+    f'            Insertion and deletion special case: {accepted_new_insertion_and_deletion_special}',
+    f'            In/del other: {accepted_new_indel_other}',
+    f'            No in/del: {accepted_new_no_indel}',
+    f'        Accepted repeat: {accepted_repeat}',
+    f'    Rejected: {total_rejected}',
+    f'        Header: {rejected_header}',
+    f'        No alignment: {rejected_no_alignment}',
+    f'        POS != 1: {rejected_not_pos_1}',
+    f'        Too short: {rejected_too_short}',
+    f'        Not consecutive: {rejected_not_consecutive}',
+    f'        Not DSB touch: {rejected_not_dsb_touch}',
+    f'        Not consecutive and not DSB touch: {rejected_not_consecutive_and_not_dsb_touch}',
+  ]
+
+  if (debug_file is None) and not quiet:
+    for l in debug_lines:
+      log_utils.log(l)
+  elif debug_file is not None:
+    with open(debug_file, 'w') as debug_out:
+      for l in debug_lines:
+        debug_out.write(l + '\n')
+    log_utils.log_output(debug_file)
   log_utils.blank_line()
 
 if __name__ == '__main__':
