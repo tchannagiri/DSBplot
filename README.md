@@ -2,15 +2,18 @@
 
 ## Introduction
 
-This tool is intended to allow processing and visualizing high-throughput sequencing data obtained for the purpose of studying double-strand break (DSB) repair due to the nonhomologous end-joining (NHEJ) repair mechanism. The accompanying article can be found at LINK. This protocol was original used in the study Jeon et al. ([link](https://doi.org/10.1101/2022.11.01.514688)) for studying DSB repair in human cells. That publication contains several examples of the graphs in the supplementary figures, as well as a discussion of insights gained from the resulting figures.
+This `DSBplot` software is intended to allow processing and visualizing high-throughput sequencing data obtained for the purpose of studying double-strand break (DSB) repair due to the nonhomologous end-joining (NHEJ) repair mechanism. The accompanying article can be found at LINK. This protocol was original used in the study Jeon et al. ([link](https://doi.org/10.1101/2022.11.01.514688)) for studying DSB repair in human cells. That publication contains several examples of the graphs in the supplementary figures, as well as a discussion of insights gained from the resulting figures.
 
-The overall functionality of the package is to (1) preprocess DNA-seq reads that have been obtained from DSB (double-strand break) repair experiments; (2) quantify the variations (insertions, deletions, and substitutions) near the DSB site using sequence alignment; (3) visualize the resulting variations using two types of visualizations: *sequence graphs* and *variation histograms*.
+The overall functionality of the package is to:
+  1. Preprocess DNA-seq reads that have been obtained from DSB (double-strand break) repair experiments.
+  2. Quantify the variations (insertions, deletions, and substitutions) near the DSB site using sequence alignment.
+  3. Visualize the resulting variations using two types of figures: *sequence graphs* and *variation histograms*.
 
 The expected inputs are DNA-seq libraries that have been treated in a very specific manner to properly allowing infering the variation with alignments. For a more detailed description of the expected input, see section [Commands](#commands) and the publication associated with this software (LINK).
 
 ## Citation
 
-If you use this software, please use the following citation:
+If you use this software, please use the citation:
 
 XXX
 
@@ -22,10 +25,10 @@ XXX
 
 To install the package, use the command
 ```
-pip install dsbplot
+pip install DSBplot
 ```
 The required Python version is >=3.11.0. The required dependencies are:
-* kaleido==0.1.0.post1 (Only this version will work, please see [here](https://github.com/plotly/Kaleido/issues/134)).
+* kaleido==0.1.0.post1 (only this version will work, please see [here](https://github.com/plotly/Kaleido/issues/134)).
 * Levenshtein>=0.21.0
 * matplotlib>=3.7.1
 * networkx>=3.1
@@ -40,20 +43,18 @@ pip install kaleido==0.1.0.post1 Levenshtein>=0.21.0 matplotlib>=3.7.1 networkx>
 ```
 For a full list of requirements, please see `requirements.txt`.
 
-Bowtie 2 (version >= 2.5.0) should be installed and available on the system path. Particularly, the executables `bowtie2-build-s` and `bowtie2-align-s` should be available as commands (internall, we use the Python function `os.system()` to run Bowtie 2).
+Bowtie 2 (version >= 2.5.0) should be installed and available on the system path. Particularly, the executables `bowtie2-build-s` and `bowtie2-align-s` should be available as commands (internally, we use the Python function `os.system()` to run Bowtie 2).
 
 ## Commands
 
 This package is based on the following four commands:
 
-* `preprocess`: takes as input the trimmed FASTQ reads files and a FASTA file containing the reference sequence, and creates the intermediate tables of DNA sequences needed for plotting the graphs and histograms. The input directories should represent replicate experiments (e.g., biological replicates).
-* `comparison`: takes as input two directories created by `preprocess` and creates a directory that contains the intermediate tables needed for plotting comparison graphs. Both of the directories must have been created with the same reference sequence.
-* `graph`: takes as input a collection of the output directories of either `preprocess` or `comparison`, lays out sequences in all inputs, and plots a separate graph for each input.
-* `histogram`: takes as input an output directories of `preprocess` (outputs of `comparison` are not valid) and plots a histogram showing the type and position of variations (insertions, deletion, or substitutions) in the sequences.
+* `DSBplot-preprocess`: takes as input the trimmed FASTQ reads files and a FASTA file containing the reference sequence, and creates the intermediate tables of DNA sequences needed for plotting the graphs and histograms. The input directories should represent replicate experiments (e.g., biological replicates).
+* `DSBplot-comparison`: takes as input two directories created by `preprocess` and creates a directory that contains the intermediate tables needed for plotting comparison graphs. Both of the directories must have been created with the same reference sequence.
+* `DSBplot-graph`: takes as input a collection of the output directories of either `preprocess` or `comparison`, lays out sequences in all inputs, and plots a separate graph for each input.
+* `DSBplot-histogram`: takes as input an output directories of `preprocess` (outputs of `comparison` are not valid) and plots a histogram showing the type and position of variations (insertions, deletion, or substitutions) in the sequences.
 
-Once DSBplot is installed, the commands may be run using `python -m dsbplot COMMAND`, where `COMMAND` should be replaced by `preprocess`, `comparison`, `graph`, or `histogram`.
-
-More information about each command is given in the following subsections. The the exposition, we use the notation `NAME` to refer to the value of a command-line parameter set by the user and the notation `--name` to refer to the parameter itself. The notation `file_name.ext` is also used to refer to file names.
+Once DSBplot is installed, these commands should be available from the command line. More information about each command is given in the following subsections. We use the notation `NAME` to refer to the value of a command-line parameter set by the user and the notation `--name` to refer to the parameter itself. The notation `file_name.ext` is also used to refer to file names.
 
 ### `DSBplot-preprocess`
 
@@ -152,130 +153,82 @@ In this section, we describe the visual features of the graphs. Not all paramete
 
 ## Demonstration
 
-Several example input files are available in the `data_input` directory:
+To begin this demonstration set the terminal working directory to the `demo_short` directory. The full sequence of commands described here are also included in the `run.ps1` script, which should run in less than a minute on a personal computer. Several example input files are available in the `input` directory:
 
-* `data_demo/ref_seq`: reference sequence FASTA files, representing the perfect repaired sequence for different experiments.
-* `data_demo/fastq`: high-throughput sequencing data in FASTQ format for different samples. Each FASTQ file corresponds to an independent experiment.
+* `data_demo/fastq/Sense_R1_1.fa`, `data_demo/fastq/Sense_R1_2.fa`, `data_demo/fastq/Sense_R1_3.fa`, `data_demo/fastq/Sense_R1_4.fa`: High-throughput sequencing reads in FASTQ format for four biological repeats of the Sense experiment (R1 indicates that the forward strand was sequenced).
+* `input/ref_seq/2DSB_Sense_R1.fastq`: Reference sequence FASTA file for the Sense (R1) reads.
 
-Note that the FASTQ samples have been *trimmed*, meaning that we only capture the portion of the read between the adaptors, and low-quality reads have been already filtered out.
+The FASTQ files have already been trimmed so that they should correspond to the reference sequence. Note that this is demonstration data that has been generated by taking a small subset of an actual dataset.
 
-### Demonstration: Preprocessing
-
-The [`preprocess.py`](#preprocesspy) command must be run before producing any figures. This stage aligns the input FASTQ files against the reference sequences, extracts the part of the alignment around the DSB position, and creates tables of the unique alignments and their frequencies. The following are examples of using the command:
-
+We will run commands so that the output data is written to the `output/Sense_R1` directory. To run all preprocessing stages use the command:
 ```
-python preprocess.py --input data_input/fastq/sense1_R1.fq data_input/fastq/sense2_R1.fq data_input/fastq/sense3_R1.fq data_input/fastq/sense4_R1.fq --ref_seq_file data_input/ref_seq/2DSB_R1_sense.fa --dsb_pos 67 --output data_output/sense_R1 --label sense_R1 --total_reads 3000 3000 3000 3000
-python preprocess.py --input data_input/fastq/sense1_R2.fq data_input/fastq/sense2_R2.fq data_input/fastq/sense3_R2.fq data_input/fastq/sense4_R2.fq --ref_seq_file data_input/ref_seq/2DSB_R2_sense.fa --dsb_pos 46 --output data_output/sense_R2 --label sense_R2 --total_reads 3000 3000 3000 3000
-python preprocess.py --input data_input/fastq/db1_R1.fq data_input/fastq/db2_R1.fq data_input/fastq/db3_R1.fq data_input/fastq/db4_R1.fq --ref_seq_file data_input/ref_seq/2DSB_R1_branch.fa --dsb_pos 67 --output data_output/db_R1 --label db_R1 --total_reads 3000 3000 3000 3000
-python preprocess.py --input data_input/fastq/db1_R2.fq data_input/fastq/db2_R2.fq data_input/fastq/db3_R2.fq data_input/fastq/db4_R2.fq --ref_seq_file data_input/ref_seq/2DSB_R2_branch.fa --dsb_pos 46 --output data_output/db_R2 --label db_R2 --total_reads 3000 3000 3000 3000
-python preprocess.py --input data_input/fastq/dcmv1_R1.fq data_input/fastq/dcmv2_R1.fq data_input/fastq/dcmv3_R1.fq data_input/fastq/dcmv4_R1.fq --ref_seq_file data_input/ref_seq/2DSB_R1_cmv.fa --dsb_pos 67 --output data_output/dcmv_R1 --label dcmv_R1 --total_reads 3000 3000 3000 3000
-python preprocess.py --input data_input/fastq/dcmv1_R2.fq data_input/fastq/dcmv2_R2.fq data_input/fastq/dcmv3_R2.fq data_input/fastq/dcmv4_R2.fq --ref_seq_file data_input/ref_seq/2DSB_R2_cmv.fa --dsb_pos 46 --output data_output/dcmv_R2 --label dcmv_R2 --total_reads 3000 3000 3000 3000
+DSBplot-preprocess --input data/input/fastq/Sense_R1_1.fq data/input/fastq/Sense_R1_2.fq data/input/fastq/Sense_R1_3.fq data/input/fastq/Sense_R1_4.fq --ref_seq_file data/input/ref_seq/2DSB_Sense_R1.fa --dsb_pos 67 --output data/output/Sense_R1 --label "Sense" --total_reads 3000 3000 3000 3000
 ```
+In the command we have indicated that the DSB site is between the 67th and 68th nucleotide on the reference sequence (`--dsb_pos 67`), and each of the FASTQ files has 3000 reads (`--total_reads 3000 3000 3000 3000`).
 
-There are 24 files in the `data_input/fastq` directory, but we only run the preprocessing pipeline six times. This is because we process the biological repeats of each experiment together. For instance, `sense1_R1.fq`, `sense2_R1.fq`, `sense3_R1.fq`, and `sense4_R1.fq` are all biological repeats of the "Sense, 2-DSB" experiment. The `R1` or `R2` in the file names indicate whether the forward or reverse strand of the read was sequenced.
-
-It's important that all the biological repeats for each experiment use the same reference sequence. For example, the four "Sense, 2-DSB" experiments in the examples use the `2DSB_R1_sense.fa` reference sequence.
-
-The output of the preprocessing pipeline will be a collection of tables in TSV (tab-separated value) format. The most significant files are located in the  `4_graph` and `5_histogram` subdirectories, which contain data used for plotting graphs and histograms, respectively. Other intermediate preprocessing files are stored in other subdirectories.
-
-An alternative to running all the stages of preprocessing in a single `preprocess.py` invocation is to run the stages separately using the `--stages` command. Below is an example of preprocessing the db_R1 experiment with only one stage per invocation. Note that not all parameters must be set for all the stages.
-
+If you want to run the preprocessing stages separately, use the commands:
 ```
-python preprocess.py --input data_demo/input/fastq/db1_R1.fq data_demo/input/fastq/db2_R1.fq data_demo/input/fastq/db3_R1.fq data_demo/input/fastq/db4_R1.fq --ref_seq_file data_demo/input/ref_seq/2DSB_R1_branch.fa --output data_demo/output/db_R1 --stages 0_align
-python preprocess.py --ref_seq_file data_demo/input/ref_seq/2DSB_R1_branch.fa --dsb_pos 67 --output data_demo/output/db_R1 --stages 1_filter
-python preprocess.py --output data_demo/output/db_R1 --stages 2_combine
-python preprocess.py --ref_seq_file data_demo/input/ref_seq/2DSB_R1_branch.fa --dsb_pos 67 --output data_demo/output/db_R1 --label db_R1 --total_reads 3000 3000 3000 3000 --stages 3_window
-python preprocess.py --output data_demo/output/db_R1 --stages 4_graph
-python preprocess.py --output data_demo/output/db_R1 --stages 5_histogram
+DSBplot-preprocess --input data/input/fastq/Sense_R1_1.fq data/input/fastq/Sense_R1_2.fq data/input/fastq/Sense_R1_3.fq data/input/fastq/Sense_R1_4.fq --ref_seq_file data/input/ref_seq/2DSB_Sense_R1.fa --output data/output/Sense_R1 --stages 0_align
+DSBplot-preprocess --ref_seq_file data/input/ref_seq/2DSB_Sense_R1.fa --dsb_pos 67 --output data/output/Sense_R1 --stages 1_filter
+DSBplot-preprocess --output data/output/Sense_R1 --stages 2_combine
+DSBplot-preprocess --ref_seq_file data/input/ref_seq/2DSB_Sense_R1.fa --dsb_pos 67 --output data/output/Sense_R1 --label Sense_R1 --total_reads 3000 3000 3000 3000 --stages 3_window
+DSBplot-preprocess --output data/output/Sense_R1 --stages 4_graph
+DSBplot-preprocess --output data/output/Sense_R1 --stages 5_histogram
+```
+The data written to `output/Sense_R1` should be exactly the same whether the stages are run together or separately. The raw data used for plotting the variation graphs will be contained in `output/Sense_R1/4_graph` while the data for the variation histograms will be contained in `output/Sense_R1/5_histogram`. Data from other stages of the processing can also be found in other subdirectories of `output/Sense_R1`.
+
+Next we demonstrate the plotting commands, which will write the output figures to the `plots` directory. To plot the sequence graphs using the Universal layout with axes use the command:
+```
+DSBplot-graph --input data/output/Sense_R1 --output plots/graph/Sense_R1_universal.png --layout universal_layout --title "Sense (R1) Universal Layout" --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
+```
+The positions of the axes must be set explicitly (parameters `--universal_layout_x_axis_deletion_y_pos`, `--universal_layout_x_axis_insertion_y_pos`, and `--universal_layout_y_axis_x_pos`). The other axis parameters will be assigned default values based on the plotted data if omitted, but are set here explicitly for aesthetic reasons. Simiarily, the plotting range is set explicitly for aesthetic reasons (parameters `--range_x` and `--range_y`). To determine the appropriate values to set for the positioning parameters, please see the console output, which shows the $x$ and $y$ ranges of the plotted vertices. In this case, the console should read:
+```
+Figure[0] x-range: -8.0 to 10.0
+Figure[0] y-range: -17.0 to 6.0
 ```
 
-If you need more information about the parameters used in the preprocessing pipeline, you can use the command `python preprocess.py --help`. You can also see the [`preprocess.py`](#preprocesspy) section for more details.
-
-### Demonstration: Comparisons
-
-The [comparison](#comparisonpy) script is used to combine two outputs directories of the [preprocessing](#preprocesspy) command for plotting [comparison graphs](#XX). The following are examples:
-
+The Kamada-Kawaii and Radial layouts may similarily be plotted using the commands:
 ```
-python comparison.py --input data_output/sense_R1 data_output/db_R1 --output data_output/sense_db_R1
-python comparison.py --input data_output/sense_R2 data_output/db_R2 --output data_output/sense_db_R2
-python comparison.py --input data_output/sense_R1 data_output/dcmv_R1 --output data_output/sense_dcmv_R1
-python comparison.py --input data_output/sense_R2 data_output/dcmv_R2 --output data_output/sense_dcmv_R2
+DSBplot-graph --input data/output/Sense_R1 --output plots/graph/Sense_R1_kamada.png --layout kamada_layout --title "Sense (R1) Kamada-Kawaii Layout" --width 2400 --height 1800
+DSBplot-graph --input data/output/Sense_R1 --output plots/graph/Sense_R1_radial.png --layout radial_layout --title "Sense (R1) Radial Layout" --width 2400 --height 1800
 ```
 
-Note that both experiments must have identical reference sequences after extracting its `2 * WINDOW_SIZE` nucleotides around the DSB position. The whole reference sequences (i.e., the files in the `--ref_seq` parameter to `preprocess.py`) need not be identical so long as this window is.
+The outputs for each of the three layouts are shown below.
+![image](figures/sense_R1_universal.png)
+![image](figures/sense_R1_kamada.png)
+![image](figures/sense_R1_radial.png)
 
-The output will have a directory structure mirroring the output of `preprocess.py`, except that only the subdirectories `3_window`, `4_graph`, and `5_histogram` will be present (since there is no need to cache the other preprocessing data). The output files contain a combination of the data from both the experiments for creating comparison graphs.
-
-### Demonstration: Graphing
-
-The [`graph.py`](#graphpy) script is used to layout and plot the aligned reads output from the [`preprocess.py`](#preprocesspy) and [`comparison.py`] scripts, into. The input should be a list of directories created by `preprocess.py`/`comparison.py` and the output will be PNG or HTML files that visually represent the graph of sequences extracted from reads around the DSB position. The graphs are represented as a scatter-plot of vertices (representing sequences) and edges (representing single-variation sequence similarity).
-
-Multiple inputs may be specified as long as all the experiments have identical reference sequences (potentially after reverse-complementing; see the `--reverse_complement` parameter) within the DSB window. When multiple inputs are specified, all sequences (potentially after reverse complementing) in all the inputs are combined into a single "supergraph". The supergraph is laid out to determine the coordinates of each vertex. Then the graphs of each input (which are subgraphs of the supergraph) are laid out separately according to the coordinates determined by the supergraph. This allows the output figures for each experiment to have the same coordinates for the same sequence, which aids visual comparison between experiments.
-
-The output may be either PNG or HTML. HTML output may be opened in a browser and allows interactive inspection of the vertices by hovering over them.
-
-To plot individual graphs (graphs with a single experiment), the output directories of `preprocess.py` should be used. To plot comparison graphs (graphs comparing two experiments), the output directories of `comparison.py` should be used.
-
-There are many parameters for customizing the aesthetics of the output graphs, which are covered in more detail in section [Graphs](#graphs).
-
-The following are example commands of using `graph.py` with a single input directory:
-
+To create interactive HTMLs of the previously plotted figures, use the commands:
 ```
-python graph.py --input data_output/db_R1 --output plot/graph/universal/db_R1.png --legend --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5  --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
-python graph.py --input data_output/db_R2 --output plot/graph/universal/db_R2.png --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
-python graph.py --input data_output/sense_R1 --output plot/graph/universal/sense_R1.png --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
-python graph.py --input data_output/sense_R2 --output plot/graph/universal/sense_R2.png --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
-python graph.py --input data_output/dcmv_R1 --output plot/graph/universal/dcmv_R1.png --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
-python graph.py --input data_output/dcmv_R2 --output plot/graph/universal/dcmv_R2.png --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
-
+DSBplot-graph --input data/output/Sense_R1 --output plots/graph/Sense_R1_universal.html --layout universal_layout --title "Sense (R1) Universal Layout" --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
+DSBplot-graph --input data/output/Sense_R1 --output plots/graph/Sense_R1_kamada.html --layout kamada_layout --title "Sense (R1) Kamada-Kawaii Layout" --width 2400 --height 1800
+DSBplot-graph --input data/output/Sense_R1 --output plots/graph/Sense_R1_radial.html --layout radial_layout --title "Sense (R1) Radial Layout" --width 2400 --height 1800
 ```
+These outputs can be opened in a browser and vertices may be inspected in more detail by hovering the cursor over them.
 
-The following is an example of using `graph.py` with multiple input directories:
-
+Finally, to plot the variation histograms, use the commands:
 ```
-python graph.py `
-  --input data_output/db_R1 data_output/db_R2 data_output/sense_R1 data_output/sense_R2 data_output/dcmv_R1 data_output/dcmv_R2 data_output/sense_db_R1 data_output/sense_db_R2 data_output/sense_dcmv_R1 data_output/sense_dcmv_R2 `
-  --output plot/graph/kamada_common/db_R1.png plot/graph/kamada_common/db_R2.png plot/graph/kamada_common/sense_R1.png plot/graph/kamada_common/sense_R2.png plot/graph/kamada_common/dcmv_R1.png plot/graph/kamada_common/dcmv_R2.png plot/graph/kamada_common/sense_db_R1.png plot/graph/kamada_common/sense_db_R2.png plot/graph/kamada_common/sense_dcmv_R1.png plot/graph/kamada_common/sense_dcmv_R2.png `
-  --reverse_complement 0 1 0 1 0 1 0 1 0 1 --layout kamada_layout --width 2400 --height 1800
+DSBplot-histogram --input data/output/Sense_R1 --output plots/histogram/Sense_R1_substitution.png --title "Sense (R1) Substitutions" --color "#bfbfbf" --variation_type substitution --label_type relative
+DSBplot-histogram --input data/output/Sense_R1 --output plots/histogram/Sense_R1_insertion.png --title "Sense (R1) Insertions" --color "#ffa500" --variation_type insertion --label_type relative
+DSBplot-histogram --input data/output/Sense_R1 --output plots/histogram/Sense_R1_deletion.png --title "Sense (R1) Deletions" --color "#8080ff" --variation_type deletion --label_type relative
 ```
+The `--margin_top` parameter is set to make room for the title, set with the `--title` parameter.
 
-The following are examples of plotting comparison graphs:
+The output variation histograms are shown below.
+![image](figures/sense_R1_substitution.png)
+![image](figures/sense_R1_insertion.png)
+![image](figures/sense_R1_deletion.png)
 
+
+For more information about the commands or their parameters, use the commands:
 ```
-python graph.py --input data_output/sense_db_R1 --node_comparison_colors "#cf191b" "#33a02c" --output plot/graph/universal/sense_db_R1.png --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
-python graph.py --input data_output/sense_db_R2 --node_comparison_colors "#cf191b" "#33a02c" --output plot/graph/universal/sense_db_R2.png --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
-python graph.py --input data_output/sense_dcmv_R1 --output plot/graph/universal/sense_dcmv_R1.png --node_comparison_colors "#cf191b" "#ffe669" --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
-python graph.py --input data_output/sense_dcmv_R2 --output plot/graph/universal/sense_dcmv_R2.png --node_comparison_colors "#cf191b" "#ffe669" --layout universal_layout --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
+DSBplot-preprocess --help
+DSBplot-comparison --help
+DSBplot-graph --help
+DSBplot-histogram --help
 ```
+Although not covered here, the `DSBplot-comparison` command may be used to create data for comparison sequence graphs by combining the data from two experiments. Please see the more detailed demo script in the `demo_long` directory (in the repository root directory) for examples of `DSBplot-comparison` usage, as well as other features of the commands.
 
-### Demonstration: Histograms
+## Contact
 
-The [`histogram.py`](#histogrampy) script allows plotting an alternative representation of the variations extracted from the DSB-window. Instead of displaying the distribution of *sequences* in a graph, the distribution of *variations* (insertion, deletion, or substitution) are shown in a histogram. 
-
-Note that the histogram script can only be run on *individual* data (output from `preprocess.py`) rather than *comparison* data (output from `comparison.py`). Moreover, it always uses the data *with substitutions* (see [here](#substitutions-in-bowtie-2)), so that the substitution distribution can be visualized.
-
-The following are examples of using the `histogram.py` command:
-
-```
-python histogram.py --input data_output/db_R1 --output plot/histogram/db_R1_substitution.png --color "#bfbfbf" --variation_type substitution --label_type relative
-python histogram.py --input data_output/db_R1 --output plot/histogram/db_R1_insertion.png --color "#ffa500" --variation_type insertion --label_type relative
-python histogram.py --input data_output/db_R1 --output plot/histogram/db_R1_deletion.png --color "#8080ff" --variation_type deletion --label_type relative
-python histogram.py --input data_output/db_R2 --output plot/histogram/db_R2_substitution.png --color "#bfbfbf" --variation_type substitution --label_type relative
-python histogram.py --input data_output/db_R2 --output plot/histogram/db_R2_insertion.png --color "#ffa500" --variation_type insertion --label_type relative
-python histogram.py --input data_output/db_R2 --output plot/histogram/db_R2_deletion.png --color "#8080ff" --variation_type deletion --label_type relative
-python histogram.py --input data_output/sense_R1 --output plot/histogram/sense_R1_substitution.png --color "#bfbfbf" --variation_type substitution --label_type relative
-python histogram.py --input data_output/sense_R1 --output plot/histogram/sense_R1_insertion.png --color "#ffa500" --variation_type insertion --label_type relative
-python histogram.py --input data_output/sense_R1 --output plot/histogram/sense_R1_deletion.png --color "#8080ff" --variation_type deletion --label_type relative
-python histogram.py --input data_output/sense_R2 --output plot/histogram/sense_R2_substitution.png --color "#bfbfbf" --variation_type substitution --label_type relative
-python histogram.py --input data_output/sense_R2 --output plot/histogram/sense_R2_insertion.png --color "#ffa500" --variation_type insertion --label_type relative
-python histogram.py --input data_output/sense_R2 --output plot/histogram/sense_R2_deletion.png --color "#8080ff" --variation_type deletion --label_type relative
-python histogram.py --input data_output/dcmv_R1 --output plot/histogram/dcmv_R1_substitution.png --color "#bfbfbf" --variation_type substitution --label_type relative
-python histogram.py --input data_output/dcmv_R1 --output plot/histogram/dcmv_R1_insertion.png --color "#ffa500" --variation_type insertion --label_type relative
-python histogram.py --input data_output/dcmv_R1 --output plot/histogram/dcmv_R1_deletion.png --color "#8080ff" --variation_type deletion --label_type relative
-python histogram.py --input data_output/dcmv_R2 --output plot/histogram/dcmv_R2_substitution.png --color "#bfbfbf" --variation_type substitution --label_type relative
-python histogram.py --input data_output/dcmv_R2 --output plot/histogram/dcmv_R2_insertion.png --color "#ffa500" --variation_type insertion --label_type relative
-python histogram.py --input data_output/dcmv_R2 --output plot/histogram/dcmv_R2_deletion.png --color "#8080ff" --variation_type deletion --label_type relative
-```
-
-<!-- SHOULD THE GRAPH DEFINITION BE DESCRIBED EARLIER? -->
-<!-- Define the DSB-window term? -->
+For questions about this software please contact the maintainer Tejasvi Channagiri at [tchannagiri@gmail.com](mailto://tchannagiri@gmail.com).
