@@ -48,13 +48,13 @@ def check_insertion_special_case(
   ref_align,
   read_align,
   dsb_pos,
-  num_subst = None,
 ):
   """
     Check if all the insertions can be put at the DSB position.
     Take all the insertions in the alignment and place them
-    at the DSB position and check if the read sequence is the same.
+    at the DSB position and check if the number of substitutions does not increase.
     If so, return the new alignment, otherwise return None.
+    Can only be used if the alignment has no deletions, otherwise an exception is raised.
 
     Parameters
     ----------
@@ -64,57 +64,38 @@ def check_insertion_special_case(
 
     Returns
     -------
-    None if the insertions cannot be shifted to the DSB positions
+    Tuple (None, None) if the insertions cannot be shifted to the DSB positions.
+    Otherwise a tuple of the new reference and read alignments.
   """
+  num_ins, num_del, num_subst = alignment_utils.count_variations(ref_align, read_align)
 
-  read_seq = alignment_utils.get_orig_seq(read_align)
-  if num_subst is None:
-    # recompute if not set
-    _, _, num_subst = alignment_utils.count_variations(ref_align, read_align)
-  new_ref_align = ''
-  new_read_align = ''
-  insertion_str = ''
+  if num_ins == 0:
+    raise Exception('No insertions in alignment')
+  if num_del > 0:
+    raise Exception('Deletions in alignment')
 
-  # remove insertions from the alignments and collection them into the insertion string
-  for i in range(len(read_align)):
-    if ref_align[i] == '-':
-      # insertion
-      insertion_str += read_align[i]
-    else:
-      # non-insertion
-      new_ref_align += ref_align[i]
-      new_read_align += read_align[i]
+  ref_seq = alignment_utils.get_orig_seq(ref_align)
 
-  # since there are no insertions remaining, the alignment indices should correspond to
-  # reference indices (except for dsb_pos being 1-based instead of 0-based)
-  new_ref_align = new_ref_align[:dsb_pos] + ('-' * len(insertion_str)) + new_ref_align[dsb_pos:]
-  new_read_align = new_read_align[:dsb_pos] + insertion_str + new_read_align[dsb_pos:]
-
-  # check that the read sequence has not changed by shifting the insertions 
-  new_read_seq = alignment_utils.get_orig_seq(new_read_align)
-  if new_read_seq != read_seq:
-    return None, None
+  new_ref_align = ref_seq[:dsb_pos] + ('-' * num_ins) + ref_seq[dsb_pos:]
 
   # check that the number of substitutions has not increased
-  _, _, new_num_subst = alignment_utils.count_variations(new_ref_align, new_read_align)
+  _, _, new_num_subst = alignment_utils.count_variations(new_ref_align, read_align)
   if new_num_subst > num_subst:
     return None, None
 
-  return new_ref_align, new_read_align
+  return new_ref_align, read_align # read_align remains unchanged
 
 def check_deletion_special_case(
   ref_align,
   read_align,
   dsb_pos,
-  num_del = None,
-  num_subst = None,
 ):
   """
     Check if all the deletions can be made to touch the DSB position.
     Take all the deletions in the alignment and place them
-    in all possible ways to touch the DSB position and check if the number of substitutions remains the same.
+    in all possible ways to touch the DSB position and check if the number of substitutions does not increase.
     If so, return the new alignment, otherwise return None.
-    We also require the alignment contain no insertions, otherwise None is returned.
+    Can only be used if the alignment has no deletions, otherwise an exeption is raised.
   
     Parameters
     ----------
@@ -124,19 +105,17 @@ def check_deletion_special_case(
 
     Returns
     -------
-    None if the deletions cannot be shifted to the DSB positions.
-    Otherwise a string new_read_align containing the new read alignment.
-    The reference alignment string is unchanged so is not returned.
-    The returned read alignment string may be the same as the original.
+    Tuple (None, None) if the deletions cannot be shifted to the DSB positions.
+    Otherwise a tuple of the new reference and read alignments.
   """
+  num_ins, num_del, num_subst = alignment_utils.count_variations(ref_align, read_align)
 
   # check if there are insertions
-  if '-' in ref_align:
-    return None
+  if num_del == 0:
+    raise Exception('No deletions in alignment')
+  if num_ins > 0:
+    raise Exception('Insertions in alignment')
 
-  if (num_del is None) or (num_subst is None):
-    # recompute if not set
-    _, num_del, num_subst = alignment_utils.count_variations(ref_align, read_align)
   read_seq = alignment_utils.get_orig_seq(read_align)
 
   new_read_align = None
@@ -150,9 +129,9 @@ def check_deletion_special_case(
       break
 
   if not found_new:
-    return None
+    return None, None
 
-  return new_read_align
+  return ref_align, new_read_align # ref_align remains unchanged
 
 def parse_args():
   parser = argparse.ArgumentParser(
@@ -225,6 +204,11 @@ def main(
   quiet = True,
   debug_file = None,
 ):
+  if debug_file is not None:
+    file_utils.make_parent_dir(debug_file)
+    debug_out = open(debug_file, 'w')
+    debug_out.write('Read names accepted:\n')
+
   # parse command line arguments
   log_utils.log_input(sam_file)
 
@@ -304,40 +288,42 @@ def main(
         insertion_special_case = False
         deletion_special_case = False
         if not (consecutive and dsb_touches):
-          if num_ins > 0:
+          # Note: The in/del special cases may fail to identify
+          # certain edge cases when Bowtie picks an alignment that reduces the
+          # number of substitutions by using mixed insertions and deletions, or
+          # by using in/dels that are not continguous. This is because the
+          # the special cases always try to reduce (or keep equal) the
+          # number of substitutions. This could potentially be solved by
+          # choosing different scoring parameters in Bowtie, (e.g., penalize
+          # gap-open more heavily) but this is not implemented currently.
+          if (num_ins > 0) and (num_del == 0):
             new_ref_align, new_read_align = check_insertion_special_case(
               ref_align,
               read_align,
               dsb_pos,
-              num_subst = num_subst,
             )
             if new_ref_align is not None:
               ref_align = new_ref_align
               read_align = new_read_align
-              cigar = alignment_utils.get_cigar(ref_align, read_align)
-              ins_pos, del_pos, subst_pos = alignment_utils.get_variation_pos(ref_align, read_align)
-              num_ins = len(ins_pos)
-              num_del = len(del_pos)
-              num_subst = len(subst_pos)
               insertion_special_case = True
-          if num_del > 0:
-            new_read_align = check_deletion_special_case(
+
+          if (num_del > 0) and (num_ins == 0):
+            new_ref_align, new_read_align = check_deletion_special_case(
               ref_align,
               read_align,
               dsb_pos,
-              num_del = num_del,
-              num_subst = num_subst,
             )
-            if new_read_align is not None:
+            if new_ref_align is not None:
+              ref_align = new_ref_align
               read_align = new_read_align
-              cigar = alignment_utils.get_cigar(ref_align, read_align)
-              ins_pos, del_pos, subst_pos = alignment_utils.get_variation_pos(ref_align, read_align)
-              num_ins = len(ins_pos)
-              num_del = len(del_pos)
-              num_subst = len(subst_pos)
               deletion_special_case = True
           if insertion_special_case or deletion_special_case:
-            # if special case used, check again
+            # if special case used, recompute info and do checks again
+            cigar = alignment_utils.get_cigar(ref_align, read_align)
+            ins_pos, del_pos, subst_pos = alignment_utils.get_variation_pos(ref_align, read_align)
+            num_ins = len(ins_pos)
+            num_del = len(del_pos)
+            num_subst = len(subst_pos)
             consecutive = check_consecutive_indel(ins_pos, del_pos)
             dsb_touches = check_dsb_touches_indel(dsb_pos, ins_pos, del_pos)
 
@@ -362,6 +348,9 @@ def main(
           continue
       else:
         accepted_new_no_indel += 1
+
+      if debug_file is not None:
+        debug_out.write('    ' + mandatory['QNAME'] + '\n')
 
       read_data[read_seq] = {
         'Sequence': read_seq,
@@ -424,9 +413,10 @@ def main(
     for l in debug_lines:
       log_utils.log(l)
   elif debug_file is not None:
-    with open(debug_file, 'w') as debug_out:
-      for l in debug_lines:
-        debug_out.write(l + '\n')
+    debug_out.write('\n')
+    for l in debug_lines:
+      debug_out.write(l + '\n')
+    debug_out.close()
     log_utils.log_output(debug_file)
   log_utils.blank_line()
 
