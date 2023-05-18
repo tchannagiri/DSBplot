@@ -1,5 +1,4 @@
 ### Preprocessing ###
-DSBplot preprocess --input data/input/fastq/db1_R1.fq data/input/fastq/db2_R1.fq data/input/fastq/db3_R1.fq data/input/fastq/db4_R1.fq --ref_seq_file data/input/ref_seq/2DSB_R1_branch.fa --dsb_pos 67 --output data/output/db_R1 --label "BranchΔ" --total_reads 3000 3000 3000 3000
 DSBplot-preprocess --input data/input/fastq/db1_R1.fq data/input/fastq/db2_R1.fq data/input/fastq/db3_R1.fq data/input/fastq/db4_R1.fq --ref_seq_file data/input/ref_seq/2DSB_R1_branch.fa --dsb_pos 67 --output data/output/db_R1 --label "BranchΔ" --total_reads 3000 3000 3000 3000
 DSBplot-preprocess --input data/input/fastq/db1_R2.fq data/input/fastq/db2_R2.fq data/input/fastq/db3_R2.fq data/input/fastq/db4_R2.fq --ref_seq_file data/input/ref_seq/2DSB_R2_branch.fa --dsb_pos 46 --output data/output/db_R2 --label "BranchΔ" --total_reads 3000 3000 3000 3000
 DSBplot-preprocess --input data/input/fastq/sense1_R1.fq data/input/fastq/sense2_R1.fq data/input/fastq/sense3_R1.fq data/input/fastq/sense4_R1.fq --ref_seq_file data/input/ref_seq/2DSB_R1_sense.fa --dsb_pos 67 --output data/output/sense_R1 --label "Sense" --total_reads 3000 3000 3000 3000
@@ -8,12 +7,12 @@ DSBplot-preprocess --input data/input/fastq/dcmv1_R1.fq data/input/fastq/dcmv2_R
 DSBplot-preprocess --input data/input/fastq/dcmv1_R2.fq data/input/fastq/dcmv2_R2.fq data/input/fastq/dcmv3_R2.fq data/input/fastq/dcmv4_R2.fq --ref_seq_file data/input/ref_seq/2DSB_R2_cmv.fa --dsb_pos 46 --output data/output/dcmv_R2 --label "pCMVΔ" --total_reads 3000 3000 3000 3000
 
 # Example of running preprocessing stages separately for one experiment
-DSBplot-preprocess --input data/input/fastq/db1_R1.fq data/input/fastq/db2_R1.fq data/input/fastq/db3_R1.fq data/input/fastq/db4_R1.fq --ref_seq_file data/input/ref_seq/2DSB_R1_branch.fa --output data/output/db_R1 --stages 0_align
-DSBplot-preprocess --ref_seq_file data/input/ref_seq/2DSB_R1_branch.fa --dsb_pos 67 --output data/output/db_R1 --stages 1_filter
-DSBplot-preprocess --output data/output/db_R1 --stages 2_combine
-DSBplot-preprocess --ref_seq_file data/input/ref_seq/2DSB_R1_branch.fa --dsb_pos 67 --output data/output/db_R1 --label db_R1 --total_reads 3000 3000 3000 3000 --stages 3_window
-DSBplot-preprocess --output data/output/db_R1 --stages 4_graph
-DSBplot-preprocess --output data/output/db_R1 --stages 5_histogram
+DSBplot-preprocess --input data/input/fastq/sense1_R1.fq data/input/fastq/sense2_R1.fq data/input/fastq/sense3_R1.fq data/input/fastq/sense4_R1.fq --ref_seq_file data/input/ref_seq/2DSB_R1_branch.fa --output data/output/sense_R1 --stages 0_align
+DSBplot-preprocess --ref_seq_file data/input/ref_seq/2DSB_R1_sense.fa --dsb_pos 67 --output data/output/sense_R1 --stages 1_filter
+DSBplot-preprocess --output data/output/sense_R1 --stages 2_combine
+DSBplot-preprocess --ref_seq_file data/input/ref_seq/2DSB_R1_sense.fa --dsb_pos 67 --output data/output/sense_R1 --label sense_R1 --total_reads 3000 3000 3000 3000 --stages 3_window
+DSBplot-preprocess --output data/output/sense_R1 --stages 4_graph
+DSBplot-preprocess --output data/output/sense_R1 --stages 5_histogram
 
 ### Comparison data ###
 DSBplot-comparison --input data/output/sense_R1 data/output/db_R1 --output data/output/sense_db_R1
