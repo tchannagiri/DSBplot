@@ -204,16 +204,9 @@ def main(
   quiet = True,
   debug_file = None,
 ):
-  if debug_file is not None:
-    file_utils.make_parent_dir(debug_file)
-    debug_out = open(debug_file, 'w')
-    debug_out.write('Read names accepted:\n')
-
-  # parse command line arguments
-  log_utils.log_input(sam_file)
-
   # read reference sequence from fasta file
   ref_seq = fasta_utils.read_fasta_seq(ref_seq_file)
+  log_utils.log_input(ref_seq_file)
   
   # For logging
   rejected_header = 0
@@ -233,7 +226,9 @@ def main(
   # categorize
   read_data = {}
   total_lines = file_utils.count_lines(sam_file)
+  read_names_accepted = [] # for debugging
   with open(sam_file, 'r') as sam_file_h:
+    log_utils.log_input(sam_file)
     for line_num, line in enumerate(sam_file_h, 1):
       if (line_num % 100000) == 1:
         if not quiet:
@@ -350,8 +345,8 @@ def main(
         accepted_new_no_indel += 1
 
       if debug_file is not None:
-        debug_out.write('    ' + mandatory['QNAME'] + '\n')
-
+        read_names_accepted.append(mandatory['QNAME'])
+        
       read_data[read_seq] = {
         'Sequence': read_seq,
         'Count': 1,
@@ -413,11 +408,16 @@ def main(
     for l in debug_lines:
       log_utils.log(l)
   elif debug_file is not None:
-    debug_out.write('\n')
-    for l in debug_lines:
-      debug_out.write(l + '\n')
-    debug_out.close()
-    log_utils.log_output(debug_file)
+    file_utils.make_parent_dir(debug_file)
+    with open(debug_file, 'w') as debug_out:
+      debug_out.write('Read names accepted: ')
+      for r in read_names_accepted:
+        debug_out.write(r + ', ')
+      debug_out.write('\n')
+      for l in debug_lines:
+        debug_out.write(l + '\n')
+      debug_out.close()
+      log_utils.log_output(debug_file)
   log_utils.blank_line()
 
 if __name__ == '__main__':
