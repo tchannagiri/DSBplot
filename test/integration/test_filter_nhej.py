@@ -3,7 +3,6 @@ import unittest
 
 import DSBplot.preprocess as preprocess
 
-
 class TestFilterNhej(unittest.TestCase):
   def get_check_files():
     """
@@ -36,6 +35,26 @@ class TestFilterNhej(unittest.TestCase):
       '5_histogram/variation_withoutSubst.tsv',
       '5_histogram/variation_withSubst.tsv',
     ]
+  
+  def check_equality(self, file_1, file_2):
+    """
+    Check if the two files are equal.
+    """
+    with open(file_1, 'r') as f_1:
+      lines_1 = f_1.readlines()
+    with open(file_2, 'r') as f_2:
+      lines_2 = f_2.readlines()
+    self.assertEqual(
+      len(lines_1),
+      len(lines_2),
+      f'The files have different number of lines.\n{file_1}\n{file_2}'
+    )
+    for i in range(len(lines_1)):
+      self.assertEqual(
+        lines_1[i],
+        lines_2[i],
+        f'The files differ at line {i + 1}.\n{file_1}\n{file_2}'
+      )
 
   def do_test_filter(self, ext_reads, ext_ref_seq):
     """
@@ -76,7 +95,11 @@ class TestFilterNhej(unittest.TestCase):
       label = 'Sense',
       quiet = False,
     )
-    # TODO: Add code for comparing the output files agains the expected output files.
+    for file in TestFilterNhej.get_check_files():
+      self.check_equality(
+        os.path.join(dir_output, file),
+        os.path.join(dir_output_expected, file)
+      )
 
   def test_filter(self):
     for ext_read in ['fq', 'fasta', 'txt']:

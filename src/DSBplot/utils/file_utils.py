@@ -2,6 +2,9 @@ import shutil
 import csv
 import os
 import pandas as pd
+import re
+
+import DSBplot.utils.constants as constants
 
 def make_parent_dir(file_name):
   dir_name = os.path.dirname(file_name)
@@ -58,3 +61,90 @@ def write_plotly(figure, file):
     figure.write_html(file)
   else:
     figure.write_image(file, engine='kaleido')
+
+def read_fasta_seq(fasta_file):
+  """
+    Read the sequence from a FASTA file.
+    The FASTA file must have a single sequence or an exception will be raised.
+    The sequence in the FASTA file must only contain letters A, C, G, and T or
+    an exception will be raised.
+
+    Parameters
+    ----------
+    fasta_file : input FASTA file name.
+
+    Returns
+    -------
+    The sequence in the FASTA file.
+  """
+  with open(fasta_file) as fasta_h:
+    lines = fasta_h.readlines()
+    if len(lines) == 0:
+      raise Exception(f'The reference FASTA file {fasta_file} is empty.')
+    lines = [line.rstrip() for line in lines]
+    lines = [line for line in lines if line != '']
+    if len(lines) == 0:
+      raise Exception(f'The reference FASTA file {fasta_file} contains only empty lines.')
+    seq = ''
+    i = 0
+    if lines[i][0] != '>':
+      raise Exception(f'Expected the sequence header ">" in FASTA file {fasta_file}.')
+    i += 1
+    while (i < len(lines)) and (lines[i][0] != '>'):
+      seq += lines[i]
+      i += 1
+    if (i < len(lines)) and (lines[i][0] == '>'):
+      raise Exception(f'The FASTA file {fasta_file} contains multiple sequences.')
+    if not(all([x in 'ACGT' for x in seq])):
+      raise Exception(f'The sequence in FASTA file {fasta_file} contains invalid characters.')
+    if len(seq) == 0:
+      raise Exception(f'The sequence in FASTA file {fasta_file} is empty.')
+    return seq
+
+def read_text_seq(text_file):
+    """
+    Read the sequence from a text file.
+    The file must contain only A, C, G, T or space and newline characters or
+    an exception will be raised. All the space and newline characters will be
+    removed.
+
+    Parameters
+    ----------
+    text_file : input text file name.
+
+    Returns
+    -------
+    The sequence in the text file.
+  """
+    with open(text_file, 'r') as input:
+      seq = input.read()
+      seq = re.sub(r'\s', '', seq)
+      seq = seq.replace('\n', '')
+      seq = seq.replace(' ', '')
+      if not(all([x in 'ACGT' for x in seq])):
+          raise Exception(f'The sequence in text file {text_file} contains invalid characters.')
+      if len(seq) == 0:
+          raise Exception(f'The sequence in text file {text_file} is empty.')
+      return seq
+
+def read_seq(seq_file):
+  """
+    Read the sequence from a FASTA or text file.
+    All files with extensions .fa, .fasta, and .fna are considered as FASTA files
+    and all other files are considered as text files.
+    See the respective documentation in read_fast_seq() and read_text_seq()
+    for the requirements of each format.
+
+    Parameters
+    ----------
+    seq_file : input FASTA or text file name.
+
+    Returns
+    -------
+    The sequence in the FASTA or text file.
+  """
+  ext = os.path.splitext(seq_file)[1].replace('.', '')
+  if ext in constants.FASTA_EXT:
+    return read_fasta_seq(seq_file)
+  else:
+    return read_text_seq(seq_file)

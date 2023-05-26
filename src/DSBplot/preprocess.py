@@ -83,7 +83,11 @@ def parse_args():
     '--ref_seq_file',
     type = common_utils.check_file,
     help = (
-      'FASTA file with a single nucleotide sequence.' +
+      'Reference sequence file.' +
+      ' Should contain a single nucleotide sequence.' +
+      ' Must be the same sequence as used for alignment.' +
+      f' Must be in FASTA format ({", ".join(constants.FASTA_EXT)}) or' +
+      ' text format (all other extensions).' +
       ' Required for stages 0_align and 1_filter.'
     ),
   )

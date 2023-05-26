@@ -1,11 +1,12 @@
+import os
 import argparse
 
 import pandas as pd
 
+import DSBplot.utils.constants as constants
 import DSBplot.utils.file_utils as file_utils
 import DSBplot.utils.common_utils as common_utils
 import DSBplot.utils.sam_utils as sam_utils
-import DSBplot.utils.fasta_utils as fasta_utils
 import DSBplot.utils.alignment_utils as alignment_utils
 import DSBplot.utils.log_utils as log_utils
 
@@ -140,7 +141,13 @@ def parse_args():
   parser.add_argument(
     '--ref_seq_file',
     type = common_utils.check_file,
-    help = 'Reference sequence FASTA. Should contain a single nucleotide sequence in FASTA format.',
+    help = (
+      'Reference sequence file.' +
+      ' Should contain a single nucleotide sequence.' +
+      ' Must be the same sequence as used for alignment.' +
+      f' Must be in FASTA format ({", ".join(constants.FASTA_EXT)}) or' +
+      ' text format (all other extensions).'
+    ),
     required = True,
   )
   parser.add_argument(
@@ -205,7 +212,7 @@ def main(
   debug_file = None,
 ):
   # read reference sequence from fasta file
-  ref_seq = fasta_utils.read_fasta_seq(ref_seq_file)
+  ref_seq = file_utils.read_seq(ref_seq_file)
   log_utils.log_input(ref_seq_file)
   
   # For logging

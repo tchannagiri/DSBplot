@@ -1,15 +1,7 @@
 import numpy as np
 
-VERSION_NONE = 'versionNone'
-VERSION_OLD = 'old'
-VERSION_NEW = 'new'
-VERSION_MERGED = 'merged'
-VERSIONS = [
-  VERSION_NONE,
-  VERSION_OLD,
-  VERSION_NEW,
-  VERSION_MERGED,
-]
+FASTA_EXT = ['fasta', 'fa', 'fna']
+FASTQ_EXT = ['fastq', 'fq']
 
 SUBST_WITH = 'withSubst'
 SUBST_WITHOUT = 'withoutSubst'
