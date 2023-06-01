@@ -5,7 +5,6 @@ import DSBplot.utils.common_utils as common_utils
 import DSBplot.utils.file_utils as file_utils
 import DSBplot.utils.log_utils as log_utils
 import DSBplot.utils.alignment_utils as alignment_utils
-import DSBplot.utils.fasta_utils as fasta_utils
 import DSBplot.utils.constants as constants
 import DSBplot.utils.file_names as file_names
 import DSBplot.get_window_data.alignment_window as alignment_window
@@ -238,7 +237,7 @@ def main(
 ):
   log_utils.log_input(input)
 
-  ref_seq = fasta_utils.read_fasta_seq(ref_seq_file)
+  ref_seq = file_utils.read_seq(ref_seq_file)
   write_alignment_window(
     input_file = input, 
     output_dir = output,
