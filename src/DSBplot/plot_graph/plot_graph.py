@@ -357,8 +357,8 @@ def make_universal_layout_y_axis(
   x_pos,
   ref_length,
   cut_pos_ref, # should be 1 based!
-  max_tick_insertion,
-  max_tick_deletion,
+  max_tick_insertion = None,
+  max_tick_deletion = None,
   y_range = [float('nan'), float('nan')],
   tick_length = 0.25,
   title_font_size = constants.GRAPH_AXES_TITLE_FONT_SIZE,
@@ -371,27 +371,35 @@ def make_universal_layout_y_axis(
   y_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
   tick_list = [{'dist_ref': 0, 'y_pos': 0}]
-  for dist_ref in range(1, max(max_tick_insertion, max_tick_deletion) + 1):
-    fake_ref_align = (
-      ('A' * cut_pos_ref) +
-      ('-' * dist_ref) +
-      ('A' * (ref_length - cut_pos_ref))
-    )
-    fake_read_align = 'A' * (ref_length + dist_ref)
-
+  dist_ref = 0
+  finish_insertion = False
+  finish_deletion = False
+  while (not finish_insertion) or (not finish_deletion):
+    dist_ref += 1
     for var_type in ['insertion', 'deletion']:
+      # Make a pair of ref_align and read_align that simulates
+      # the correct number of insertions or deletions.
+      ref_align = (
+        ('A' * cut_pos_ref) +
+        ('-' * dist_ref) +
+        ('A' * (ref_length - cut_pos_ref))
+      )
+      read_align = 'A' * (ref_length + dist_ref)
       if var_type == 'deletion':
-        fake_ref_align, fake_read_align = fake_read_align, fake_ref_align
+        ref_align, read_align = read_align, ref_align
 
-      if (
-        ((var_type == 'insertion') and (dist_ref > max_tick_insertion)) or
-        ((var_type == 'deletion') and (dist_ref > max_tick_deletion))
-      ):
-        continue
+      if var_type == 'insertion':
+        if (max_tick_insertion is not None) and (dist_ref > max_tick_insertion):
+          finish_insertion = True
+          continue
+      elif var_type == 'deletion':
+        if (max_tick_deletion is not None) and (dist_ref > max_tick_deletion):
+          finish_deletion = True
+          continue
 
       y_pos = get_pos_universal_layout(
-        ref_align = fake_ref_align,
-        read_align = fake_read_align,
+        ref_align = ref_align,
+        read_align = read_align,
         dist_ref = dist_ref,
         var_type = var_type,
         cut_pos_ref = cut_pos_ref,
@@ -400,6 +408,15 @@ def make_universal_layout_y_axis(
         x_scale_deletion = x_scale_deletion,
         y_scale_deletion = y_scale_deletion,
       )[1]
+
+      if var_type == 'insertion':
+        if (not np.isnan(y_range[1])) and (y_pos > y_range[1]):
+          finish_insertion = True
+          continue
+      elif var_type == 'deletion':
+        if (not np.isnan(y_range[0])) and (y_pos < y_range[0]):
+          finish_deletion = True
+          continue
 
       tick_list.append(
         {
@@ -2014,7 +2031,7 @@ def parse_args():
   parser = argparse.ArgumentParser(
     description = (
       'Layout and plot variation-distance graphs.' +
-      ' For more information about the layouts please see the publication FIXME.'
+      ' For more information about the layouts please see the README.'
     ),
     formatter_class = argparse.ArgumentDefaultsHelpFormatter,
   )
@@ -2112,6 +2129,8 @@ def parse_args():
     help = (
       'If showing an y-axis for the universal layout,' +
       ' the min and max y-position of the line.' +
+      ' Note either or both of these values may be omitted or set to NaN, ' +
+      ' and the "universal_layout_y_axis_*_max_tick" parameters may be used instead.' +
       ' To determine appropriate values to set please see the console log, which' +
       ' shows the range of y-values of the nodes.'
     ),
@@ -2133,7 +2152,9 @@ def parse_args():
     type = int,
     help = (
       'If showing an y-axis for the universal layout,' +
-      ' the max tick value for the deletion side.'
+      ' the max tick value for the deletion side.' +
+      ' If omitted, will be caculated as the largest deletion' +
+      ' in the data.'
     ),
   )
   parser.add_argument(
@@ -2141,7 +2162,9 @@ def parse_args():
     type = int,
     help = (
       'If showing an y-axis for the universal layout,' +
-      ' the max tick value for the insertion side.'
+      ' the max tick value for the insertion side.' +
+      ' If omitted, will be caculated as the lart insertion' +
+      ' in the data.'
     ),
   )
   parser.add_argument(
