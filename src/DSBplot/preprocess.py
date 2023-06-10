@@ -186,6 +186,17 @@ def parse_args():
     ),
   )
   parser.add_argument(
+    '--bowtie2_args',
+    type = str,
+    default = '',
+    help = (
+      'Additional arguments to pass to Bowtie2.' +
+      ' Must be a single string.' +
+      ' Required only for stage 0_align' +
+      ' (but can be omitted because of default).'
+    ),
+  )
+  parser.add_argument(
     '--quiet',
     action = 'store_true',
     help = 'If present, do no output verbose log message.',
@@ -202,6 +213,7 @@ def do_0_align(
   input,
   output,
   ref_seq_file,
+  bowtie2_args,
 ):
   if input is None:
     raise Exception('INPUT must be provided for stage 0_align.')
@@ -222,9 +234,9 @@ def do_0_align(
       flags = '-f'
     else:
       flags = '-r'
-    bowtie2_command = f'bowtie2-align-s {flags} -x {bowtie2_build_file} {input_1} -S {sam_file} --quiet'
+    bowtie2_command = f'bowtie2-align-s --no-hd {flags} {bowtie2_args} -x {bowtie2_build_file} {input_1} -S {sam_file} --quiet'
     log_utils.log('Bowtie 2 command: ' + bowtie2_command)
-    os.system(f'bowtie2-align-s {flags} -x {bowtie2_build_file} {input_1} -S {sam_file} --quiet')
+    os.system(bowtie2_command)
     log_utils.blank_line()
 
 def do_1_filter_nhej(
@@ -359,6 +371,7 @@ def do_stages_1(
   total_reads,
   freq_min,
   label,
+  bowtie2_args,
   quiet,
   stages = STAGES_1,
 ):
@@ -367,6 +380,7 @@ def do_stages_1(
       input = input,
       output = output,
       ref_seq_file = ref_seq_file,
+      bowtie2_args = bowtie2_args,
     )
 
   if '1_filter' in stages:
@@ -428,6 +442,7 @@ def main(
   total_reads,
   freq_min,
   label,
+  bowtie2_args,
   quiet,
   stages = STAGES_1 + [x for x in STAGES_2 if x != '3_comparison'],
 ):
@@ -443,6 +458,7 @@ def main(
     total_reads = total_reads,
     freq_min = freq_min,
     label = label,
+    bowtie2_args = bowtie2_args,
     quiet = quiet,
     stages = stages,
   )

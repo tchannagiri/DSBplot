@@ -234,6 +234,7 @@ def main(
   read_data = {}
   total_lines = file_utils.count_lines(sam_file)
   read_names_accepted = [] # for debugging
+  read_names_rejected = [] # for debugging
   with open(sam_file, 'r') as sam_file_h:
     log_utils.log_input(sam_file)
     for line_num, line in enumerate(sam_file_h, 1):
@@ -250,20 +251,24 @@ def main(
 
       if int(mandatory['FLAG']) & 4: # the read did not align at all
         rejected_no_alignment += 1
+        read_names_rejected.append(mandatory['QNAME'])
         continue
 
       if int(mandatory['POS']) != 1:
         rejected_not_pos_1 += 1
+        read_names_rejected.append(mandatory['QNAME'])
         continue
 
       read_seq = mandatory['SEQ']
       if read_seq in read_data:
         read_data[read_seq]['Count'] += 1
         accepted_repeat += 1
+        read_names_accepted.append(mandatory['QNAME'])
         continue
 
       if len(read_seq) < min_length:
         rejected_too_short += 1
+        read_names_rejected.append(mandatory['QNAME'])
         continue
 
       # XG is the number of gap-extends (aka in/dels). 
@@ -347,6 +352,7 @@ def main(
             rejected_not_dsb_touch += 1
           else:
             raise Exception('Impossible to reach.')
+          read_names_rejected.append(mandatory['QNAME'])
           continue
       else:
         accepted_new_no_indel += 1
@@ -390,6 +396,10 @@ def main(
   )
   if (total_rejected + total_accepted) != total_lines:
     raise Exception('Line counts of accepted + rejected != total lines')
+  if len(read_names_accepted) != total_accepted:
+    raise Exception('Number of accepted read names not correct')
+  if len(read_names_rejected) != total_rejected:
+    raise Exception('Number of rejected read names not correct')
 
   debug_lines = [
     f'Total lines: {total_lines}',
@@ -419,6 +429,9 @@ def main(
     with open(debug_file, 'w') as debug_out:
       debug_out.write('Read names accepted: ')
       for r in read_names_accepted:
+        debug_out.write(r + ', ')
+      debug_out.write('\nRead names rejected: ')
+      for r in read_names_rejected:
         debug_out.write(r + ', ')
       debug_out.write('\n')
       for l in debug_lines:
