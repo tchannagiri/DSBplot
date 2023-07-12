@@ -206,8 +206,11 @@ def parse_args():
 def get_sam_file(output, i):
   return os.path.join(file_names.sam_dir(output), f'{i}.sam')
 
-def get_filter_nhej_file(output, i):
-  return os.path.join(file_names.filter_nhej_dir(output), f'{i}.tsv')
+def get_filter_nhej_file(output, i, rejected=False):
+  if rejected:
+    return os.path.join(file_names.filter_nhej_dir(output), f'{i}_rejected.tsv')
+  else:
+    return os.path.join(file_names.filter_nhej_dir(output), f'{i}.tsv')
 
 def do_0_align(
   input,
@@ -262,6 +265,7 @@ def do_1_filter_nhej(
       ref_seq_file = ref_seq_file,
       sam_file = get_sam_file(output, i),
       output = get_filter_nhej_file(output, i),
+      output_rejected = get_filter_nhej_file(output, i, rejected=True),
       dsb_pos = dsb_pos,
       min_length = min_length,
       quiet = quiet,
