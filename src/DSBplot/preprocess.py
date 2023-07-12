@@ -352,7 +352,7 @@ def do_4_graph(output):
 def do_5_histogram(output):
   for subst_type in constants.SUBST_TYPES:
     get_histogram_data.main(
-      input = file_names.graph_dir(output),
+      input = file_names.window_dir(output),
       output = file_names.histogram_dir(output),
       subst_type = subst_type,
     )

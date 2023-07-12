@@ -31,10 +31,6 @@ def variation(dir, subst_type):
   constants.check_subst_type(subst_type)
   return make_file_name(dir, 'variation', subst_type, ext = 'tsv')
 
-def variation_grouped(dir, subst_type):
-  constants.check_subst_type(subst_type)
-  return make_file_name(dir, 'variation_grouped', subst_type, ext = 'tsv')
-
 def data_info(dir):
   return make_file_name(dir, 'data_info', ext = 'tsv')
 

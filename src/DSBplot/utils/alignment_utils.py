@@ -178,7 +178,7 @@ def get_variation_info(ref_align, read_align):
   for i in range(len(ref_align)):
     if ref_align[i] != read_align[i]:
       if (ref_align[i] != '-') and (read_align[i] != '-'):
-        variation_info.append((ref_i, 'substitution', read_align[i]))
+        variation_info.append((ref_i, 'substitution', '{}>{}'.format(ref_align[i], read_align[i])))
       elif ref_align[i] == '-':
         variation_info.append((ref_i - 1, 'insertion', read_align[i]))
       elif read_align[i] == '-':

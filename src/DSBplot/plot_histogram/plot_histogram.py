@@ -70,7 +70,7 @@ def get_variation_data(
   ref_length = len(data_info['ref_seq_window'])
 
   data_long = file_utils.read_tsv(
-    file_names.variation_grouped(data_dir, constants.SUBST_WITH)
+    file_names.variation(data_dir, constants.SUBST_WITH)
   )
   data_long = data_long.loc[data_long['variation_type'] == variation_type]
   if reverse_pos:
