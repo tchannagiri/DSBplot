@@ -395,10 +395,11 @@ def main(
     key = lambda x: read_count_accepted[x],
     reverse = True
   )
-
+# TODO ADD A DEBUG COLUMNS WITH THE TAGS OF ACCEPTANCE/REJECTION
+# TODO ALSO MAKE THE REPEATS PROCESSED TOGETHER
   file_utils.make_parent_dir(output)
   with open(output, 'w') as output_h:
-    output_h.write('Rank\tCount\tNum_Subst\tCIGAR\tCIGAR_old\tSequence\n')
+    output_h.write('rank\tcount\tnum_subst\tcigar\tcigar_old\tsequence\n')
     for read_seq in read_seq_list:
       rank = read_rank[read_seq]
       cigar = read_cigar_new[read_seq]
@@ -413,7 +414,7 @@ def main(
     reverse = True
   )
   with open(output_rejected, 'w') as output_h:
-    output_h.write('Rank\tCount\tAligned\tSequence\n')
+    output_h.write('rank\tcount\taligned\tsequence\n')
     for read_seq in read_seq_list:
       rank = read_rank[read_seq]
       count = read_count_rejected[read_seq]

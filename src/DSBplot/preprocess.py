@@ -311,11 +311,16 @@ def do_3_window(
   if label is None:
     label = os.path.basename(output)
 
-  combine_repeat_file = file_names.combine_repeat_file(output)
+  filter_nhej_dir = file_names.filter_nhej_dir(output)
+  input = glob.glob(os.path.join(filter_nhej_dir, '*.tsv'))
+  input = [x for x in input if not x.endswith('_rejected.tsv')]
+  names = [os.path.basename(x).split('.')[0] for x in input]
   window_dir = file_names.window_dir(output)
   for subst_type in constants.SUBST_TYPES:
     get_window.main(
-      input = combine_repeat_file,
+      input = input,
+      names = names,
+      total_reads = total_reads,
       output = window_dir,
       ref_seq_file = ref_seq_file,
       dsb_pos = dsb_pos,
@@ -325,13 +330,14 @@ def do_3_window(
       subst_type = subst_type,
       label = label,
     )
-    get_freq.main(
-      input = window_dir,
-      output = window_dir,
-      subst_type = subst_type,
-      total_reads = total_reads,
-      freq_min = freq_min,
-    )
+    # FIXME: DELETE EVENTUALLY
+    # get_freq.main(
+    #   input = window_dir,
+    #   output = window_dir,
+    #   subst_type = subst_type,
+    #   total_reads = total_reads,
+    #   freq_min = freq_min,
+    # )
 
 def do_3_comparison(
   input_1,

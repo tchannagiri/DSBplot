@@ -18,8 +18,29 @@ def parse_args():
   parser.add_argument(
     '--input',
     type = common_utils.check_file,
-    help = 'Table of sequences produced with "combine_repeat.py".',
+    help = 'TSV files output from script "filter_nhej.py".',
+    nargs = '+',
     required = True,
+  )
+  parser.add_argument(
+    '--names',
+    nargs = '+',
+    required = True,
+    help = (
+      'Names to use as suffixes to the value columns of the output.' +
+      ' Number of arguments must match the number of INPUT args.'
+    ),
+  )
+  parser.add_argument(
+    '--total_reads',
+    type = int,
+    help = (
+      'Total reads for each file.' +
+      ' Must be the same number of arguments as the number of ' +
+      ' INPUT files. If not provided, the total reads are' +
+      ' are calculated by taking the sum of the "Count" columns in each INPUT.'
+    ),
+    nargs = '+',
   )
   parser.add_argument(
     '--ref_seq_file',
@@ -91,10 +112,22 @@ def parse_args():
     help = 'Label of the library.',
     required = True,
   )
-  return vars(parser.parse_args())
+  args = vars(parser.parse_args())
+  if args['total_reads'] is not None:
+    if len(args['total_reads']) != len(args['input']):
+      raise Exception(
+        'Number of total reads must match the number of input files.'
+      )
+  if len(args['input']) != len(args['names']):
+    raise Exception(
+      'Number of input files must match the number of names.'
+    )
+  return args
 
 def write_alignment_window(
-  input_file,
+  input,
+  names,
+  total_reads,
   output_dir,
   ref_seq,
   dsb_pos,
@@ -103,21 +136,33 @@ def write_alignment_window(
   anchor_mismatches,
   subst_type,
 ):
-  data = file_utils.read_tsv(input_file)
-  count_columns_old = [x for x in data.columns if x.startswith('Count_')]
-  data = data[['Sequence', 'CIGAR'] + count_columns_old]
+  data_list = []
+  for i in range(len(input)):
+    log_utils.log_input(input[i])
+    data = pd.read_csv(input[i], sep='\t').set_index(['sequence', 'cigar'])[['count']]
+    if total_reads is None:
+      data['freq'] = data['count'] / data['count'].sum()
+    else:
+      data['freq'] = data['count'] / total_reads[i]
+    data = data.rename(columns={'freq': 'freq_' + names[i], 'count': 'count_' + names[i]})
+    data_list.append(data)
 
+  data = pd.concat(data_list, axis='columns', join='outer').fillna(0).reset_index()
+  for col in data.columns:
+    if col.startswith('count_'):
+      data[col] = data[col].astype(int)
+
+  # extract window around DSB
   data_new = {
     'ref_align': [],
     'read_align': [],
   }
-  count_columns_new = [x.lower() for x in count_columns_old]
-  for column in count_columns_new:
-    data_new[column] = []
-    
+  value_cols = [x for x in data.columns if x not in ['sequence', 'cigar']]
+  for col in value_cols:
+    data_new[col] = []
   for row in data.to_dict('records'):
     # convert CIGAR to alignment
-    ref_align, read_align = alignment_utils.get_alignment(ref_seq, row['Sequence'], 1, row['CIGAR'])
+    ref_align, read_align = alignment_utils.get_alignment(ref_seq, row['sequence'], 1, row['cigar'])
 
     # extract window around DSB
     ref_align, read_align = alignment_window.get_alignment_window(
@@ -141,8 +186,8 @@ def write_alignment_window(
     data_new['ref_align'].append(ref_align)
     data_new['read_align'].append(read_align)
 
-    for col_old, col_new in zip(count_columns_old, count_columns_new):
-      data_new[col_new].append(row[col_old])
+    for col in value_cols:
+      data_new[col].append(row[col])
 
   data = pd.DataFrame(data_new)
 
@@ -152,24 +197,21 @@ def write_alignment_window(
   data = data.groupby('read_seq').aggregate(
     ref_align = ('ref_align', 'first'),
     read_align = ('read_align', 'first'),
-    **{col: (col, 'sum') for col in count_columns_new}
+    **{col: (col, 'sum') for col in value_cols}
   ).reset_index()
-  data = data.drop('read_seq', axis='columns').reset_index(drop=True)
+  data = data.drop(columns='read_seq').reset_index(drop=True)
 
-  # get the min frequency of the repeats
-  data['count_min'] = data[count_columns_new].min(axis='columns')
+  # get the max frequency of the repeats and sort by it
+  data['count_max'] = data[
+    [x for x in data.columns if x.startswith('count_')]
+  ].max(axis='columns')
   data = data.sort_values(
-    ['count_min', 'read_align'],
+    ['count_max', 'read_align'],
     ascending = [False, True],
-  ).reset_index(drop=True)
+  ).drop(columns='count_max')
 
   # save the unfiltered repeat data
-  data = data.drop('count_min', axis='columns')
-  output_file = file_names.window(
-    output_dir,
-    constants.COUNT,
-    subst_type,
-  )
+  output_file = file_names.window(output_dir, subst_type)
   file_utils.write_tsv(data, output_file)
   log_utils.log_output(output_file)
 
@@ -226,6 +268,8 @@ def get_ref_seq_window(ref_seq, dsb_pos, window_size):
 
 def main(
   input,
+  names,
+  total_reads,
   output,
   ref_seq_file,
   dsb_pos,
@@ -239,7 +283,9 @@ def main(
 
   ref_seq = file_utils.read_seq(ref_seq_file)
   write_alignment_window(
-    input_file = input, 
+    input = input,
+    names = names,
+    total_reads = total_reads,
     output_dir = output,
     ref_seq = ref_seq,
     dsb_pos = dsb_pos,
