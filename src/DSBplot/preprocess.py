@@ -260,7 +260,7 @@ def do_1_filter_nhej(
   input_num = len(glob.glob(os.path.join(file_names.sam_dir(output), '*.sam')))
 
   for i in range(1, input_num + 1):
-    debug_file = os.path.join(file_names.filter_nhej_dir(output), f'debug_{i}.txt')
+    debug_file = os.path.join(file_names.filter_nhej_dir(output), f'{i}_debug.txt')
     filter_nhej.main(
       ref_seq_file = ref_seq_file,
       sam_file = get_sam_file(output, i),

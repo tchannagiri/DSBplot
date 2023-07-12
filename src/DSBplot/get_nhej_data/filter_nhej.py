@@ -395,6 +395,8 @@ def main(
     key = lambda x: read_count_accepted[x],
     reverse = True
   )
+
+  file_utils.make_parent_dir(output)
   with open(output, 'w') as output_h:
     output_h.write('Rank\tCount\tNum_Subst\tCIGAR\tCIGAR_old\tSequence\n')
     for read_seq in read_seq_list:
