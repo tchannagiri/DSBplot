@@ -22,6 +22,7 @@ import DSBplot.utils.kmer_utils as kmer_utils
 import DSBplot.utils.alignment_utils as alignment_utils
 import DSBplot.utils.file_names as file_names
 import DSBplot.plot_graph.plot_graph_helper as plot_graph_helper
+import DSBplot.get_graph_data.get_graph_data as get_graph_data
 
 LAYOUT_PROPERTIES = {
  'radial_layout': {
@@ -799,9 +800,9 @@ def make_grid_spec(
   return grid_spec
 
 def make_graph_layout(
-  data_dir,
+  # data_dir,
   data_info,
-  node_subst_type,
+  # node_subst_type,
   graph,
   layout_type,
   graph_layout_common = None,
@@ -1407,156 +1408,209 @@ def make_custom_legends(
   
   return y_shift_curr_px
 
-def make_graph_stats(
-  figure,
-  data_dir,
-  x,
-  y,
-  x_shift,
-  y_shift,
-  x_anchor,
-  y_anchor,
-  font_size_scale = 1,
-):
-  graph_stats = file_utils.read_tsv_dict(file_names.graph_stats(data_dir))
-  graph_stats = {
-    k: 'NA' if pd.isna(v) else
-    str(v) if isinstance(v, int) else
-    f'{v:.2f}'
-    for k, v in graph_stats.items()
-  }
-  figure.add_annotation(
-    xref = 'x domain',
-    yref = 'y domain',
-    x = x,
-    y = y,
-    xshift = x_shift,
-    yshift = y_shift,
-    xanchor = x_anchor,
-    yanchor = y_anchor,
-    align = 'left',
-    font_size = constants.GRAPH_LEGEND_FONT_SIZE * font_size_scale,
-    font_family = 'Monospace',
-    text = (
-      f'Num nodes:            {graph_stats["num_nodes"][0]}<br>'
-      f'Num edges:            {graph_stats["num_edges"][0]}<br>'
-      f'Avg degree:           {graph_stats["avg_degree"][0]}<br>'
-      f'Avg dist from ref:    {graph_stats["avg_dist_ref"][0]}<br>'
-      f'Avg pairwise dist:    {graph_stats["avg_pairwise_lev_dist"][0]}<br>'
-      f'Max dist from ref:    {graph_stats["max_dist_ref"][0]}<br>'
-      f'Max pairwise dist:    {graph_stats["max_pairwise_lev_dist"][0]}<br>'
-      f'Num seq substitution: {graph_stats["num_seq_substitution"][0]}<br>'
-      f'Num seq insertion:    {graph_stats["num_seq_insertion"][0]}<br>'
-      f'Num seq deletion:     {graph_stats["num_seq_deletion"][0]}<br>'
-    ),
-    showarrow = False,
-  )
+# FIXME: DELETE!
+# def make_graph_stats(
+#   figure,
+#   data_dir,
+#   x,
+#   y,
+#   x_shift,
+#   y_shift,
+#   x_anchor,
+#   y_anchor,
+#   font_size_scale = 1,
+# ):
+#   graph_stats = file_utils.read_tsv_dict(file_names.graph_stats(data_dir))
+#   graph_stats = {
+#     k: 'NA' if pd.isna(v) else
+#     str(v) if isinstance(v, int) else
+#     f'{v:.2f}'
+#     for k, v in graph_stats.items()
+#   }
+#   figure.add_annotation(
+#     xref = 'x domain',
+#     yref = 'y domain',
+#     x = x,
+#     y = y,
+#     xshift = x_shift,
+#     yshift = y_shift,
+#     xanchor = x_anchor,
+#     yanchor = y_anchor,
+#     align = 'left',
+#     font_size = constants.GRAPH_LEGEND_FONT_SIZE * font_size_scale,
+#     font_family = 'Monospace',
+#     text = (
+#       f'Num nodes:            {graph_stats["num_nodes"][0]}<br>'
+#       f'Num edges:            {graph_stats["num_edges"][0]}<br>'
+#       f'Avg degree:           {graph_stats["avg_degree"][0]}<br>'
+#       f'Avg dist from ref:    {graph_stats["avg_dist_ref"][0]}<br>'
+#       f'Avg pairwise dist:    {graph_stats["avg_pairwise_lev_dist"][0]}<br>'
+#       f'Max dist from ref:    {graph_stats["max_dist_ref"][0]}<br>'
+#       f'Max pairwise dist:    {graph_stats["max_pairwise_lev_dist"][0]}<br>'
+#       f'Num seq substitution: {graph_stats["num_seq_substitution"][0]}<br>'
+#       f'Num seq insertion:    {graph_stats["num_seq_insertion"][0]}<br>'
+#       f'Num seq deletion:     {graph_stats["num_seq_deletion"][0]}<br>'
+#     ),
+#     showarrow = False,
+#   )
 
-def make_graph_stats_ref_component(
-  figure,
-  data_dir,
-  data_info,
-  subst_type,
-  x,
-  y,
-  x_shift,
-  y_shift,
-  x_anchor,
-  y_anchor,
-  font_size_scale = 1,
+# FIXME: DELETE!
+# def make_graph_stats_ref_component(
+#   figure,
+#   data_dir,
+#   data_info,
+#   subst_type,
+#   x,
+#   y,
+#   x_shift,
+#   y_shift,
+#   x_anchor,
+#   y_anchor,
+#   font_size_scale = 1,
+# ):
+#   graph_stats = file_utils.read_tsv_dict(
+#     file_names.graph_stats(data_dir, subst_type)
+#   )
+#   stat_lines = [
+#     ['Num nodes', graph_stats['num_nodes']],
+#     ['Num edges', graph_stats['num_edges']],
+#     ['Avg degree', graph_stats['avg_degree']],
+#     ['Avg dist from ref', graph_stats['avg_dist_ref']],
+#     ['Avg pairwise dist', graph_stats['avg_pairwise_dist']],
+#     ['Max dist from ref', graph_stats['max_dist_ref']],
+#     ['Max pairwise dist', graph_stats['max_pairwise_dist']],
+#     ['Num seq insertion', graph_stats['num_seq_insertion']],
+#     ['Num seq deletion', graph_stats['num_seq_deletion']],
+#   ]
+#   if data_info['format'] == 'comparison':
+#     stat_lines += [
+#       [
+#         'Ref seq freq', '{:.3f} & {:.3f}'.format(
+#           graph_stats['ref_freq_mean_1'],
+#           graph_stats['ref_freq_mean_2'],
+#         )
+#       ],
+#       [
+#         'Non-ref seq freq', '{:.3f} & {:.3f}'.format(
+#           graph_stats['non_ref_freq_mean_1'],
+#           graph_stats['non_ref_freq_mean_2'],
+#         )
+#       ],
+#       [
+#         'Insertion freq', '{:.4f} & {:.4f}'.format(
+#           graph_stats['insertion_freq_mean_1'],
+#           graph_stats['insertion_freq_mean_2'],
+#         )
+#       ],
+#       [
+#         'Deletion freq', '{:.4f} & {:.4f}'.format(
+#           graph_stats['deletion_freq_mean_1'],
+#           graph_stats['deletion_freq_mean_2'],
+#         )
+#       ],
+#     ]
+#   elif data_info['format'] == 'individual':
+#     stat_lines += [
+#       ['Ref seq freq', '{:.3f}'.format(graph_stats['ref_freq_mean'])],
+#       ['Non-ref seq freq', '{:.5f}'.format(graph_stats['non_ref_freq_mean'])],
+#       ['Insertion freq', '{:.5f}'.format(graph_stats['insertion_freq_mean'])],
+#       ['Deletion freq', '{:.5f}'.format(graph_stats['deletion_freq_mean'])],
+#     ]
+#   else:
+#     raise Exception('Unknown data format: ' + str(data_info['format']))
+#   for line in stat_lines:
+#     if not isinstance(line[1], str):
+#       if pd.isna(line[1]):
+#         line[1] = 'NA'
+#       elif line[1] == np.round(line[1]): # integer
+#         line[1] = str(line[1])
+#       else:
+#         line[1] = f'{line[1]:.2f}'
+#   max_label_len = max(len(line[0]) for line in stat_lines)
+#   for line in stat_lines:
+#     line[0] = line[0].ljust(max_label_len) + ': '
+#   stat_lines = [line[0] + line[1] for line in stat_lines]
+#   stat_lines = '<br>'.join(stat_lines)
+#   figure.add_annotation(
+#     xref = 'x domain',
+#     yref = 'y domain',
+#     x = x,
+#     y = y,
+#     xshift = x_shift,
+#     yshift = y_shift,
+#     xanchor = x_anchor,
+#     yanchor = y_anchor,
+#     align = 'left',
+#     font_size = constants.GRAPH_LEGEND_FONT_SIZE * font_size_scale,
+#     font_family = 'Monospace',
+#     text = (
+#       '<span style="text-decoration: underline;">'
+#         'Graph Statistics (ref component only)'
+#       '</span><br>' +
+#       stat_lines
+#     ),
+#     showarrow = False,
+#   )
+
+def get_data(
+  data_dir_list,
+  node_subst_type,
+  node_filter_variation_types,
+  node_filter_freq_range,
+  node_filter_dist_range
 ):
-  graph_stats = file_utils.read_tsv_dict(
-    file_names.graph_stats(data_dir, subst_type)
-  )
-  stat_lines = [
-    ['Num nodes', graph_stats['num_nodes']],
-    ['Num edges', graph_stats['num_edges']],
-    ['Avg degree', graph_stats['avg_degree']],
-    ['Avg dist from ref', graph_stats['avg_dist_ref']],
-    ['Avg pairwise dist', graph_stats['avg_pairwise_dist']],
-    ['Max dist from ref', graph_stats['max_dist_ref']],
-    ['Max pairwise dist', graph_stats['max_pairwise_dist']],
-    ['Num seq insertion', graph_stats['num_seq_insertion']],
-    ['Num seq deletion', graph_stats['num_seq_deletion']],
+  node_data_list = [
+    get_graph_data.get_node_data(
+      file_utils.read_csv(file_names.window(data_dir, node_subst_type))
+    ).set_index('id', drop=False)
+    for data_dir in data_dir_list
   ]
-  if data_info['format'] == 'comparison':
-    stat_lines += [
-      [
-        'Ref seq freq', '{:.3f} & {:.3f}'.format(
-          graph_stats['ref_freq_mean_1'],
-          graph_stats['ref_freq_mean_2'],
-        )
-      ],
-      [
-        'Non-ref seq freq', '{:.3f} & {:.3f}'.format(
-          graph_stats['non_ref_freq_mean_1'],
-          graph_stats['non_ref_freq_mean_2'],
-        )
-      ],
-      [
-        'Insertion freq', '{:.4f} & {:.4f}'.format(
-          graph_stats['insertion_freq_mean_1'],
-          graph_stats['insertion_freq_mean_2'],
-        )
-      ],
-      [
-        'Deletion freq', '{:.4f} & {:.4f}'.format(
-          graph_stats['deletion_freq_mean_1'],
-          graph_stats['deletion_freq_mean_2'],
-        )
-      ],
-    ]
-  elif data_info['format'] == 'individual':
-    stat_lines += [
-      ['Ref seq freq', '{:.3f}'.format(graph_stats['ref_freq_mean'])],
-      ['Non-ref seq freq', '{:.5f}'.format(graph_stats['non_ref_freq_mean'])],
-      ['Insertion freq', '{:.5f}'.format(graph_stats['insertion_freq_mean'])],
-      ['Deletion freq', '{:.5f}'.format(graph_stats['deletion_freq_mean'])],
-    ]
-  else:
-    raise Exception('Unknown data format: ' + str(data_info['format']))
-  for line in stat_lines:
-    if not isinstance(line[1], str):
-      if pd.isna(line[1]):
-        line[1] = 'NA'
-      elif line[1] == np.round(line[1]): # integer
-        line[1] = str(line[1])
-      else:
-        line[1] = f'{line[1]:.2f}'
-  max_label_len = max(len(line[0]) for line in stat_lines)
-  for line in stat_lines:
-    line[0] = line[0].ljust(max_label_len) + ': '
-  stat_lines = [line[0] + line[1] for line in stat_lines]
-  stat_lines = '<br>'.join(stat_lines)
-  figure.add_annotation(
-    xref = 'x domain',
-    yref = 'y domain',
-    x = x,
-    y = y,
-    xshift = x_shift,
-    yshift = y_shift,
-    xanchor = x_anchor,
-    yanchor = y_anchor,
-    align = 'left',
-    font_size = constants.GRAPH_LEGEND_FONT_SIZE * font_size_scale,
-    font_family = 'Monospace',
-    text = (
-      '<span style="text-decoration: underline;">'
-        'Graph Statistics (ref component only)'
-      '</span><br>' +
-      stat_lines
-    ),
-    showarrow = False,
-  )
 
+  for i in range(len(data_dir_list)):
+    if node_filter_variation_types is not None:
+      node_data_list[i] = node_data_list[i].loc[
+        node_data_list[i]['variation_type'].isin(node_filter_variation_types)
+      ]
+    node_data_list[i] = node_data_list[i].loc[
+      node_data_list[i]['freq_mean'].between(
+        node_filter_freq_range[0],
+        node_filter_freq_range[1],
+        inclusive = 'both',
+      )
+    ]
+
+    node_data_list[i] = node_data_list[i].loc[
+      node_data_list[i]['dist_ref'].between(
+        node_filter_dist_range[0],
+        node_filter_dist_range[1],
+        inclusive = 'both',
+      )
+    ]
+
+  edge_data_list = [
+    get_graph_data.get_edge_data(node_data_list[i])
+    for i in range(len(data_dir_list))
+  ]
+
+  graph_list = [
+    graph_utils.get_graph(node_data_list[i], edge_data_list[i])
+    for i in range(len(data_dir_list))
+  ]
+
+  return node_data_list, edge_data_list, graph_list
+
+# FIXME: DELETE COMMENTS
 def make_graph_figure_helper(
   figure_list,
-  data_dir_list,
+  # data_dir_list,
   data_info_list,
+  node_data_list,
+  edge_data_list,
+  graph_list,
   sequence_reverse_complement_list = None,
-  node_subst_type = constants.SUBST_WITHOUT,
-  node_filter_freq_range = constants.GRAPH_NODE_FILTER_FREQ_RANGE,
-  node_filter_dist_range = constants.GRAPH_NODE_FILTER_DIST_RANGE,
+  # node_subst_type = constants.SUBST_WITHOUT,
+  # node_filter_freq_range = constants.GRAPH_NODE_FILTER_FREQ_RANGE, FIXME: DELTE
+  # node_filter_dist_range = constants.GRAPH_NODE_FILTER_DIST_RANGE, FIXME: DELTE
   edge_show = constants.GRAPH_EDGE_SHOW,
   edge_types_show = constants.GRAPH_EDGE_SHOW_TYPES,
   edge_labels_show = constants.GRAPH_EDGE_LABELS_SHOW,
@@ -1576,7 +1630,7 @@ def make_graph_figure_helper(
   node_size_type = constants.GRAPH_NODE_SIZE_TYPE,
   node_size_px_range = constants.GRAPH_NODE_SIZE_PX_RANGE,
   node_size_freq_range = constants.GRAPH_NODE_SIZE_FREQ_RANGE,
-  node_filter_variation_types = constants.GRAPH_NODE_FILTER_VARIATION_TYPES,
+  # node_filter_variation_types = constants.GRAPH_NODE_FILTER_VARIATION_TYPES, FIXME: DELTE
   node_outline_width_scale = constants.GRAPH_NODE_OUTLINE_WIDTH_SCALE,
   plot_range_x = constants.GRAPH_PLOT_RANGE_X,
   plot_range_y = constants.GRAPH_PLOT_RANGE_Y,
@@ -1588,50 +1642,66 @@ def make_graph_figure_helper(
   universal_layout_x_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
   universal_layout_y_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
-  if sequence_reverse_complement_list is None:
-    sequence_reverse_complement_list = (
-      [constants.GRAPH_SEQUENCE_REVERSE_COMPLEMENT] * len(data_dir_list)
-    )
+  # if sequence_reverse_complement_list is None:
+  #   sequence_reverse_complement_list = (
+  #     [constants.GRAPH_SEQUENCE_REVERSE_COMPLEMENT] * len(data_dir_list)
+  #   )
 
   ### Load node data ###
-  node_data_list = [
-    file_utils.read_tsv(file_names.sequence_data(data_dir, node_subst_type))
-      .set_index('id', drop=False)
-    for data_dir in data_dir_list
-  ]
+  # node_data_list = [
+  #   file_utils.read_tsv(file_names.sequence_data(data_dir, node_subst_type))
+  #     .set_index('id', drop=False)
+  #   for data_dir in data_dir_list
+  # ]
+  # node_data_list = [
+  #   get_graph_data.get_node_data(
+  #     file_utils.read_csv(file_names.window(data_dir, node_subst_type))
+  #   ).set_index('id', drop=False)
+  #   for data_dir in data_dir_list
+  # ]
 
-  ### Load graph ###
-  graph_list = [
-    graph_utils.load_graph(data_dir, node_subst_type)
-    for data_dir in data_dir_list
-  ]
+  # ### Load graph ###
+  # # graph_list = [
+  # #   graph_utils.load_graph(node_data_list[i], edge_data_list[i], node_subst_type)
+  # #   for i in range(len(data_dir_list))
+  # # ]
+  # ### Node filtering ###
+  # for i in range(len(data_dir_list)):
+  #   if node_filter_variation_types is not None:
+  #     node_data_list[i] = node_data_list[i].loc[
+  #       node_data_list[i]['variation_type'].isin(node_filter_variation_types)
+  #     ]
+  #   node_data_list[i] = node_data_list[i].loc[
+  #     node_data_list[i]['freq_mean'].between(
+  #       node_filter_freq_range[0],
+  #       node_filter_freq_range[1],
+  #       inclusive = 'both',
+  #     )
+  #   ]
 
-  ### Node filtering / subgraph ###
-  for i in range(len(data_dir_list)):
-    if node_filter_variation_types is not None:
-      node_data_list[i] = node_data_list[i].loc[
-        node_data_list[i]['variation_type'].isin(node_filter_variation_types)
-      ]
-    node_data_list[i] = node_data_list[i].loc[
-      node_data_list[i]['freq_mean']
-        .between(node_filter_freq_range[0], node_filter_freq_range[1], inclusive='both')
-    ]
+  #   node_data_list[i] = node_data_list[i].loc[
+  #     node_data_list[i]['dist_ref'].between(
+  #       node_filter_dist_range[0],
+  #       node_filter_dist_range[1],
+  #       inclusive = 'both',
+  #     )
+  #   ]
 
-    node_data_list[i] = node_data_list[i].loc[
-      node_data_list[i]['dist_ref'].between(
-        node_filter_dist_range[0],
-        node_filter_dist_range[1],
-        inclusive = 'both'
-      )
-    ]
+  # edge_data_list = [
+  #   get_graph_data.get_edge_data(node_data_list[i])
+  #   for i in range(len(data_dir_list))
+  # ]
 
-    graph_list[i] = graph_list[i].subgraph(node_data_list[i].index)
+  # graph_list = [
+  #   graph_utils.get_graph(node_data_list[i], edge_data_list[i])
+  #   for i in range(len(data_dir_list))
+  # ]
 
   ### Combine the nodes/edges ###
 
   # Combine node data #
   node_data_list_copy = [node_data.copy() for node_data in node_data_list]
-  for i in range(len(data_dir_list)):
+  for i in range(len(data_info_list)):
     if sequence_reverse_complement_list[i]:
       node_data_list_copy[i] = node_data_list_copy[i].assign(
         ref_align = node_data_list_copy[i]['ref_align'].apply(kmer_utils.reverse_complement),
@@ -1647,13 +1717,18 @@ def make_graph_figure_helper(
   node_data = node_data.set_index('id', drop=False)
 
   # Combine edge data
-  edge_data_list = [
-    file_utils.read_tsv(file_names.edge_data(data_dir, node_subst_type))
-      .drop(['id_a', 'id_b'], axis='columns')
-    for data_dir in data_dir_list
-  ]
-  edge_data = pd.concat(edge_data_list, axis='index', ignore_index=True)
-  edge_data = edge_data.groupby(list(edge_data.columns)).first().reset_index()
+  # edge_data_list = [
+  #   file_utils.read_tsv(file_names.edge_data(data_dir, node_subst_type))
+  #     .drop(['id_a', 'id_b'], axis='columns')
+  #   for data_dir in data_dir_list
+  # ]
+  edge_data = pd.concat(
+    [x.drop(columns=['id_a', 'id_b']) for x in edge_data_list],
+    axis = 'index',
+    ignore_index = True,
+  )
+  # edge_data = edge_data.groupby(list(edge_data.columns)).first().reset_index()
+  edge_data = edge_data.drop_duplicates(keep='first').reset_index(drop=True)
 
   # Get the new id's for the edges
   for suffix in ['_a', '_b']:
@@ -1685,13 +1760,12 @@ def make_graph_figure_helper(
   )
 
   ### Make the common graph layout ###
-  data_info = file_utils.read_tsv_dict(
-    file_names.data_info(data_dir_list[0])
-  )
+  # data_info = file_utils.read_csv_dict(file_names.data_info(data_dir_list[0]))
+  data_info = data_info_list[0]
   graph_layout_common = make_graph_layout(
-    data_dir = data_dir_list[0] if (len(data_dir_list) == 1) else None,
+    # data_dir = data_dir_list[0] if (len(data_dir_list) == 1) else None,
     data_info = data_info_list[0],
-    node_subst_type = node_subst_type,
+    # node_subst_type = node_subst_type,
     graph = graph,
     layout_type = graph_layout_type,
     separate_components = False,
@@ -1707,9 +1781,9 @@ def make_graph_figure_helper(
   
   for i in range(len(data_info_list)):
     graph_layout = make_graph_layout(
-      data_dir = data_dir_list[i],
+      # data_dir = data_dir_list[i],
       data_info = data_info_list[i],
-      node_subst_type = node_subst_type,
+      # node_subst_type = node_subst_type,
       graph = graph_list[i],
       layout_type = graph_layout_type,
       graph_layout_common = graph_layout_common,
@@ -1803,14 +1877,18 @@ def get_figure_size_args(
   }
 
 def make_graph_figure(
-  data_dir_list,
+  # data_dir_list,
+  data_info_list,
+  node_data_list,
+  edge_data_list,
+  graph_list,
   graph_layout_type = constants.GRAPH_LAYOUT_TYPE,
   graph_layout_separate_components = constants.GRAPH_LAYOUT_SEPARATE_COMPONENTS,
   sequence_reverse_complement_list = None,
-  node_subst_type = constants.GRAPH_NODE_SUBST_TYPE,
+  # node_subst_type = constants.GRAPH_NODE_SUBST_TYPE,
   node_filter_variation_types = constants.GRAPH_NODE_FILTER_VARIATION_TYPES,
-  node_filter_freq_range = constants.GRAPH_NODE_FILTER_FREQ_RANGE,
-  node_filter_dist_range = constants.GRAPH_NODE_FILTER_DIST_RANGE,
+  # node_filter_freq_range = constants.GRAPH_NODE_FILTER_FREQ_RANGE,
+  # node_filter_dist_range = constants.GRAPH_NODE_FILTER_DIST_RANGE,
   node_label_show = constants.GRAPH_NODE_LABEL_SHOW,
   node_label_columns = constants.GRAPH_NODE_LABEL_COLUMNS,
   node_label_position = constants.GRAPH_NODE_LABEL_POSITION,
@@ -1844,13 +1922,13 @@ def make_graph_figure(
   node_outline_width_scale = constants.GRAPH_NODE_OUTLINE_WIDTH_SCALE,
   plot_range_x = constants.GRAPH_PLOT_RANGE_X,
   plot_range_y = constants.GRAPH_PLOT_RANGE_Y,
-  graph_stats_show = constants.GRAPH_STATS_SHOW,
-  graph_stats_x_frac = constants.GRAPH_STATS_X_FRAC,
-  graph_stats_y_frac = constants.GRAPH_STATS_Y_FRAC,
-  graph_stats_x_shift_px = constants.GRAPH_STATS_X_SHIFT_PX,
-  graph_stats_y_shift_px = constants.GRAPH_STATS_Y_SHIFT_PX,
-  graph_stats_x_anchor = constants.GRAPH_STATS_X_ANCHOR,
-  graph_stats_y_anchor = constants.GRAPH_STATS_Y_ANCHOR,
+  # graph_stats_show = constants.GRAPH_STATS_SHOW,
+  # graph_stats_x_frac = constants.GRAPH_STATS_X_FRAC,
+  # graph_stats_y_frac = constants.GRAPH_STATS_Y_FRAC,
+  # graph_stats_x_shift_px = constants.GRAPH_STATS_X_SHIFT_PX,
+  # graph_stats_y_shift_px = constants.GRAPH_STATS_Y_SHIFT_PX,
+  # graph_stats_x_anchor = constants.GRAPH_STATS_X_ANCHOR,
+  # graph_stats_y_anchor = constants.GRAPH_STATS_Y_ANCHOR,
   margin_top_px = constants.GRAPH_MARGIN_TOP_MIN_PX,
   margin_bottom_px = constants.GRAPH_MARGIN_BOTTOM_MIN_PX,
   margin_left_px = constants.GRAPH_MARGIN_LEFT_MIN_PX,
@@ -1862,22 +1940,13 @@ def make_graph_figure(
   universal_layout_x_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
   universal_layout_y_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
-  if sequence_reverse_complement_list is None:
-    sequence_reverse_complement_list = [constants.GRAPH_SEQUENCE_REVERSE_COMPLEMENT] * len(data_dir_list)
+  # if sequence_reverse_complement_list is None:
+  #   sequence_reverse_complement_list = (
+  #     [constants.GRAPH_SEQUENCE_REVERSE_COMPLEMENT] *
+  #     len(data_info_list)
+  #   )
   if title_list is None:
-    title_list = [constants.GRAPH_TITLE] * len(data_dir_list)
-  data_info_list = [
-    file_utils.read_tsv_dict(file_names.data_info(data_dir))
-    for data_dir in data_dir_list
-  ]
-
-  if node_filter_variation_types is None:
-    node_filter_variation_types = list(constants.VARIATION_TYPES)
-  if node_subst_type == constants.SUBST_WITHOUT:
-    node_filter_variation_types = [
-      x for x in node_filter_variation_types
-      if x not in ['substitution', 'mixed']
-    ]
+    title_list = [constants.GRAPH_TITLE] * len(data_info_list)
 
   if LAYOUT_PROPERTIES.get(graph_layout_type, {}).get('plot_range_x', None) is not None:
     plot_range_x_default = LAYOUT_PROPERTIES[graph_layout_type]['plot_range_x']
@@ -1889,15 +1958,18 @@ def make_graph_figure(
 
   edge_show = edge_show and LAYOUT_PROPERTIES[graph_layout_type]['has_edges']
 
-  figure_list = [plotly.graph_objects.Figure() for _ in range(len(data_dir_list))]
+  figure_list = [plotly.graph_objects.Figure() for _ in range(len(data_info_list))]
 
   make_graph_figure_helper(
     figure_list = figure_list,
-    data_dir_list = data_dir_list,
+    # data_dir_list = data_dir_list,
     data_info_list = data_info_list,
-    node_subst_type = node_subst_type,
-    node_filter_freq_range = node_filter_freq_range,
-    node_filter_dist_range = node_filter_dist_range,
+    node_data_list = node_data_list,
+    edge_data_list = edge_data_list,
+    graph_list = graph_list,
+    # node_subst_type = node_subst_type,
+    # node_filter_freq_range = node_filter_freq_range,
+    # node_filter_dist_range = node_filter_dist_range,
     edge_show = edge_show,
     edge_types_show = edge_show_types,
     edge_labels_show = edge_show_labels,
@@ -1918,7 +1990,7 @@ def make_graph_figure(
     node_size_type = node_size_type,
     node_size_px_range = node_size_px_range,
     node_size_freq_range = node_size_freq_range,
-    node_filter_variation_types = node_filter_variation_types,
+    # node_filter_variation_types = node_filter_variation_types,
     node_outline_width_scale = node_outline_width_scale,
     plot_range_x = plot_range_x,
     plot_range_y = plot_range_y,
@@ -1941,20 +2013,21 @@ def make_graph_figure(
   )
 
   for i in range(len(data_info_list)):
-    if graph_stats_show:
-      make_graph_stats_ref_component(
-        figure = figure_list[i],
-        data_dir = data_dir_list[i],
-        data_info = data_info_list[i],
-        subst_type = node_subst_type,
-        x = graph_stats_x_frac,
-        y = graph_stats_y_frac,
-        x_shift = -margin_left_px + graph_stats_x_shift_px,
-        y_shift = graph_stats_y_shift_px,
-        x_anchor = graph_stats_x_anchor,
-        y_anchor = graph_stats_y_anchor,
-        font_size_scale = font_size_scale,
-      )
+    # FIXME: DELETE
+    # if graph_stats_show:
+    #   make_graph_stats_ref_component(
+    #     figure = figure_list[i],
+    #     data_dir = data_dir_list[i],
+    #     data_info = data_info_list[i],
+    #     subst_type = node_subst_type,
+    #     x = graph_stats_x_frac,
+    #     y = graph_stats_y_frac,
+    #     x_shift = -margin_left_px + graph_stats_x_shift_px,
+    #     y_shift = graph_stats_y_shift_px,
+    #     x_anchor = graph_stats_x_anchor,
+    #     y_anchor = graph_stats_y_anchor,
+    #     font_size_scale = font_size_scale,
+    #   )
 
     figure_list[i].update_layout(
       width = figure_size_args['total_width_px'],
@@ -2061,18 +2134,6 @@ def parse_args():
       ' the number of input directories.'
     ),
   )
-  # parser.add_argument(
-  #   '--freq_min',
-  #   type = float,
-  #   default = 1e-5,
-  #   help = (
-  #     f'Minimum frequency for output in' +
-  #     f' windows_{constants.FREQ_FILTER_MEAN}.tsv.' +
-  #     f' Sequences with frequencies <= this are discarded.' +
-  #     f' Required only for stage 3_window' +
-  #     f' (but can be omitted because of default).'
-  #   ),
-  # )
   parser.add_argument(
     '--title',
     type = str,
@@ -2242,6 +2303,20 @@ def parse_args():
     )
   )
   parser.add_argument(
+    '--filter_freq',
+    nargs = 2,
+    type = float,
+    default = constants.GRAPH_NODE_FILTER_FREQ_RANGE,
+    help = 'Min and max frequency to filter nodes by.'
+  )
+  parser.add_argument(
+    '--filter_dist',
+    nargs = 2,
+    type = float,
+    default = constants.GRAPH_NODE_FILTER_DIST_RANGE,
+    help = 'Min and max distance to filter nodes by.'
+  )
+  parser.add_argument(
     '--node_outline_scale',
     type = float,
     default = constants.GRAPH_NODE_OUTLINE_WIDTH_SCALE,
@@ -2373,23 +2448,24 @@ def parse_args():
       ' Values > 1 increase the width; values < 1 decrease the width.'
     ),
   )
-  parser.add_argument(
-    '--stats',
-    action = 'store_true',
-    help = 'If present, show graph summary statistics in the left margin.',
-  )
-  parser.add_argument(
-    '--stats_x_shift_px',
-    type = float,
-    default = constants.GRAPH_STATS_X_SHIFT_PX,
-    help = 'How much to shift the stats in the x direction (in pixels).',
-  )
-  parser.add_argument(
-    '--stats_y_shift_px',
-    type = float,
-    default = constants.GRAPH_STATS_Y_SHIFT_PX,
-    help = 'How much to shift the stats in the x direction (in pixels).',
-  )
+  # FIXME: DELETE
+  # parser.add_argument(
+  #   '--stats',
+  #   action = 'store_true',
+  #   help = 'If present, show graph summary statistics in the left margin.',
+  # )
+  # parser.add_argument(
+  #   '--stats_x_shift_px',
+  #   type = float,
+  #   default = constants.GRAPH_STATS_X_SHIFT_PX,
+  #   help = 'How much to shift the stats in the x direction (in pixels).',
+  # )
+  # parser.add_argument(
+  #   '--stats_y_shift_px',
+  #   type = float,
+  #   default = constants.GRAPH_STATS_Y_SHIFT_PX,
+  #   help = 'How much to shift the stats in the x direction (in pixels).',
+  # )
   parser.add_argument(
     '--width_px',
     type = int,
@@ -2600,6 +2676,7 @@ def parse_args():
 
   return args
 
+# FIXME: DELETE COMMENTS!
 def main(
   input,
   output,
@@ -2617,6 +2694,8 @@ def main(
   node_fill_color,
   variation_type_colors,
   variation_types,
+  filter_freq,
+  filter_dist,
   node_outline_scale,
   edge_show,
   edge_types,
@@ -2627,9 +2706,9 @@ def main(
   margin_bottom_px,
   margin_left_px,
   margin_right_px,
-  stats,
-  stats_x_shift_px,
-  stats_y_shift_px,
+  # stats,
+  # stats_x_shift_px,
+  # stats_y_shift_px,
   separate_components,
   line_width_scale,
   font_size_scale,
@@ -2657,13 +2736,13 @@ def main(
   interactive,
   quiet,
 ):
-  data_dir_list = input
+  input_list = input
   output_list = output
-  for data_dir in data_dir_list:
-    log_utils.log_input(data_dir)
+  for x in input_list:
+    log_utils.log_input(x)
   data_info_list = [
-    file_utils.read_tsv_dict(file_names.data_info(data_dir))
-    for data_dir in data_dir_list
+    file_utils.read_csv_dict(file_names.data_info(data_dir))
+    for data_dir in input_list
   ]
 
   node_color_type_list = []
@@ -2687,12 +2766,30 @@ def main(
       'Not all reference sequences are identical.' +
       ' Got ' + str(ref_seq_set) + '.'
     )
+  
+  if subst_type == constants.SUBST_WITHOUT:
+    variation_types = [
+      x for x in variation_types
+      if x not in ['substitution', 'mixed']
+    ]
+  
+  node_data_list, edge_data_list, graph_list = get_data(
+    data_dir_list = input_list,
+    node_subst_type = subst_type,
+    node_filter_variation_types = variation_types,
+    node_filter_freq_range = filter_freq,
+    node_filter_dist_range = filter_dist,
+  )
 
   figure_list = make_graph_figure(
-    data_dir_list = data_dir_list,
+    # data_dir_list = input_list,
+    data_info_list = data_info_list,
+    node_data_list = node_data_list,
+    edge_data_list = edge_data_list,
+    graph_list = graph_list,
     title_list = title,
     sequence_reverse_complement_list = reverse_complement,
-    node_subst_type = subst_type,
+    # node_subst_type = subst_type,
     node_size_px_range = node_px_range,
     node_size_freq_range = node_freq_range,
     node_filter_variation_types = variation_types,
@@ -2706,9 +2803,9 @@ def main(
     node_variation_type_colors = variation_type_colors,
     graph_width_px = width_px,
     graph_height_px = height_px,
-    graph_stats_show = stats,
-    graph_stats_x_shift_px = stats_x_shift_px,
-    graph_stats_y_shift_px = stats_y_shift_px,
+    # graph_stats_show = stats,
+    # graph_stats_x_shift_px = stats_x_shift_px,
+    # graph_stats_y_shift_px = stats_y_shift_px,
     graph_layout_type = layout,
     graph_layout_separate_components = separate_components,
     margin_top_px = margin_top_px,
@@ -2748,13 +2845,13 @@ def main(
         y_max = np.max([y_max] + [y for y in trace.y if y is not None])
       log_utils.log(f'Figure[{i}] x-range: {x_min} to {x_max}')
       log_utils.log(f'Figure[{i}] y-range: {y_min} to {y_max}')
-    sequence_data = file_utils.read_tsv(
-      file_names.sequence_data(data_dir_list[i], subst_type)
-    )
+    # sequence_data = file_utils.read_tsv(
+    #   file_names.sequence_data(input_list[i], subst_type)
+    # )
     if universal_layout_y_axis_insertion_max_tick is None:
       try:
-        max_tick_insertion = sequence_data.loc[
-          sequence_data['variation_type'] == 'insertion',
+        max_tick_insertion = node_data_list.loc[
+          node_data_list['variation_type'] == 'insertion',
           'dist_ref'
         ].max()
       except:
@@ -2765,8 +2862,8 @@ def main(
     
     if universal_layout_y_axis_deletion_max_tick is None:
       try:
-        max_tick_deletion = sequence_data.loc[
-          sequence_data['variation_type'] == 'deletion',
+        max_tick_deletion = node_data_list.loc[
+          node_data_list['variation_type'] == 'deletion',
           'dist_ref'
         ].max()
       except:

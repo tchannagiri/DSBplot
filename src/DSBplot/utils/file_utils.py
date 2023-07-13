@@ -30,12 +30,12 @@ def read_csv(file):
     na_values = 'NA',
   )
 
-def read_tsv_dict(file):
+def read_csv_dict(file):
   """
-    Read a single row tsv as a dict.
+    Read a single row CSV as a dict.
   """
-  data = read_tsv(file)
-  return {k: data.loc[0, k] for k in data.columns}
+  data = read_csv(file).T.to_dict(orient='index')
+  return {k: v[0] for k, v in data.items()}
 
 def count_lines(file):
   """Get the number of lines in the file."""
