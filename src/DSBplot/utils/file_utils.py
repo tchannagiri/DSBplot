@@ -11,25 +11,23 @@ def make_parent_dir(file_name):
   if dir_name != '':
     os.makedirs(os.path.dirname(file_name), exist_ok=True)
 
-def write_tsv(data, file, **args):
+def write_csv(data, file, **args):
   if type(file) == str:
     make_parent_dir(file)
   data.to_csv(
     file,
-    sep = '\t',
     na_rep = 'NA',
     quoting = csv.QUOTE_NONNUMERIC,
     index = args.get('index', False),
     lineterminator = '\n',
   )
 
-def read_tsv(file):
+def read_csv(file):
   return pd.read_csv(
     file,
     index_col = False,
     keep_default_na = False,
     na_values = 'NA',
-    sep = '\t',
   )
 
 def read_tsv_dict(file):

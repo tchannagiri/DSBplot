@@ -1,7 +1,8 @@
 import os
 import argparse
-
+from collections import defaultdict
 import pandas as pd
+import numpy as np
 
 import DSBplot.utils.constants as constants
 import DSBplot.utils.file_utils as file_utils
@@ -151,14 +152,37 @@ def parse_args():
     required = True,
   )
   parser.add_argument(
-    '--sam_file',
+    '--input',
     type = common_utils.check_file,
     help = (
       'Aligned SAM input file.' +
       ' Must be created with Bowtie2 (specific flags from Bowtie2 are used).'
       ' Every read must be aligned with exactly the same reference sequence.'
+      ' Multiple files may be specified as long as they all use the same reference sequence.' +
+      ' The output will contain a separate count columns for each input file.'
     ),
+    nargs = '+',
     required = True,
+  )
+  parser.add_argument(
+    '--names',
+    nargs = '+',
+    help = (
+      'Names to use as suffixes to the value columns of the output.' +
+      ' Number of arguments must match the number of INPUT args.' +
+      ' If not specified, becomes the names of the INPUT files.'
+    ),
+  )
+  parser.add_argument(
+    '--total_reads',
+    type = int,
+    help = (
+      'Total reads for each file.' +
+      ' Must be the same number of arguments as the number of ' +
+      ' INPUT files. If not provided, the total reads are' +
+      ' are calculated by taking the sum of the "Count" columns in each INPUT.'
+    ),
+    nargs = '+',
   )
   parser.add_argument(
     '--output',
@@ -206,11 +230,24 @@ def parse_args():
   )
   args = vars(parser.parse_args())
   args['min_length'] = max(args['dsb_pos'] + 1, args['min_length'])
+  args = vars(parser.parse_args())
+  if args['total_reads'] is not None:
+    if len(args['total_reads']) != len(args['input']):
+      raise Exception(
+        'Number of total reads must match the number of input files.'
+      )
+  if args['names'] is not None:
+    if len(args['input']) != len(args['names']):
+      raise Exception(
+        'Number of input files must match the number of names.'
+      )
   return args
 
 def main(
+  input,
+  names,
+  total_reads,
   ref_seq_file,
-  sam_file,
   output,
   output_rejected,
   dsb_pos,
@@ -221,257 +258,357 @@ def main(
   # read reference sequence from fasta file
   ref_seq = file_utils.read_seq(ref_seq_file)
   log_utils.log_input(ref_seq_file)
+
+  if names is None:
+    names = [os.path.basename(f).split('.')[0] for f in input]
   
   # For logging
-  rejected_header = 0
-  rejected_repeat = 0
-  rejected_no_alignment = 0
-  rejected_pos_not_1 = 0
-  rejected_not_consecutive = 0
-  rejected_dsb_not_touch = 0
-  rejected_not_consecutive_and_dsb_not_touch = 0
-  rejected_too_short = 0
-  accepted_repeat = 0
-  accepted_deletion_special = 0
-  accepted_insertion_special = 0
-  accepted_insertion_and_deletion_special = 0
-  accepted_indel_other = 0
-  accepted_no_indel = 0
+  rejected_header = [0] * len(input)
+  rejected_repeat = [0] * len(input)
+  rejected_no_alignment = [0] * len(input)
+  rejected_pos_not_1 = [0] * len(input)
+  rejected_not_consecutive = [0] * len(input)
+  rejected_not_dsb_touch = [0] * len(input)
+  rejected_not_consecutive_and_not_dsb_touch = [0] * len(input)
+  rejected_too_short = [0] * len(input)
+  accepted_repeat = [0] * len(input)
+  accepted_deletion_special = [0] * len(input)
+  accepted_insertion_special = [0] * len(input)
+  accepted_insertion_and_deletion_special = [0] * len(input)
+  accepted_indel_other = [0] * len(input)
+  accepted_no_indel = [0] * len(input)
 
-  # categorize
-  read_count_accepted = {}
-  read_count_rejected = {}
+  # Common variables
+  read_accepted = set()
+  read_rejected = set()
   read_num_subst = {}
   read_aligned = {}
   read_cigar_old = {}
   read_cigar_new = {}
-  total_lines = file_utils.count_lines(sam_file)
-  total_reads = 0
-  with open(sam_file, 'r') as sam_file_h:
-    log_utils.log_input(sam_file)
-    for line_num, line in enumerate(sam_file_h, 1):
-      if (line_num % 100000) == 1:
-        if not quiet:
-          log_utils.log(f"Progress: {line_num} / {total_lines}")
+  read_debug = {}
 
-      if line.startswith('@'): # header line of SAM
-        rejected_header += 1
-        continue
+  # Variables for each input file
+  read_count_accepted = [defaultdict(lambda: 0) for _ in input]
+  read_count_rejected = [defaultdict(lambda: 0) for _ in input]
+  read_rank = [None for _ in input]
+  total_lines = [0] * len(input)
+  total_reads_1 = [0] * len(input)
 
-      total_reads += 1
+  for i in range(len(input)): # Loop over input files
+    total_lines[i] = file_utils.count_lines(input[i])
 
-      fields = line.rstrip().split('\t')
-      mandatory, optional = sam_utils.parse_sam_fields(fields)
-      read_seq = mandatory['SEQ']
-      cigar = mandatory['CIGAR']
-      read_cigar_old[read_seq] = cigar
+    with open(input[i], 'r') as in_h:
+      log_utils.log_input(input[i])
+      for line_num, line in enumerate(in_h, 1): # Filter reads
+        if (line_num % 100000) == 1:
+          if not quiet:
+            log_utils.log(f"Progress: {i}: {line_num} / {total_lines[i]}")
 
-      if read_seq in read_count_accepted:
-        read_count_accepted[read_seq] += 1
-        accepted_repeat += 1
-        continue
-      elif read_seq in read_count_rejected:
-        read_count_rejected[read_seq] += 1
-        rejected_repeat += 1
-        continue
+        if line.startswith('@'): # header line of SAM
+          rejected_header[i] += 1
+          continue
 
-      if int(mandatory['FLAG']) & 4: # the read did not align at all
-        rejected_no_alignment += 1
-        read_count_rejected[read_seq] = 1
-        read_aligned[read_seq] = False
-        continue
-      else:
-        read_aligned[read_seq] = True
+        total_reads_1[i] += 1
 
-      if int(mandatory['POS']) != 1:
-        rejected_pos_not_1 += 1
-        read_count_rejected[read_seq] = 1
-        continue
+        fields = line.rstrip().split('\t')
+        mandatory, optional = sam_utils.parse_sam_fields(fields)
+        read_seq = mandatory['SEQ']
+        cigar = mandatory['CIGAR']
 
-      if len(read_seq) < min_length:
-        rejected_too_short += 1
-        read_count_rejected[read_seq] = 1
-        continue
+        if read_seq in read_accepted:
+          read_count_accepted[i][read_seq] += 1
+          accepted_repeat[i] += 1
+          continue
+        elif read_seq in read_rejected:
+          read_count_rejected[i][read_seq] += 1
+          rejected_repeat[i] += 1
+          continue
+        
+        read_cigar_old[read_seq] = cigar
 
-      # XG is the number of gap-extends (aka in/dels). 
-      # XM if number of mismatches.
-      # Both should always be present for aligned reads.
-      num_indel_sam = int(optional['XG']['VALUE'])
-      num_subst_sam = int(optional['XM']['VALUE'])
+        if int(mandatory['FLAG']) & 4: # the read did not align at all
+          read_rejected.add(read_seq)
+          read_debug[read_seq] = 'no_alignment'
+          read_aligned[read_seq] = False
+          rejected_no_alignment[i] += 1
+          read_count_rejected[i][read_seq] = 1
+          continue
+        else:
+          read_aligned[read_seq] = True
 
-      ref_align, read_align = alignment_utils.get_alignment(ref_seq, read_seq, 1, cigar)
+        if int(mandatory['POS']) != 1:
+          read_rejected.add(read_seq)
+          read_debug[read_seq] = 'pos_not_1'
+          rejected_pos_not_1[i] += 1
+          read_count_rejected[i][read_seq] = 1
+          continue
 
-      ins_pos, del_pos, subst_pos = alignment_utils.get_variation_pos(ref_align, read_align)
-      num_ins = len(ins_pos)
-      num_del = len(del_pos)
-      num_subst = len(subst_pos)
-      if num_indel_sam != (num_ins + num_del):
+        if len(read_seq) < min_length:
+          read_rejected.add(read_seq)
+          read_debug[read_seq] = 'too_short'
+          rejected_too_short[i] += 1
+          read_count_rejected[i][read_seq] = 1
+          continue
+
+        # XG is the number of gap-extends (aka in/dels). 
+        # XM if number of mismatches.
+        # Both should always be present for aligned reads.
+        num_indel_sam = int(optional['XG']['VALUE'])
+        num_subst_sam = int(optional['XM']['VALUE'])
+
+        ref_align, read_align = alignment_utils.get_alignment(ref_seq, read_seq, 1, cigar)
+
+        ins_pos, del_pos, subst_pos = alignment_utils.get_variation_pos(ref_align, read_align)
+        num_ins = len(ins_pos)
+        num_del = len(del_pos)
+        num_subst = len(subst_pos)
+        if num_indel_sam != (num_ins + num_del):
           raise Exception('Incorrect count of insertions and/or deletions')
-      if num_subst_sam != num_subst:
+        if num_subst_sam != num_subst:
           raise Exception('Incorrect count of substitutions')
 
-      if (num_ins > 0) or (num_del > 0):
-        consecutive = check_consecutive_indel(ins_pos, del_pos)
-        dsb_touches = check_dsb_touches_indel(dsb_pos, ins_pos, del_pos)
-        insertion_special_case = False
-        deletion_special_case = False
-        if not (consecutive and dsb_touches):
-          # Note: The in/del special cases may fail to identify
-          # certain edge cases when Bowtie picks an alignment that reduces the
-          # number of substitutions by using mixed insertions and deletions, or
-          # by using in/dels that are not continguous. This is because the
-          # the special cases always try to reduce (or keep equal) the
-          # number of substitutions. This could potentially be solved by
-          # choosing different scoring parameters in Bowtie, (e.g., penalize
-          # gap-open more heavily) but this is not implemented currently.
-          if (num_ins > 0) and (num_del == 0):
-            new_ref_align, new_read_align = check_insertion_special_case(
-              ref_align,
-              read_align,
-              dsb_pos,
-            )
-            if new_ref_align is not None:
-              ref_align = new_ref_align
-              read_align = new_read_align
-              insertion_special_case = True
+        if (num_ins > 0) or (num_del > 0):
+          consecutive = check_consecutive_indel(ins_pos, del_pos)
+          dsb_touch = check_dsb_touches_indel(dsb_pos, ins_pos, del_pos)
+          insertion_special_case = False
+          deletion_special_case = False
+          if not (consecutive and dsb_touch):
+            # Note: The in/del special cases may fail to identify
+            # certain edge cases when Bowtie picks an alignment that reduces the
+            # number of substitutions by using mixed insertions and deletions, or
+            # by using in/dels that are not continguous. This is because the
+            # the special cases always try to reduce (or keep equal) the
+            # number of substitutions. This could potentially be solved by
+            # choosing different scoring parameters in Bowtie, (e.g., penalize
+            # gap-open more heavily) but this is not implemented currently.
+            if (num_ins > 0) and (num_del == 0):
+              new_ref_align, new_read_align = check_insertion_special_case(
+                ref_align,
+                read_align,
+                dsb_pos,
+              )
+              if new_ref_align is not None:
+                ref_align = new_ref_align
+                read_align = new_read_align
+                insertion_special_case = True
 
-          if (num_del > 0) and (num_ins == 0):
-            new_ref_align, new_read_align = check_deletion_special_case(
-              ref_align,
-              read_align,
-              dsb_pos,
-            )
-            if new_ref_align is not None:
-              ref_align = new_ref_align
-              read_align = new_read_align
-              deletion_special_case = True
-          if insertion_special_case or deletion_special_case:
-            # if special case used, recompute info and do checks again
-            cigar = alignment_utils.get_cigar(ref_align, read_align)
-            ins_pos, del_pos, subst_pos = alignment_utils.get_variation_pos(ref_align, read_align)
-            num_ins = len(ins_pos)
-            num_del = len(del_pos)
-            num_subst = len(subst_pos)
-            consecutive = check_consecutive_indel(ins_pos, del_pos)
-            dsb_touches = check_dsb_touches_indel(dsb_pos, ins_pos, del_pos)
+            if (num_del > 0) and (num_ins == 0):
+              new_ref_align, new_read_align = check_deletion_special_case(
+                ref_align,
+                read_align,
+                dsb_pos,
+              )
+              if new_ref_align is not None:
+                ref_align = new_ref_align
+                read_align = new_read_align
+                deletion_special_case = True
+            if insertion_special_case or deletion_special_case:
+              # if special case used, recompute info and do checks again
+              cigar = alignment_utils.get_cigar(ref_align, read_align)
+              ins_pos, del_pos, subst_pos = alignment_utils.get_variation_pos(ref_align, read_align)
+              num_ins = len(ins_pos)
+              num_del = len(del_pos)
+              num_subst = len(subst_pos)
+              consecutive = check_consecutive_indel(ins_pos, del_pos)
+              dsb_touch = check_dsb_touches_indel(dsb_pos, ins_pos, del_pos)
 
-        if consecutive and dsb_touches:
-          if insertion_special_case and deletion_special_case:
-            accepted_insertion_and_deletion_special += 1
-          elif insertion_special_case:
-            accepted_insertion_special += 1
-          elif deletion_special_case:
-            accepted_deletion_special += 1
+          if consecutive and dsb_touch:
+            if insertion_special_case and deletion_special_case:
+              read_debug[read_seq] = 'insertion_and_deletion_special'
+              accepted_insertion_and_deletion_special[i] += 1
+            elif insertion_special_case:
+              read_debug[read_seq] = 'insertion_special'
+              accepted_insertion_special[i] += 1
+            elif deletion_special_case:
+              read_debug[read_seq] = 'deletion_special'
+              accepted_deletion_special[i] += 1
+            else:
+              read_debug[read_seq] = 'indel_other'
+              accepted_indel_other[i] += 1
           else:
-            accepted_indel_other += 1
+            if (not consecutive) and (not dsb_touch): 
+              read_debug[read_seq] = 'not_consecutive_and_not_dsb_touch'
+              rejected_not_consecutive_and_not_dsb_touch[i] += 1
+            elif not consecutive:
+              read_debug[read_seq] = 'not_consecutive'
+              rejected_not_consecutive[i] += 1
+            elif not dsb_touch:
+              read_debug[read_seq] = 'not_dsb_touch'
+              rejected_not_dsb_touch[i] += 1
+            else:
+              raise Exception('Impossible to reach.')
+            read_rejected.add(read_seq)
+            read_count_rejected[i][read_seq] = 1
+            continue
         else:
-          if (not consecutive) and (not dsb_touches): 
-            rejected_not_consecutive_and_dsb_not_touch += 1
-          elif not consecutive:
-            rejected_not_consecutive += 1
-          elif not dsb_touches:
-            rejected_dsb_not_touch += 1
-          else:
-            raise Exception('Impossible to reach.')
-          read_count_rejected[read_seq] = 1
-          continue
-      else:
-        accepted_no_indel += 1
+          read_debug[read_seq] = 'no_indel'
+          accepted_no_indel[i] += 1
 
-      read_count_accepted[read_seq] = 1
-      read_cigar_new[read_seq] = cigar
-      read_num_subst[read_seq] = num_subst
+        read_accepted.add(read_seq)
+        read_cigar_new[read_seq] = cigar
+        read_num_subst[read_seq] = num_subst
+        read_count_accepted[i][read_seq] = 1
+      # End of loop over reads
+    # End with statement
+    if len(read_count_accepted[i]) == 0:
+      raise Exception('No reads captured. Check input file.')
 
-  if len(read_count_accepted) == 0:
-    raise Exception('No reads captured. Check input file.')
+    read_count = read_count_accepted[i].copy()
+    read_count.update(read_count_rejected[i])
+    read_count = sorted(read_count.items(), key=lambda x: x[1], reverse=True) # tuples (read_seq, count)
+    read_rank[i] = {read_seq : rank for rank, (read_seq, _) in enumerate(read_count, 1)} 
+  # End of loop over files
 
-  read_count = read_count_accepted.copy()
-  read_count.update(read_count_rejected)
-  read_count = sorted(read_count.items(), key=lambda x: x[1], reverse=True) # tuples (read_seq, count)
-  read_rank = {read_seq : rank for rank, (read_seq, _) in enumerate(read_count, 1)} 
+  if total_reads is None:
+    total_reads = total_reads_1
 
-  read_seq_list = sorted(
-    read_count_accepted.keys(),
-    key = lambda x: read_count_accepted[x],
-    reverse = True
+  # Makes sure the read data is in the same order for all samples
+  read_accepted = list(read_accepted)
+  read_rejected = list(read_rejected)
+
+  # Make the accepted read dataframe
+  data_list = []
+  for i in range(len(input)):
+    read_seq_list = list(read_count_accepted[i].keys())
+    data = pd.DataFrame({'seq': read_seq_list})
+    data['count_' + names[i]] = [read_count_accepted[i][read_seq] for read_seq in read_seq_list]
+    data['freq_' + names[i]] = data['count_' + names[i]] / total_reads[i]
+    data['rank_' + names[i]] = [read_rank[i][read_seq] for read_seq in read_seq_list]
+    data = data.set_index('seq').reindex(read_accepted)
+    data['count_' + names[i]] = data['count_' + names[i]].fillna(0).astype(int)
+    data['freq_' + names[i]] = data['freq_' + names[i]].fillna(0)
+    data['rank_' + names[i]] = data['rank_' + names[i]].fillna(2**31 - 1).astype(int) # Int max
+    data_list.append(data)
+  data_common = pd.DataFrame({
+    'seq': read_accepted,
+    'debug': [read_debug[read_seq] for read_seq in read_accepted],
+    'num_subst': [read_num_subst[read_seq] for read_seq in read_accepted],
+    'cigar': [read_cigar_new[read_seq] for read_seq in read_accepted],
+    'cigar_old': [read_cigar_old[read_seq] for read_seq in read_accepted],
+  }).set_index('seq')
+  data_accepted = (
+    pd.concat([data_common] + data_list, join='outer', axis='columns')
+    .fillna(0)
+    .reset_index()
   )
-# TODO ADD A DEBUG COLUMNS WITH THE TAGS OF ACCEPTANCE/REJECTION
-# TODO ALSO MAKE THE REPEATS PROCESSED TOGETHER
-  file_utils.make_parent_dir(output)
-  with open(output, 'w') as output_h:
-    output_h.write('rank\tcount\tnum_subst\tcigar\tcigar_old\tsequence\n')
-    for read_seq in read_seq_list:
-      rank = read_rank[read_seq]
-      cigar = read_cigar_new[read_seq]
-      cigar_old = read_cigar_old[read_seq]
-      count = read_count_accepted[read_seq]
-      num_subst = read_num_subst[read_seq]
-      output_h.write(f'{rank}\t{count}\t{num_subst}\t{cigar}\t{cigar_old}\t{read_seq}\n')
-
-  read_seq_list = sorted(
-    read_count_rejected.keys(),
-    key = lambda x: read_count_rejected[x],
-    reverse = True
+  for col in data_accepted.columns:
+    if col.startswith('count_'):
+      data_accepted[col] = data_accepted[col].astype(int)
+  data_accepted['num_subst'] = data_accepted['num_subst'].astype(int)
+  data_accepted['freq_mean'] = (
+    data_accepted[['freq_' + x for x in names]]
+    .mean(axis='columns')
   )
-  with open(output_rejected, 'w') as output_h:
-    output_h.write('rank\tcount\taligned\tsequence\n')
-    for read_seq in read_seq_list:
-      rank = read_rank[read_seq]
-      count = read_count_rejected[read_seq]
-      aligned = int(read_aligned[read_seq])
-      output_h.write(f'{rank}\t{count}\t{aligned}\t{read_seq}\n')
+  data_accepted = data_accepted[
+    ['seq', 'debug', 'num_subst', 'cigar', 'cigar_old'] +
+    ['freq_mean'] +
+    ['freq_' + x for x in names] +
+    ['count_' + x for x in names] +
+    ['rank_' + x for x in names] +
+    ['seq']
+  ]
+  data_accepted = data_accepted.sort_values('freq_mean', ascending=False)
 
+  # Make the rejected read data
+  data_list = []
+  for i in range(len(input)):
+    read_seq_list = list(read_count_rejected[i].keys())
+    data = pd.DataFrame({'seq': read_seq_list})
+    data['count_' + names[i]] = [read_count_accepted[i][read_seq] for read_seq in read_seq_list]
+    data['freq_' + names[i]] = data['count_' + names[i]] / total_reads[i]
+    data['rank_' + names[i]] = [read_rank[i][read_seq] for read_seq in read_seq_list]
+    data = data.set_index('seq').reindex(read_rejected)
+    data['count_' + names[i]] = data['count_' + names[i]].fillna(0).astype(int)
+    data['freq_' + names[i]] = data['freq_' + names[i]].fillna(0)
+    data['rank_' + names[i]] = data['rank_' + names[i]].fillna(2**31 - 1).astype(int) # Int max
+    data_list.append(data)
+  data_common = pd.DataFrame({
+    'seq': read_rejected,
+    'debug': [read_debug[read_seq] for read_seq in read_rejected],
+    'cigar_old': [read_cigar_old[read_seq] for read_seq in read_rejected],
+    'aligned': [read_aligned[read_seq] for read_seq in read_rejected],
+  }).set_index('seq')
+  data_rejected = (
+    pd.concat([data_common] + data_list, join='outer', axis='columns')
+    .fillna(0)
+    .sort_values(by='rank_' + names[0])
+    .reset_index()
+  )
+  for col in data_rejected.columns:
+    if col.startswith('count_'):
+      data_rejected[col] = data_rejected[col].astype(int)
+  data_rejected['freq_mean'] = (
+    data_rejected[['freq_' + x for x in names]]
+    .mean(axis='columns')
+  )
+  data_rejected = data_rejected[
+    ['debug', 'cigar_old', 'aligned'] +
+    ['freq_mean'] +
+    ['freq_' + x for x in names] +
+    ['count_' + x for x in names] +
+    ['rank_' + x for x in names]
+  ]
+  data_rejected = data_rejected.sort_values('freq_mean', ascending=False)
+
+  file_utils.write_csv(data_accepted, output)
+  file_utils.write_csv(data_rejected, output_rejected)
   log_utils.log_output(output)
   log_utils.log_output(output_rejected)
 
-  accepted_new = (
-    accepted_deletion_special +
-    accepted_insertion_special +
-    accepted_insertion_and_deletion_special +
-    accepted_indel_other +
-    accepted_no_indel
-  )
-  total_accepted = accepted_new + accepted_repeat
+  accepted_new = [0] * len(input)
+  rejected_new = [0] * len(input)
+  total_accepted = [0] * len(input)
+  total_rejected = [0] * len(input)
 
-  rejected_new = (
-    rejected_no_alignment + 
-    rejected_pos_not_1 +
-    rejected_too_short +
-    rejected_not_consecutive +
-    rejected_dsb_not_touch +
-    rejected_not_consecutive_and_dsb_not_touch
-  )
-  total_rejected = rejected_new + rejected_repeat
+  for i in range(len(input)):
+    accepted_new[i] = (
+      accepted_deletion_special[i] +
+      accepted_insertion_special[i] +
+      accepted_insertion_and_deletion_special[i] +
+      accepted_indel_other[i] +
+      accepted_no_indel[i]
+    )
+    total_accepted[i] = accepted_new[i] + accepted_repeat[i]
 
-  if (total_rejected + total_accepted) != total_reads:
-    raise Exception("accepted + rejected != total")
+    rejected_new[i] = (
+      rejected_no_alignment[i] + 
+      rejected_pos_not_1[i] +
+      rejected_too_short[i] +
+      rejected_not_consecutive[i] +
+      rejected_not_dsb_touch[i] +
+      rejected_not_consecutive_and_not_dsb_touch[i]
+    )
+    total_rejected[i] = rejected_new[i] + rejected_repeat[i]
 
-  if total_accepted != sum(read_count_accepted.values()):
-    raise Exception("Total accepted not summing")
-  
-  if total_rejected != sum(read_count_rejected.values()):
-    raise Exception("Total rejected not summing")
+    if (total_rejected[i] + total_accepted[i]) != total_reads_1[i]:
+      raise Exception("accepted + rejected != total")
+
+    if total_accepted[i] != sum(read_count_accepted[i].values()):
+      raise Exception("Total accepted not summing")
+    
+    if total_rejected[i] != sum(read_count_rejected[i].values()):
+      raise Exception("Total rejected not summing")
 
   debug_lines = [
-    f'Header lines: {rejected_header}',
-    f'Total reads: {total_reads}',
-    f'    Accepted: {total_accepted}',
-    f'        Repeat: {accepted_repeat}',
-    f'        New: {accepted_new}',
-    f'            Insertion special case: {accepted_insertion_special}',
-    f'            Deletion special case: {accepted_deletion_special}',
-    f'            Insertion and deletion special case: {accepted_insertion_and_deletion_special}',
-    f'            In/del other: {accepted_indel_other}',
-    f'            No in/del: {accepted_no_indel}',
-    f'    Rejected: {total_rejected}',
-    f'        Repeat: {rejected_repeat}',
-    f'        New: {rejected_new}',
-    f'            No alignment: {rejected_no_alignment}',
-    f'            POS != 1: {rejected_pos_not_1}',
-    f'            Too short: {rejected_too_short}',
-    f'            Not consecutive: {rejected_not_consecutive}',
-    f'            DSB not touch: {rejected_dsb_not_touch}',
-    f'            Not consecutive and DSB not touch: {rejected_not_consecutive_and_dsb_not_touch}',
+    f'Header lines: ' + ', '.join([str(x) for x in rejected_header]),
+    f'Total reads: ' + ', '.join([str(x) for x in total_reads_1]),
+    f'    Accepted: '  + ', '.join([str(x) for x in total_accepted]),
+    f'        Repeat: ' + ', '.join([str(x) for x in accepted_repeat]),
+    f'        New: '  + ', '.join([str(x) for x in accepted_new]),
+    f'            Insertion special case: ' + ', '.join([str(x) for x in accepted_insertion_special]),
+    f'            Deletion special case: ' + ', '.join([str(x) for x in accepted_deletion_special]),
+    f'            Insertion and deletion special case: ' + ', '.join([str(x) for x in accepted_insertion_and_deletion_special]),
+    f'            In/del other: ' + ', '.join([str(x) for x in accepted_indel_other]),
+    f'            No in/del: ' + ', '.join([str(x) for x in accepted_no_indel]),
+    f'    Rejected: ' + ', '.join([str(x) for x in total_rejected]),
+    f'        Repeat: ' + ', '.join([str(x) for x in rejected_repeat]),
+    f'        New: ' + ', '.join([str(x) for x in rejected_new]),
+    f'            No alignment: ' + ', '.join([str(x) for x in rejected_no_alignment]),
+    f'            POS != 1: ' + ', '.join([str(x) for x in rejected_pos_not_1]),
+    f'            Too short: ' + ', '.join([str(x) for x in rejected_too_short]),
+    f'            Not consecutive: ' + ', '.join([str(x) for x in rejected_not_consecutive]),
+    f'            DSB not touch: ' + ', '.join([str(x) for x in rejected_not_dsb_touch]),
+    f'            Not consecutive and DSB not touch: ' + ', '.join([str(x) for x in rejected_not_consecutive_and_not_dsb_touch]),
   ]
 
   if (debug_file is None) and not quiet:
@@ -482,9 +619,10 @@ def main(
     with open(debug_file, 'w') as debug_out:
       for l in debug_lines:
         debug_out.write(l + '\n')
-      debug_out.close()
-      log_utils.log_output(debug_file)
+    log_utils.log_output(debug_file)
   log_utils.blank_line()
 
 if __name__ == '__main__':
   main(**parse_args())
+
+# TODO: ADD MAX SUBSTITUTIONS TO ACCEPT

@@ -243,12 +243,17 @@ def do_0_align(
     log_utils.blank_line()
 
 def do_1_filter_nhej(
+  input,
+  names,
+  total_reads,
   output,
   ref_seq_file,
   dsb_pos,
   min_length,
   quiet,
 ):
+  if input is None:
+    raise Exception('INPUT must be provided for stage 1_filter.')
   if ref_seq_file is None:
     raise Exception('REF_SEQ_FILE must be provided for stage 1_filter.')
   if dsb_pos is None:
@@ -257,20 +262,20 @@ def do_1_filter_nhej(
     min_length = dsb_pos + 1
 
   min_length = max(dsb_pos + 1, min_length)
-  input_num = len(glob.glob(os.path.join(file_names.sam_dir(output), '*.sam')))
-
-  for i in range(1, input_num + 1):
-    debug_file = os.path.join(file_names.filter_nhej_dir(output), f'{i}_debug.txt')
-    filter_nhej.main(
-      ref_seq_file = ref_seq_file,
-      sam_file = get_sam_file(output, i),
-      output = get_filter_nhej_file(output, i),
-      output_rejected = get_filter_nhej_file(output, i, rejected=True),
-      dsb_pos = dsb_pos,
-      min_length = min_length,
-      quiet = quiet,
-      debug_file = debug_file,
-    )
+  filter_nhej.main(
+    input = input,
+    names = names,
+    total_reads = total_reads,
+    ref_seq_file = ref_seq_file,
+    # sam_file = get_sam_file(output, i),
+    # output = get_filter_nhej_file(output, i),
+    output = file_names.filter_nhej(output, 'accepted'),
+    output_rejected = file_names.filter_nhej(output, 'rejected'),
+    dsb_pos = dsb_pos,
+    min_length = min_length,
+    quiet = quiet,
+    debug_file = file_names.filter_nhej(output, 'debug'),
+  )
 
 def do_2_combine_repeat(
   output,
@@ -395,6 +400,9 @@ def do_stages_1(
 
   if '1_filter' in stages:
     do_1_filter_nhej(
+      input = input,
+      names = None,
+      total_reads = total_reads,
       output = output,
       ref_seq_file = ref_seq_file,
       dsb_pos = dsb_pos,
@@ -480,3 +488,5 @@ def entry_point():
 
 if __name__ == '__main__':
   entry_point()
+
+# TODO: MAKE NAME OPTIONAL ARGUMENT

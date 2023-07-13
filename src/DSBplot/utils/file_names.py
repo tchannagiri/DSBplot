@@ -42,8 +42,8 @@ def bowtie2_build(dir):
 def sam_dir(dir):
   return os.path.join(dir, '0_sam')
 
-def filter_nhej_dir(dir):
-  return os.path.join(dir, '1_filter_nhej')
+def filter_nhej(dir, suffix):
+  return os.path.join(dir, 'filter_nhej_' + suffix + '.csv')
 
 def combine_repeat_file(dir):
   return os.path.join(dir, '2_combine_repeat', 'out.tsv')
