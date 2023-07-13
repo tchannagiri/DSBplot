@@ -69,7 +69,7 @@ def get_variation_data(
 ):
   ref_length = len(data_info['ref_seq_window'])
 
-  data_long = file_utils.read_tsv(
+  data_long = file_utils.read_csv(
     file_names.variation(data_dir, constants.SUBST_WITH)
   )
   data_long = data_long.loc[data_long['variation_type'] == variation_type]
@@ -452,7 +452,7 @@ def main(
     title = constants.HISTOGRAM_TITLE,
   ):
   data_dir = input
-  data_info = file_utils.read_tsv_dict(file_names.data_info(input))
+  data_info = file_utils.read_csv_dict(file_names.data_info(input))
   plot_histogram(
     file_out = output,
     data_dir = data_dir,

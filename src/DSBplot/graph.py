@@ -1,10 +1,7 @@
-# import DSBplot.utils.file_names as file_names
 import DSBplot.plot_graph.plot_graph as plot_graph
 
 def parse_args():
-  args = plot_graph.parse_args()
-  # args['input'] = [file_names.graph_dir(x) for x in args['input']]
-  return args
+  return plot_graph.parse_args()
 
 def main(**args):
   plot_graph.main(**args)
