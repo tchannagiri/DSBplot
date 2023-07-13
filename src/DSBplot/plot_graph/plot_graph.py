@@ -2061,6 +2061,18 @@ def parse_args():
       ' the number of input directories.'
     ),
   )
+  # parser.add_argument(
+  #   '--freq_min',
+  #   type = float,
+  #   default = 1e-5,
+  #   help = (
+  #     f'Minimum frequency for output in' +
+  #     f' windows_{constants.FREQ_FILTER_MEAN}.tsv.' +
+  #     f' Sequences with frequencies <= this are discarded.' +
+  #     f' Required only for stage 3_window' +
+  #     f' (but can be omitted because of default).'
+  #   ),
+  # )
   parser.add_argument(
     '--title',
     type = str,

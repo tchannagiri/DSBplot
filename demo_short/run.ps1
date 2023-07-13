@@ -9,7 +9,9 @@ DSBplot-preprocess --ref_seq_file data/input/ref_seq/2DSB_Sense_R1.fa --dsb_pos 
 DSBplot-preprocess --output data/output/Sense_R1 --stages 4_graph
 DSBplot-preprocess --output data/output/Sense_R1 --stages 5_histogram
 
-# TODO: DELETE LINE EVENTUALLY
+# TODO: DELETE LINES EVENTUALLY
+DSBplot-preprocess --input data/input/fastq/Sense_R1_1.fq data/input/fastq/Sense_R1_2.fq data/input/fastq/Sense_R1_3.fq data/input/fastq/Sense_R1_4.fq --names a b c d --ref_seq_file data/input/ref_seq/2DSB_Sense_R1.fa --output data/output/Sense_R1 --stages 0_align
+DSBplot-preprocess --ref_seq_file data/input/ref_seq/2DSB_Sense_R1.fa --dsb_pos 67 --output data/output/Sense_R1 --stages 1_filter --total_reads 3000 3000 3000 3000
 DSBplot-preprocess --ref_seq_file data/input/ref_seq/2DSB_Sense_R1.fa --dsb_pos 67 --output data/output/Sense_R1 --label Sense_R1 --total_reads 3000 3000 3000 3000 --stages 3_window
 
 

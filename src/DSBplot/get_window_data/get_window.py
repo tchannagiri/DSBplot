@@ -23,26 +23,6 @@ def parse_args():
     required = True,
   )
   parser.add_argument(
-    '--names',
-    nargs = '+',
-    required = True,
-    help = (
-      'Names to use as suffixes to the value columns of the output.' +
-      ' Number of arguments must match the number of INPUT args.'
-    ),
-  )
-  parser.add_argument(
-    '--total_reads',
-    type = int,
-    help = (
-      'Total reads for each file.' +
-      ' Must be the same number of arguments as the number of ' +
-      ' INPUT files. If not provided, the total reads are' +
-      ' are calculated by taking the sum of the "Count" columns in each INPUT.'
-    ),
-    nargs = '+',
-  )
-  parser.add_argument(
     '--ref_seq_file',
     type = common_utils.check_file,
     help = 'Reference sequence FASTA. Should contain a single nucleotide sequence in FASTA format.',
@@ -50,8 +30,14 @@ def parse_args():
   )
   parser.add_argument(
     '--output',
-    type = common_utils.check_dir_output,
-    help = 'Output directory.',
+    type = common_utils.check_file_output,
+    help = 'Output CSV file.',
+    required = True,
+  )
+  parser.add_argument(
+    '--output_info',
+    type = common_utils.check_file_output,
+    help = 'Output CSV file for metadata.',
     required = True,
   )
   parser.add_argument(
@@ -124,11 +110,9 @@ def parse_args():
     )
   return args
 
-def write_alignment_window(
+def write_window(
   input,
-  names,
-  total_reads,
-  output_dir,
+  output,
   ref_seq,
   dsb_pos,
   window_size,
@@ -136,33 +120,19 @@ def write_alignment_window(
   anchor_mismatches,
   subst_type,
 ):
-  data_list = []
-  for i in range(len(input)):
-    log_utils.log_input(input[i])
-    data = pd.read_csv(input[i], sep='\t').set_index(['sequence', 'cigar'])[['count']]
-    if total_reads is None:
-      data['freq'] = data['count'] / data['count'].sum()
-    else:
-      data['freq'] = data['count'] / total_reads[i]
-    data = data.rename(columns={'freq': 'freq_' + names[i], 'count': 'count_' + names[i]})
-    data_list.append(data)
-
-  data = pd.concat(data_list, axis='columns', join='outer').fillna(0).reset_index()
-  for col in data.columns:
-    if col.startswith('count_'):
-      data[col] = data[col].astype(int)
+  data = file_utils.read_csv(input)
 
   # extract window around DSB
   data_new = {
     'ref_align': [],
     'read_align': [],
   }
-  value_cols = [x for x in data.columns if x not in ['sequence', 'cigar']]
+  value_cols = [x for x in data.columns if (x.startswith('count_') or x.startswith('freq_'))]
   for col in value_cols:
     data_new[col] = []
   for row in data.to_dict('records'):
     # convert CIGAR to alignment
-    ref_align, read_align = alignment_utils.get_alignment(ref_seq, row['sequence'], 1, row['cigar'])
+    ref_align, read_align = alignment_utils.get_alignment(ref_seq, row['seq'], 1, row['cigar'])
 
     # extract window around DSB
     ref_align, read_align = alignment_window.get_alignment_window(
@@ -201,22 +171,13 @@ def write_alignment_window(
   ).reset_index()
   data = data.drop(columns='read_seq').reset_index(drop=True)
 
-  # get the max frequency of the repeats and sort by it
-  data['count_max'] = data[
-    [x for x in data.columns if x.startswith('count_')]
-  ].max(axis='columns')
-  data = data.sort_values(
-    ['count_max', 'read_align'],
-    ascending = [False, True],
-  ).drop(columns='count_max')
+  data = data.sort_values('freq_mean', ascending=False)
 
-  # save the unfiltered repeat data
-  output_file = file_names.window(output_dir, subst_type)
-  file_utils.write_tsv(data, output_file)
-  log_utils.log_output(output_file)
+  file_utils.write_csv(data, output)
+  log_utils.log_output(output)
 
 def write_data_info(
-  dir,
+  output,
   format,
   labels,
   ref_seqs,
@@ -245,9 +206,8 @@ def write_data_info(
   else:
     raise Exception('Unknown data format: ' + str(format))
   data_info = pd.DataFrame(data_info, index = [0])
-  file_out = file_names.data_info(dir)
-  log_utils.log_output(file_out)
-  file_utils.write_tsv(data_info, file_out)
+  log_utils.log_output(output)
+  file_utils.write_csv(data_info, output)
 
 def get_ref_seq_window(ref_seq, dsb_pos, window_size):
   """
@@ -268,9 +228,8 @@ def get_ref_seq_window(ref_seq, dsb_pos, window_size):
 
 def main(
   input,
-  names,
-  total_reads,
   output,
+  output_info,
   ref_seq_file,
   dsb_pos,
   window_size,
@@ -282,11 +241,9 @@ def main(
   log_utils.log_input(input)
 
   ref_seq = file_utils.read_seq(ref_seq_file)
-  write_alignment_window(
+  write_window(
     input = input,
-    names = names,
-    total_reads = total_reads,
-    output_dir = output,
+    output = output,
     ref_seq = ref_seq,
     dsb_pos = dsb_pos,
     window_size = window_size,
@@ -295,7 +252,7 @@ def main(
     subst_type = subst_type,
   )
   write_data_info(
-    dir = output,
+    output = output_info,
     format = 'individual',
     labels = [label],
     ref_seqs = [ref_seq],

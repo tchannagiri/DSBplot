@@ -108,7 +108,7 @@ def main(input, output, subst_type):
 
   # Make the comparison info
   get_window.write_data_info(
-    dir = output,
+    output = output,
     format = 'comparison',
     labels = [data_info_1['label'], data_info_2['label']],
     ref_seqs = [data_info_1['ref_seq'], data_info_2['ref_seq']],

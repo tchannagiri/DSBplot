@@ -1,5 +1,6 @@
 import os
 
+import shutil
 import argparse
 import glob
 
@@ -46,13 +47,27 @@ def parse_args():
       ' and text files are processed with the Bowtie 2 flag "-r".' +
       ' Please see the Bowtie 2 manual at http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml.' +
       ' Each file is considered a repeat of the same experiment.' +
-      ' Required only for stages 0_align.'
+      ' Required for stages 0_align and 1_filter.'
+    ),
+  )
+  parser.add_argument(
+    '--names',
+    nargs = '+',
+    type = str,
+    help = (
+      'Identifiers to use for the input libraries.' +
+      ' Must be given in the same order as the input files.' +
+      ' If omitted, the names will be the input file names without the extension.' +
+      ' Required for stages 0_align and 1_filter (but can be omitted because of the default).'
     ),
   )
   parser.add_argument(
     '--output',
     type = common_utils.check_dir_output,
-    help = 'Output directory. Required for all stages.',
+    help = (
+      'Working output directory. Required for all stages.' +
+      ' If running stages separately, the same directory must be given for all stages.'
+    ),
     required = True,
   )
   parser.add_argument(
@@ -164,18 +179,6 @@ def parse_args():
     nargs = '+',
   )
   parser.add_argument(
-    '--freq_min',
-    type = float,
-    default = 1e-5,
-    help = (
-      f'Minimum frequency for output in' +
-      f' windows_{constants.FREQ_FILTER_MEAN}.tsv.' +
-      f' Sequences with frequencies <= this are discarded.' +
-      f' Required only for stage 3_window' +
-      f' (but can be omitted because of default).'
-    ),
-  )
-  parser.add_argument(
     '--label',
     type = str,
     help = (
@@ -201,10 +204,11 @@ def parse_args():
     action = 'store_true',
     help = 'If present, do no output verbose log message.',
   )
-  return vars(parser.parse_args())
-
-def get_sam_file(output, i):
-  return os.path.join(file_names.sam_dir(output), f'{i}.sam')
+  args = vars(parser.parse_args())
+  if args['names'] is not None:
+    if len(args['names']) != len(args['input']):
+      raise Exception('Number of NAMES must be the same as the number of INPUTs.')
+  return args
 
 def get_filter_nhej_file(output, i, rejected=False):
   if rejected:
@@ -214,6 +218,7 @@ def get_filter_nhej_file(output, i, rejected=False):
 
 def do_0_align(
   input,
+  names,
   output,
   ref_seq_file,
   bowtie2_args,
@@ -222,28 +227,29 @@ def do_0_align(
     raise Exception('INPUT must be provided for stage 0_align.')
   if ref_seq_file is None:
     raise Exception('REF_SEQ_FILE must be provided for stage 0_align.')
+  if names is None:
+    names = [file_names.get_file_name(x) for x in input]
   bowtie2_build_file = file_names.bowtie2_build(output)
   file_utils.make_parent_dir(bowtie2_build_file)
   log_utils.log_input('Bowtie2 build file: ' + bowtie2_build_file)
   os.system(f'bowtie2-build-s {ref_seq_file} {bowtie2_build_file} --quiet')
 
-  for i, input_1 in enumerate(input, 1):
-    sam_file = get_sam_file(output, i)
+  for i in range(len(input)):
+    sam_file = file_names.sam_file(output, names[i])
     file_utils.make_parent_dir(sam_file)
-    input_ext = os.path.splitext(input_1)[1]
+    input_ext = os.path.splitext(input[i])[1]
     if input_ext in ['.fastq', '.fq']:
       flags = '-q'
     elif input_ext in ['.fasta', '.fa', '.fna']:
       flags = '-f'
     else:
       flags = '-r'
-    bowtie2_command = f'bowtie2-align-s --no-hd {flags} {bowtie2_args} -x {bowtie2_build_file} {input_1} -S {sam_file} --quiet'
+    bowtie2_command = f'bowtie2-align-s --no-hd {flags} {bowtie2_args} -x {bowtie2_build_file} {input[i]} -S {sam_file} --quiet'
     log_utils.log('Bowtie 2 command: ' + bowtie2_command)
     os.system(bowtie2_command)
     log_utils.blank_line()
 
 def do_1_filter_nhej(
-  input,
   names,
   total_reads,
   output,
@@ -252,8 +258,6 @@ def do_1_filter_nhej(
   min_length,
   quiet,
 ):
-  if input is None:
-    raise Exception('INPUT must be provided for stage 1_filter.')
   if ref_seq_file is None:
     raise Exception('REF_SEQ_FILE must be provided for stage 1_filter.')
   if dsb_pos is None:
@@ -261,14 +265,19 @@ def do_1_filter_nhej(
   if min_length is None:
     min_length = dsb_pos + 1
 
+  if names is None:
+    # Infer names from the SAM files.
+    names = sorted([
+      file_names.get_file_name(x) for x in glob.glob(os.path.join(output, '*.sam'))
+    ])
+  input = [file_names.sam_file(output, x) for x in names]
+
   min_length = max(dsb_pos + 1, min_length)
   filter_nhej.main(
     input = input,
     names = names,
     total_reads = total_reads,
     ref_seq_file = ref_seq_file,
-    # sam_file = get_sam_file(output, i),
-    # output = get_filter_nhej_file(output, i),
     output = file_names.filter_nhej(output, 'accepted'),
     output_rejected = file_names.filter_nhej(output, 'rejected'),
     dsb_pos = dsb_pos,
@@ -277,6 +286,7 @@ def do_1_filter_nhej(
     debug_file = file_names.filter_nhej(output, 'debug'),
   )
 
+# FIXME: DELETE THIS STAGE
 def do_2_combine_repeat(
   output,
   quiet,
@@ -297,8 +307,6 @@ def do_3_window(
   window_size,
   anchor_size,
   anchor_mismatches,
-  total_reads,
-  freq_min,
   label,
 ):
   if ref_seq_file is None:
@@ -311,23 +319,15 @@ def do_3_window(
     raise Exception('ANCHOR_SIZE must be provided for stage 3_window.')
   if anchor_mismatches is None:
     raise Exception('ANCHOR_MISMATCHES must be provided for stage 3_window.')
-  if freq_min is None:
-    raise Exception('FREQ_MIN must be provided for stage 3_window.')
   if label is None:
     label = os.path.basename(output)
 
-  filter_nhej_dir = file_names.filter_nhej_dir(output)
-  input = glob.glob(os.path.join(filter_nhej_dir, '*.tsv'))
-  input = [x for x in input if not x.endswith('_rejected.tsv')]
-  names = [os.path.basename(x).split('.')[0] for x in input]
-  window_dir = file_names.window_dir(output)
   for subst_type in constants.SUBST_TYPES:
     get_window.main(
-      input = input,
-      names = names,
-      total_reads = total_reads,
-      output = window_dir,
+      input = file_names.filter_nhej(output, 'accepted'),
       ref_seq_file = ref_seq_file,
+      output = file_names.window(output, subst_type),
+      output_info = file_names.data_info(output),
       dsb_pos = dsb_pos,
       window_size = window_size,
       anchor_size = anchor_size,
@@ -335,15 +335,8 @@ def do_3_window(
       subst_type = subst_type,
       label = label,
     )
-    # FIXME: DELETE EVENTUALLY
-    # get_freq.main(
-    #   input = window_dir,
-    #   output = window_dir,
-    #   subst_type = subst_type,
-    #   total_reads = total_reads,
-    #   freq_min = freq_min,
-    # )
 
+# FIXME: DELETE THIS STAGE, COMBINE WITH PLOT GRAPH
 def do_3_comparison(
   input_1,
   input_2,
@@ -356,6 +349,7 @@ def do_3_comparison(
       subst_type = subst_type,
     )
 
+# FIXME: DELETE THIS STAGE, COMBINE WITH PLOT GRAPH
 def do_4_graph(output):
   for subst_type in constants.SUBST_TYPES:
     get_graph_data.main(
@@ -364,6 +358,7 @@ def do_4_graph(output):
       subst_type = subst_type,
     )
 
+# FIXME: DELETE THIS STAGE, COMBINE WITH PLOT HISTOGRAM
 def do_5_histogram(output):
   for subst_type in constants.SUBST_TYPES:
     get_histogram_data.main(
@@ -376,6 +371,7 @@ def do_5_histogram(output):
 # Everything up to the point of combine samples for comparison.
 def do_stages_1(
   input,
+  names,
   output,
   ref_seq_file,
   dsb_pos,
@@ -384,24 +380,27 @@ def do_stages_1(
   anchor_size,
   anchor_mismatches,
   total_reads,
-  freq_min,
   label,
   bowtie2_args,
   quiet,
   stages = STAGES_1,
 ):
+  # Copy reference sequence file to output directory.
+  if ref_seq_file is not None:
+    shutil.copy(ref_seq_file, file_names.ref_seq_file(output))
+
   if '0_align' in stages:
     do_0_align(
       input = input,
+      names = names,
       output = output,
-      ref_seq_file = ref_seq_file,
+      ref_seq_file = file_names.ref_seq_file(output),
       bowtie2_args = bowtie2_args,
     )
 
   if '1_filter' in stages:
     do_1_filter_nhej(
-      input = input,
-      names = None,
+      names = names,
       total_reads = total_reads,
       output = output,
       ref_seq_file = ref_seq_file,
@@ -410,22 +409,14 @@ def do_stages_1(
       quiet = quiet,
     )
 
-  if '2_combine' in stages:
-    do_2_combine_repeat(
-      output = output,
-      quiet = quiet,
-    )
-
   if '3_window' in stages:
     do_3_window(
       output = output,
-      ref_seq_file = ref_seq_file,
+      ref_seq_file = file_names.ref_seq_file(output),
       dsb_pos = dsb_pos,
       window_size = window_size,
       anchor_size = anchor_size,
       anchor_mismatches = anchor_mismatches,
-      total_reads = total_reads,
-      freq_min = freq_min,
       label = label,
     )
 
@@ -450,6 +441,7 @@ def do_stages_2(
 
 def main(
   input,
+  names,
   output,
   ref_seq_file,
   dsb_pos,
@@ -458,7 +450,6 @@ def main(
   anchor_size,
   anchor_mismatches,
   total_reads,
-  freq_min,
   label,
   bowtie2_args,
   quiet,
@@ -466,6 +457,7 @@ def main(
 ):
   do_stages_1(
     input = input,
+    names  = names,
     output = output,
     ref_seq_file = ref_seq_file,
     dsb_pos = dsb_pos,
@@ -474,13 +466,12 @@ def main(
     anchor_size = anchor_size,
     anchor_mismatches = anchor_mismatches,
     total_reads = total_reads,
-    freq_min = freq_min,
     label = label,
     bowtie2_args = bowtie2_args,
     quiet = quiet,
     stages = stages,
   )
-  do_stages_2(output = output, stages = stages)
+  do_stages_2(output=output, stages=stages)
 
 # This allows the "DSBplot-preprocess" command to be run from the command line.
 def entry_point():
@@ -488,5 +479,3 @@ def entry_point():
 
 if __name__ == '__main__':
   entry_point()
-
-# TODO: MAKE NAME OPTIONAL ARGUMENT
