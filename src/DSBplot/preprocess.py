@@ -183,10 +183,17 @@ def parse_args():
     action = 'store_true',
     help = 'If present, do no output verbose log message.',
   )
+  parser.add_argument(
+    '--no_align',
+    action = 'store_true',
+    help = 'Shorthand for omitting the 0_align stage (see --stages).',
+  )
   args = vars(parser.parse_args())
   if args['names'] is not None:
     if len(args['names']) != len(args['input']):
       raise Exception('Number of NAMES must be the same as the number of INPUTs.')
+  if args['no_align']:
+    args['stages'] = [x for x in args['stages'] if (x != '0_align')]
   return args
 
 def do_0_align(
@@ -204,7 +211,7 @@ def do_0_align(
     names = [file_names.get_file_name(x) for x in input]
   bowtie2_build_file = file_names.bowtie2_build(output)
   file_utils.make_parent_dir(bowtie2_build_file)
-  log_utils.log_input('Bowtie2 build file: ' + bowtie2_build_file)
+  log_utils.log_output('Bowtie2 build file: ' + bowtie2_build_file)
   os.system(f'bowtie2-build-s {ref_seq_file} {bowtie2_build_file} --quiet')
 
   for i in range(len(input)):
@@ -220,7 +227,7 @@ def do_0_align(
     bowtie2_command = f'bowtie2-align-s --no-hd {flags} {bowtie2_args} -x {bowtie2_build_file} {input[i]} -S {sam_file} --quiet'
     log_utils.log('Bowtie 2 command: ' + bowtie2_command)
     os.system(bowtie2_command)
-    log_utils.blank_line()
+  log_utils.blank_line()
 
 def do_1_filter_nhej(
   names,
@@ -370,6 +377,7 @@ def main(
   label,
   bowtie2_args,
   quiet,
+  no_align = False, # Not used
   stages = STAGES,
 ):
   do_stages(
