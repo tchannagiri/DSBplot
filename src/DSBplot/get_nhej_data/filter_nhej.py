@@ -2,14 +2,15 @@ import os
 import argparse
 from collections import defaultdict
 import pandas as pd
-import numpy as np
 
 import DSBplot.utils.constants as constants
+import DSBplot.utils.file_names as file_names
 import DSBplot.utils.file_utils as file_utils
 import DSBplot.utils.common_utils as common_utils
 import DSBplot.utils.sam_utils as sam_utils
 import DSBplot.utils.alignment_utils as alignment_utils
 import DSBplot.utils.log_utils as log_utils
+
 
 def check_consecutive_indel(ins_pos, del_pos):
   if (len(ins_pos) == 0) and (len(del_pos) == 0): # no in/dels
@@ -224,8 +225,10 @@ def parse_args():
     '--debug_file',
     type = common_utils.check_file_output,
     help = (
-      'File to output debugging messages.' +
-      'If omitted, the messages are printed to the console (unless --quiet is used).'
+      'File to output debugging categories.' +
+      ' If omitted, the messages are printed to the console (unless --quiet is used).' +
+      ' If the extension is ".csv", the output is formatted as a CSV table, otherwise' +
+      ' it is formatted as a text file.'
     ),
   )
   args = vars(parser.parse_args())
@@ -260,10 +263,10 @@ def main(
   log_utils.log_input(ref_seq_file)
 
   if names is None:
-    names = [os.path.basename(f).split('.')[0] for f in input]
+    names = [file_names.get_file_name(x) for x in input]
   
   # For logging
-  rejected_header = [0] * len(input)
+  header = [0] * len(input)
   rejected_repeat = [0] * len(input)
   rejected_no_alignment = [0] * len(input)
   rejected_pos_not_1 = [0] * len(input)
@@ -305,7 +308,7 @@ def main(
             log_utils.log(f"Progress: {i}: {line_num} / {total_lines[i]}")
 
         if line.startswith('@'): # header line of SAM
-          rejected_header[i] += 1
+          header[i] += 1
           continue
 
         total_reads_1[i] += 1
@@ -500,7 +503,7 @@ def main(
     .mean(axis='columns')
   )
   data_accepted = data_accepted[
-    ['seq', 'debug', 'num_subst', 'cigar', 'cigar_old'] +
+    ['debug', 'num_subst', 'cigar', 'cigar_old'] +
     ['freq_mean'] +
     ['freq_' + x for x in names] +
     ['count_' + x for x in names] +
@@ -546,7 +549,8 @@ def main(
     ['freq_mean'] +
     ['freq_' + x for x in names] +
     ['count_' + x for x in names] +
-    ['rank_' + x for x in names]
+    ['rank_' + x for x in names] +
+    ['seq']
   ]
   data_rejected = data_rejected.sort_values('freq_mean', ascending=False)
 
@@ -589,8 +593,32 @@ def main(
     if total_rejected[i] != sum(read_count_rejected[i].values()):
       raise Exception("Total rejected not summing")
 
+  debug_data = pd.DataFrame({
+    'header': header,
+    'total_reads': total_reads_1,
+    'rejected_no_alignment': rejected_no_alignment,
+    'rejected_pos_not_1': rejected_pos_not_1,
+    'rejected_too_short': rejected_too_short,
+    'rejected_not_consecutive': rejected_not_consecutive,
+    'rejected_not_dsb_touch': rejected_not_dsb_touch,
+    'rejected_not_consecutive_and_not_dsb_touch': rejected_not_consecutive_and_not_dsb_touch,
+    'rejected_repeat': rejected_repeat,
+    'rejected_new': rejected_new,
+    'accepted_repeat': accepted_repeat,
+    'accepted_deletion_special': accepted_deletion_special,
+    'accepted_insertion_special': accepted_insertion_special,
+    'accepted_insertion_and_deletion_special': accepted_insertion_and_deletion_special,
+    'accepted_indel_other': accepted_indel_other,
+    'accepted_no_indel': accepted_no_indel,
+    'accepted_new': accepted_new,
+    'total_accepted': total_accepted,
+    'total_rejected': total_rejected,
+  }).T.rename_axis('debug')
+  debug_data.columns = ['count_' + x for x in names]
+  debug_data[['freq_' + x for x in names]] = debug_data[['count_' + x for x in names]].divide(total_reads_1, axis='columns')
+  debug_data = debug_data.reset_index()
   debug_lines = [
-    f'Header lines: ' + ', '.join([str(x) for x in rejected_header]),
+    f'Header lines: ' + ', '.join([str(x) for x in header]),
     f'Total reads: ' + ', '.join([str(x) for x in total_reads_1]),
     f'    Accepted: '  + ', '.join([str(x) for x in total_accepted]),
     f'        Repeat: ' + ', '.join([str(x) for x in accepted_repeat]),
@@ -615,10 +643,13 @@ def main(
     for l in debug_lines:
       log_utils.log(l)
   elif debug_file is not None:
-    file_utils.make_parent_dir(debug_file)
-    with open(debug_file, 'w') as debug_out:
-      for l in debug_lines:
-        debug_out.write(l + '\n')
+    if debug_file.endswith('.csv'):
+      file_utils.write_csv(debug_data, debug_file)
+    else:
+      file_utils.make_parent_dir(debug_file)
+      with open(debug_file, 'w') as debug_out:
+        for l in debug_lines:
+          debug_out.write(l + '\n')
     log_utils.log_output(debug_file)
   log_utils.blank_line()
 
