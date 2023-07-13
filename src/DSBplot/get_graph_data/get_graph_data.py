@@ -1,3 +1,5 @@
+# FIXME: DELETE
+
 import itertools
 import pandas as pd
 import argparse
@@ -38,55 +40,6 @@ import DSBplot.utils.graph_utils as graph_utils
 #   )
 #   return vars(parser.parse_args())
 
-def get_node_data(data):
-  """
-    Get the data for the vertices of the graph.
-  """
-  dist_ref = []
-  variation_type = []
-  substitution = []
-  insertion = []
-  deletion = []
-  indel = []
-
-  for row in data.to_dict('records'):
-    num_ins, num_del, num_subst = (
-      alignment_utils.count_variations(row['ref_align'], row['read_align'])
-    )
-    if num_ins + num_del + num_subst == 0:
-      var_type = 'none'
-    elif num_del + num_subst == 0:
-      var_type = 'insertion'
-    elif num_subst + num_ins == 0:
-      var_type = 'deletion'
-    elif num_ins + num_del == 0:
-      var_type = 'substitution'
-    else:
-      var_type = 'mixed'
-    variation_type.append(var_type)
-    dist_ref.append(num_ins + num_del + num_subst)
-    substitution.append(num_subst)
-    insertion.append(num_ins)
-    deletion.append(num_del)
-    indel.append(num_ins + num_del)
-
-  all_data = data.to_dict('list')
-  all_data.update({
-    'is_ref': [x == 0 for x in dist_ref],
-    'dist_ref': dist_ref,
-    'variation_type': variation_type,
-    'substitution': substitution,
-    'insertion': insertion,
-    'deletion': deletion,
-    'indel': indel,
-  })
-
-  all_data = pd.DataFrame(all_data)
-  all_data = all_data.sort_values('freq_mean', ascending=False)
-  all_data['id'] = 'S' + pd.Series(range(1, all_data.shape[0] + 1), dtype=str)
-  all_data = all_data[['id'] + list(all_data.columns[all_data.columns != 'id'])]
-
-  return pd.DataFrame(all_data)
 
 # FIXME: This function is not used anywhere. DELETE.
 # def write_sequence_data(input_dir, output_dir, subst_type):
@@ -107,52 +60,6 @@ def get_node_data(data):
 #   file_utils.write_tsv(data, out_file_name)
 #   log_utils.log_output(out_file_name)
 
-def get_edge_data(sequence_data):
-  """
-    Make adjacency edge data from sequence data.
-  """
-
-  edges = {
-    'id_a': [],
-    'id_b': [],
-    'ref_align_a': [],
-    'read_align_a': [],
-    'variation_type_a': [],
-    'ref_align_b': [],
-    'read_align_b': [],
-    'variation_type_b': [],
-    'edge_type': [],
-  }
-  for row_a, row_b in itertools.combinations(sequence_data.to_dict('records'), 2):
-    ref_align_a = row_a['ref_align']
-    read_align_a = row_a['read_align']
-    ref_align_b = row_b['ref_align']
-    read_align_b = row_b['read_align']
-    if graph_utils.is_alignment_adjacent(
-      read_align_a,
-      read_align_b,
-    ):
-      if (
-        (row_a['insertion'] != row_b['insertion']) or
-        (row_a['deletion'] != row_b['deletion'])
-      ):
-        edge_type = 'indel'
-      else:
-        edge_type = 'substitution'
-      
-      edges['id_a'].append(row_a['id'])
-      edges['id_b'].append(row_b['id'])
-
-      edges['ref_align_a'].append(ref_align_a)
-      edges['read_align_a'].append(read_align_a)
-      edges['variation_type_a'].append(row_a['variation_type'])
-
-      edges['ref_align_b'].append(ref_align_b)
-      edges['read_align_b'].append(read_align_b)
-      edges['variation_type_b'].append(row_b['variation_type'])
-
-      edges['edge_type'].append(edge_type)
-  return pd.DataFrame(edges)
 
 # FIXME: This function is not used anywhere. DELETE.
 # def write_edge_data(output_dir, subst_type):

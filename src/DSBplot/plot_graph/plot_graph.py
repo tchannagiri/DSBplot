@@ -22,7 +22,6 @@ import DSBplot.utils.kmer_utils as kmer_utils
 import DSBplot.utils.alignment_utils as alignment_utils
 import DSBplot.utils.file_names as file_names
 import DSBplot.plot_graph.plot_graph_helper as plot_graph_helper
-import DSBplot.get_graph_data.get_graph_data as get_graph_data
 
 LAYOUT_PROPERTIES = {
  'radial_layout': {
@@ -1552,6 +1551,7 @@ def make_custom_legends(
 #     showarrow = False,
 #   )
 
+# Load all the data needed for making the graphs
 def get_data(
   data_dir_list,
   node_subst_type,
@@ -1559,45 +1559,62 @@ def get_data(
   node_filter_freq_range,
   node_filter_dist_range
 ):
-  node_data_list = [
-    get_graph_data.get_node_data(
-      file_utils.read_csv(file_names.window(data_dir, node_subst_type))
-    ).set_index('id', drop=False)
-    for data_dir in data_dir_list
-  ]
+  data_info_list = []
+  node_data_list = []
+  edge_data_list = []
+  graph_list = []
 
-  for i in range(len(data_dir_list)):
-    if node_filter_variation_types is not None:
-      node_data_list[i] = node_data_list[i].loc[
-        node_data_list[i]['variation_type'].isin(node_filter_variation_types)
-      ]
-    node_data_list[i] = node_data_list[i].loc[
-      node_data_list[i]['freq_mean'].between(
+  for data_dir in data_dir_list:
+    if constants.COMPARISON_SEP in data_dir:
+      data_dir_1, data_dir_2 = data_dir.split(constants.COMPARISON_SEP)
+      log_utils.log_input(data_dir_1)
+      log_utils.log_input(data_dir_2)
+      data_info_1 = file_utils.read_csv_dict(file_names.data_info(data_dir_1))
+      data_info_2 = file_utils.read_csv_dict(file_names.data_info(data_dir_2))
+      data_1 = file_utils.read_csv(file_names.window(data_dir_1, node_subst_type))
+      data_2 = file_utils.read_csv(file_names.window(data_dir_2, node_subst_type))
+      data_info, data = graph_utils.get_comparison_data(
+        data_info_1 = data_info_1,
+        data_info_2 = data_info_2,
+        data_1 = data_1,
+        data_2 = data_2,
+      )
+      node_data = graph_utils.get_node_data(data)
+    else:
+      log_utils.log_input(data_dir)
+      data_info = file_utils.read_csv_dict(file_names.data_info(data_dir))
+      data = file_utils.read_csv(file_names.window(data_dir, node_subst_type))
+      node_data = graph_utils.get_node_data(data)
+
+    node_data = node_data.loc[
+      node_data['variation_type'].isin(node_filter_variation_types)
+    ]
+    node_data = node_data.loc[
+      node_data['freq_mean'].between(
         node_filter_freq_range[0],
         node_filter_freq_range[1],
         inclusive = 'both',
       )
     ]
-
-    node_data_list[i] = node_data_list[i].loc[
-      node_data_list[i]['dist_ref'].between(
+    node_data = node_data.loc[
+      node_data['dist_ref'].between(
         node_filter_dist_range[0],
         node_filter_dist_range[1],
         inclusive = 'both',
       )
     ]
+    node_data = node_data.set_index('id', drop=False)
 
-  edge_data_list = [
-    get_graph_data.get_edge_data(node_data_list[i])
-    for i in range(len(data_dir_list))
-  ]
+    edge_data = graph_utils.get_edge_data(node_data)
 
-  graph_list = [
-    graph_utils.get_graph(node_data_list[i], edge_data_list[i])
-    for i in range(len(data_dir_list))
-  ]
+    graph = graph_utils.get_graph(node_data, edge_data)
 
-  return node_data_list, edge_data_list, graph_list
+    data_info_list.append(data_info)
+    node_data_list.append(node_data)
+    edge_data_list.append(edge_data)
+    graph_list.append(graph)
+
+  return data_info_list, node_data_list, edge_data_list, graph_list
 
 # FIXME: DELETE COMMENTS
 def make_graph_figure_helper(
@@ -1654,7 +1671,7 @@ def make_graph_figure_helper(
   #   for data_dir in data_dir_list
   # ]
   # node_data_list = [
-  #   get_graph_data.get_node_data(
+  #   graph_utils.get_node_data(
   #     file_utils.read_csv(file_names.window(data_dir, node_subst_type))
   #   ).set_index('id', drop=False)
   #   for data_dir in data_dir_list
@@ -1688,7 +1705,7 @@ def make_graph_figure_helper(
   #   ]
 
   # edge_data_list = [
-  #   get_graph_data.get_edge_data(node_data_list[i])
+  #   graph_utils.get_edge_data(node_data_list[i])
   #   for i in range(len(data_dir_list))
   # ]
 
@@ -2110,14 +2127,15 @@ def parse_args():
   )
   parser.add_argument(
     '--input',
-    type = common_utils.check_dir,
+    type = str,
     nargs = '+',
     help = (
       'Input data directories.' +
       ' All libraries specified here must have the same windowed reference sequence' +
       ' (i.e., the 20bp section of the reference around the DSB site should be the same' +
       ' in all libraries). All the libraries will be laid out using common x/y-coordinate' +
-      ' assignments to the vertices.'
+      ' assignments to the vertices. To plot plot a comparion graph between two libraries,' +
+      f' specify both directories as a single argument separated by "{constants.COMPARISON_SEP}".'
     ),
     required = True,
   )
@@ -2738,12 +2756,13 @@ def main(
 ):
   input_list = input
   output_list = output
-  for x in input_list:
-    log_utils.log_input(x)
-  data_info_list = [
-    file_utils.read_csv_dict(file_names.data_info(data_dir))
-    for data_dir in input_list
-  ]
+  data_info_list, node_data_list, edge_data_list, graph_list = get_data(
+    data_dir_list = input_list,
+    node_subst_type = subst_type,
+    node_filter_variation_types = variation_types,
+    node_filter_freq_range = filter_freq,
+    node_filter_dist_range = filter_dist,
+  )
 
   node_color_type_list = []
   for i in range(len(data_info_list)):
@@ -2773,13 +2792,7 @@ def main(
       if x not in ['substitution', 'mixed']
     ]
   
-  node_data_list, edge_data_list, graph_list = get_data(
-    data_dir_list = input_list,
-    node_subst_type = subst_type,
-    node_filter_variation_types = variation_types,
-    node_filter_freq_range = filter_freq,
-    node_filter_dist_range = filter_dist,
-  )
+
 
   figure_list = make_graph_figure(
     # data_dir_list = input_list,

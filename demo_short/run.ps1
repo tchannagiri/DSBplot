@@ -21,7 +21,7 @@ DSBplot-graph --input data/output/Sense_R1 --output plots/graph/Sense_R1_kamada.
 DSBplot-graph --input data/output/Sense_R1 --output plots/graph/Sense_R1_radial.png --layout radial_layout --title "Sense (R1) Radial Layout" --width 2400 --height 1800
 
 # TEMP FOR TESTING
-DSBplot-graph --input data/output/Sense_R1 --output plots/temp.png --layout universal_layout --title "Sense (R1) Universal Layout" --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
+DSBplot-graph --input data/output/Sense_R1::data/output/Sense_R1 --output plots/temp.png --layout universal_layout --title "Sense (R1) Universal Layout" --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
 
 ### Plot the graphs (HTML) ###
 DSBplot-graph --input data/output/Sense_R1 --output plots/graph/Sense_R1_universal.html --layout universal_layout --title "Sense (R1) Universal Layout" --width 2400 --height 1800 --range_x -12 13 --range_y -23 20 --universal_layout_y_axis_x_pos 12 --universal_layout_y_axis_y_range -20.5 18.5 --universal_layout_x_axis_deletion_y_pos -20.5 --universal_layout_x_axis_insertion_y_pos 18.5 --universal_layout_y_axis_insertion_max_tick 6 --universal_layout_y_axis_deletion_max_tick 19
