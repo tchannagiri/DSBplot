@@ -14,11 +14,8 @@ import DSBplot.get_nhej_data.filter_nhej as filter_nhej
 import DSBplot.get_window_data.get_window as get_window
 import DSBplot.get_histogram_data.get_variation as get_variation
 
-
-
 STAGES = ['0_align', '1_filter', '2_window', '3_variation']
 
-# FIXME RE WRITE THE DOCU MEN TATION FOR THE NEW STAGES
 def parse_args():
   parser = argparse.ArgumentParser(
     description = (
@@ -85,11 +82,6 @@ def parse_args():
       ' 1_filter: Filter reads that represent NHEJ repair (all in/dels touch the DSB site and are consecutive).' +
       ' 2_window: Extract the nucleotide sequences and alignment from around the DSB site.' +
       ' 3_variation: Split alignment windows into individual variations (used for plotting variation-position histograms).'
-      # ' 3_comparison: Combine the data from two different experiments in preparation for' +
-      # ' making comparison graphs (this stage cannot be run from "preprocess.py", only "comparison.py").' +
-      # ' 4_graph: Preprocess the data further for graph construction and plotting.' +
-      # ' 5_hist: Preprocess the data further for histogram construction and plotting.' +
-      # ' For a more detailed explanation of the preprocessing pipeline, see the README.'
     )
   )
   parser.add_argument(
@@ -101,7 +93,7 @@ def parse_args():
       ' Must be the same sequence as used for alignment.' +
       f' Must be in FASTA format ({", ".join(constants.FASTA_EXT)}) or' +
       ' text format (all other extensions).' +
-      ' Required for stages 0_align and 1_filter.'
+      ' Required for stages 0_align, 1_filter, and 2_window.'
     ),
   )
   parser.add_argument(
@@ -110,19 +102,16 @@ def parse_args():
     help = (
       'Position on reference sequence immediately left (5'') of DSB site.' +
       ' I.e., the DSB is between position DSB_POS and DSB_POS + 1.' +
-      ' Required only for stage 1_filter.'
+      ' Required for stage 1_filter and 2_window.'
     ),
   )
   parser.add_argument(
     '--min_length',
     type = int,
     help = (
-      'Minimum length of read sequence to be considered.' +
-      ' Reads shorter than this are discarded.' +
-      ' Forced to be at least DSB_POS + 1.' +
-      ' If not given, will be assigned DSB_POS + 1.' +
-      ' Required only for stage 1_filter' +
-      ' (but can be omitted because of default).'
+      'Minimum length of read sequence to be considered. Reads shorter than this are discarded.' +
+      ' Forced to be at least DSB_POS + 1 (also the default).' +
+      ' Required for stage 1_filter (but can be omitted because of default).'
     ),
   )
   parser.add_argument(
@@ -135,8 +124,7 @@ def parse_args():
       ' {DSB_POS - WINDOW_SIZE + 1, ..., DSB_POS + WINDOW_SIZE} are extracted.' +
       ' The actual number of nucleotides extracted from each read may vary depending' +
       ' on the number of insertions/deletions/substitutions in the alignment.' +
-      ' Required only for stage 3_window' +
-      ' (but can be omitted because of default).'
+      ' Required for stage 2_window (but can be omitted because of default).'
     ),
   )
   parser.add_argument(
@@ -144,10 +132,8 @@ def parse_args():
     type = int,
     default = 20,
     help = (
-      'Size of the anchor on the left/right of the extracted window' +
-      ' to check for mismatches.' +
-      ' Required only for stage 3_window' +
-      ' (but can be omitted because of default).'
+      'Size of the anchor on the left/right of the extracted window to check for mismatches.' +
+      ' Required only for stage 2_window (but can be omitted because of default).'
     ),
   )
   parser.add_argument(
@@ -155,11 +141,10 @@ def parse_args():
     type = int,
     default = 1,
     help = (
-      'Maximum number of mismatches allowed on the left/right anchor sequences.\n'
-      'Reads with more than the allowed number of mismatches on the left/right anchor\n'
-      'will be discarded. This limit is applied to the left/right anchors separately.' +
-      ' Required only for stage 3_window' +
-      ' (but can be omitted because of default).'
+      'Maximum number of mismatches allowed on the left/right anchor sequences.' +
+      ' Reads with more than the allowed number of mismatches on the left/right anchor' +
+      ' will be discarded. This limit is applied to the left/right anchors separately.' +
+      ' Required for stage 2_window (but can be omitted because of default).'
     ),
   )
   parser.add_argument(
@@ -171,8 +156,7 @@ def parse_args():
       ' files if some reads were discarded during preprocessing.' +
       ' The number of arguments must be the same as the number of ' +
       ' INPUTs. If not provided, the total reads remaining after NHEJ filtering are used.' +
-      ' Required only for stage 2_combine' +
-      ' (but can be omitted because of default).'
+      ' Required for stage 1_filter (but can be omitted because of default).'
     ),
     nargs = '+',
   )
@@ -182,8 +166,7 @@ def parse_args():
     help = (
       'Label of the experiment to be used in plot legends.' +
       ' If not provided, the label is the basename of the OUTPUT directory.' +
-      ' Required only for stage 3_window' +
-      ' (but can be omitted because of default).'
+      ' Required for stage 2_window (but can be omitted because of default).'
     ),
   )
   parser.add_argument(
@@ -191,10 +174,8 @@ def parse_args():
     type = str,
     default = '',
     help = (
-      'Additional arguments to pass to Bowtie2.' +
-      ' Must be a single string.' +
-      ' Required only for stage 0_align' +
-      ' (but can be omitted because of default).'
+      'Additional arguments to pass to Bowtie2. Must be a single string.' +
+      ' Required for stage 0_align (but can be omitted because of default).'
     ),
   )
   parser.add_argument(
@@ -207,12 +188,6 @@ def parse_args():
     if len(args['names']) != len(args['input']):
       raise Exception('Number of NAMES must be the same as the number of INPUTs.')
   return args
-
-def get_filter_nhej_file(output, i, rejected=False):
-  if rejected:
-    return os.path.join(file_names.filter_nhej_dir(output), f'{i}_rejected.tsv')
-  else:
-    return os.path.join(file_names.filter_nhej_dir(output), f'{i}.tsv')
 
 def do_0_align(
   input,
@@ -294,15 +269,15 @@ def do_2_window(
   label,
 ):
   if ref_seq_file is None:
-    raise Exception('REF_SEQ_FILE must be provided for stage 3_window.')
+    raise Exception('REF_SEQ_FILE must be provided for stage 2_window.')
   if dsb_pos is None:
-    raise Exception('DSB_POS must be provided for stage 3_window.')
+    raise Exception('DSB_POS must be provided for stage 2_window.')
   if window_size is None:
-    raise Exception('WINDOW_SIZE must be provided for stage 3_window.')
+    raise Exception('WINDOW_SIZE must be provided for stage 2_window.')
   if anchor_size is None:
-    raise Exception('ANCHOR_SIZE must be provided for stage 3_window.')
+    raise Exception('ANCHOR_SIZE must be provided for stage 2_window.')
   if anchor_mismatches is None:
-    raise Exception('ANCHOR_MISMATCHES must be provided for stage 3_window.')
+    raise Exception('ANCHOR_MISMATCHES must be provided for stage 2_window.')
   if label is None:
     label = os.path.basename(output)
 
@@ -326,7 +301,6 @@ def do_3_variation(output):
       input = file_names.window(output, subst_type),
       output = file_names.variation(output, subst_type),
     )
-
 
 def do_stages(
   input,
@@ -353,7 +327,7 @@ def do_stages(
       input = input,
       names = names,
       output = output,
-      ref_seq_file = file_names.ref_seq_file(output),
+      ref_seq_file = ref_seq_file,
       bowtie2_args = bowtie2_args,
     )
 
@@ -371,7 +345,7 @@ def do_stages(
   if '2_window' in stages:
     do_2_window(
       output = output,
-      ref_seq_file = file_names.ref_seq_file(output),
+      ref_seq_file = ref_seq_file,
       dsb_pos = dsb_pos,
       window_size = window_size,
       anchor_size = anchor_size,
