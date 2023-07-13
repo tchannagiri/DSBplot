@@ -799,9 +799,7 @@ def make_grid_spec(
   return grid_spec
 
 def make_graph_layout(
-  # data_dir,
   data_info,
-  # node_subst_type,
   graph,
   layout_type,
   graph_layout_common = None,
@@ -1406,151 +1404,6 @@ def make_custom_legends(
       y_shift_curr_px -= legend_vertical_space_px
   
   return y_shift_curr_px
-
-# FIXME: DELETE!
-# def make_graph_stats(
-#   figure,
-#   data_dir,
-#   x,
-#   y,
-#   x_shift,
-#   y_shift,
-#   x_anchor,
-#   y_anchor,
-#   font_size_scale = 1,
-# ):
-#   graph_stats = file_utils.read_tsv_dict(file_names.graph_stats(data_dir))
-#   graph_stats = {
-#     k: 'NA' if pd.isna(v) else
-#     str(v) if isinstance(v, int) else
-#     f'{v:.2f}'
-#     for k, v in graph_stats.items()
-#   }
-#   figure.add_annotation(
-#     xref = 'x domain',
-#     yref = 'y domain',
-#     x = x,
-#     y = y,
-#     xshift = x_shift,
-#     yshift = y_shift,
-#     xanchor = x_anchor,
-#     yanchor = y_anchor,
-#     align = 'left',
-#     font_size = constants.GRAPH_LEGEND_FONT_SIZE * font_size_scale,
-#     font_family = 'Monospace',
-#     text = (
-#       f'Num nodes:            {graph_stats["num_nodes"][0]}<br>'
-#       f'Num edges:            {graph_stats["num_edges"][0]}<br>'
-#       f'Avg degree:           {graph_stats["avg_degree"][0]}<br>'
-#       f'Avg dist from ref:    {graph_stats["avg_dist_ref"][0]}<br>'
-#       f'Avg pairwise dist:    {graph_stats["avg_pairwise_lev_dist"][0]}<br>'
-#       f'Max dist from ref:    {graph_stats["max_dist_ref"][0]}<br>'
-#       f'Max pairwise dist:    {graph_stats["max_pairwise_lev_dist"][0]}<br>'
-#       f'Num seq substitution: {graph_stats["num_seq_substitution"][0]}<br>'
-#       f'Num seq insertion:    {graph_stats["num_seq_insertion"][0]}<br>'
-#       f'Num seq deletion:     {graph_stats["num_seq_deletion"][0]}<br>'
-#     ),
-#     showarrow = False,
-#   )
-
-# FIXME: DELETE!
-# def make_graph_stats_ref_component(
-#   figure,
-#   data_dir,
-#   data_info,
-#   subst_type,
-#   x,
-#   y,
-#   x_shift,
-#   y_shift,
-#   x_anchor,
-#   y_anchor,
-#   font_size_scale = 1,
-# ):
-#   graph_stats = file_utils.read_tsv_dict(
-#     file_names.graph_stats(data_dir, subst_type)
-#   )
-#   stat_lines = [
-#     ['Num nodes', graph_stats['num_nodes']],
-#     ['Num edges', graph_stats['num_edges']],
-#     ['Avg degree', graph_stats['avg_degree']],
-#     ['Avg dist from ref', graph_stats['avg_dist_ref']],
-#     ['Avg pairwise dist', graph_stats['avg_pairwise_dist']],
-#     ['Max dist from ref', graph_stats['max_dist_ref']],
-#     ['Max pairwise dist', graph_stats['max_pairwise_dist']],
-#     ['Num seq insertion', graph_stats['num_seq_insertion']],
-#     ['Num seq deletion', graph_stats['num_seq_deletion']],
-#   ]
-#   if data_info['format'] == 'comparison':
-#     stat_lines += [
-#       [
-#         'Ref seq freq', '{:.3f} & {:.3f}'.format(
-#           graph_stats['ref_freq_mean_1'],
-#           graph_stats['ref_freq_mean_2'],
-#         )
-#       ],
-#       [
-#         'Non-ref seq freq', '{:.3f} & {:.3f}'.format(
-#           graph_stats['non_ref_freq_mean_1'],
-#           graph_stats['non_ref_freq_mean_2'],
-#         )
-#       ],
-#       [
-#         'Insertion freq', '{:.4f} & {:.4f}'.format(
-#           graph_stats['insertion_freq_mean_1'],
-#           graph_stats['insertion_freq_mean_2'],
-#         )
-#       ],
-#       [
-#         'Deletion freq', '{:.4f} & {:.4f}'.format(
-#           graph_stats['deletion_freq_mean_1'],
-#           graph_stats['deletion_freq_mean_2'],
-#         )
-#       ],
-#     ]
-#   elif data_info['format'] == 'individual':
-#     stat_lines += [
-#       ['Ref seq freq', '{:.3f}'.format(graph_stats['ref_freq_mean'])],
-#       ['Non-ref seq freq', '{:.5f}'.format(graph_stats['non_ref_freq_mean'])],
-#       ['Insertion freq', '{:.5f}'.format(graph_stats['insertion_freq_mean'])],
-#       ['Deletion freq', '{:.5f}'.format(graph_stats['deletion_freq_mean'])],
-#     ]
-#   else:
-#     raise Exception('Unknown data format: ' + str(data_info['format']))
-#   for line in stat_lines:
-#     if not isinstance(line[1], str):
-#       if pd.isna(line[1]):
-#         line[1] = 'NA'
-#       elif line[1] == np.round(line[1]): # integer
-#         line[1] = str(line[1])
-#       else:
-#         line[1] = f'{line[1]:.2f}'
-#   max_label_len = max(len(line[0]) for line in stat_lines)
-#   for line in stat_lines:
-#     line[0] = line[0].ljust(max_label_len) + ': '
-#   stat_lines = [line[0] + line[1] for line in stat_lines]
-#   stat_lines = '<br>'.join(stat_lines)
-#   figure.add_annotation(
-#     xref = 'x domain',
-#     yref = 'y domain',
-#     x = x,
-#     y = y,
-#     xshift = x_shift,
-#     yshift = y_shift,
-#     xanchor = x_anchor,
-#     yanchor = y_anchor,
-#     align = 'left',
-#     font_size = constants.GRAPH_LEGEND_FONT_SIZE * font_size_scale,
-#     font_family = 'Monospace',
-#     text = (
-#       '<span style="text-decoration: underline;">'
-#         'Graph Statistics (ref component only)'
-#       '</span><br>' +
-#       stat_lines
-#     ),
-#     showarrow = False,
-#   )
-
 # Load all the data needed for making the graphs
 def get_data(
   data_dir_list,
@@ -1616,110 +1469,16 @@ def get_data(
 
   return data_info_list, node_data_list, edge_data_list, graph_list
 
-# FIXME: DELETE COMMENTS
-def make_graph_figure_helper(
-  figure_list,
-  # data_dir_list,
+def get_combined_data(
   data_info_list,
   node_data_list,
   edge_data_list,
-  graph_list,
-  sequence_reverse_complement_list = None,
-  # node_subst_type = constants.SUBST_WITHOUT,
-  # node_filter_freq_range = constants.GRAPH_NODE_FILTER_FREQ_RANGE, FIXME: DELTE
-  # node_filter_dist_range = constants.GRAPH_NODE_FILTER_DIST_RANGE, FIXME: DELTE
-  edge_show = constants.GRAPH_EDGE_SHOW,
-  edge_types_show = constants.GRAPH_EDGE_SHOW_TYPES,
-  edge_labels_show = constants.GRAPH_EDGE_LABELS_SHOW,
-  edge_width_scale = constants.GRAPH_EDGE_WIDTH_SCALE,
-  graph_layout_type = constants.GRAPH_LAYOUT_TYPE,
-  graph_layout_separate_components = constants.GRAPH_LAYOUT_SEPARATE_COMPONENTS,
-  node_labels_show = constants.GRAPH_NODE_LABEL_SHOW,
-  node_label_columns = constants.GRAPH_NODE_LABEL_COLUMNS,
-  node_label_position = constants.GRAPH_NODE_LABEL_POSITION,
-  node_color_type_list = None,
-  node_comparison_colors = constants.GRAPH_NODE_COMPARISON_COLORS,
-  node_freq_ratio_range = constants.GRAPH_NODE_FREQ_RATIO_RANGE,
-  node_reference_outline_color = constants.GRAPH_NODE_REFERENCE_OUTLINE_COLOR,
-  node_outline_color = constants.GRAPH_NODE_OUTLINE_COLOR,
-  node_fill_color = constants.GRAPH_NODE_FILL_COLOR,
-  node_variation_type_colors = constants.GRAPH_NODE_VARIATION_TYPE_COLORS,
-  node_size_type = constants.GRAPH_NODE_SIZE_TYPE,
-  node_size_px_range = constants.GRAPH_NODE_SIZE_PX_RANGE,
-  node_size_freq_range = constants.GRAPH_NODE_SIZE_FREQ_RANGE,
-  # node_filter_variation_types = constants.GRAPH_NODE_FILTER_VARIATION_TYPES, FIXME: DELTE
-  node_outline_width_scale = constants.GRAPH_NODE_OUTLINE_WIDTH_SCALE,
-  plot_range_x = constants.GRAPH_PLOT_RANGE_X,
-  plot_range_y = constants.GRAPH_PLOT_RANGE_Y,
-  legend_plotly_show = constants.GRAPH_LEGEND_CUSTOM_SHOW,
-  axes_show = constants.GRAPH_AXES_SHOW,
-  font_size_scale = constants.GRAPH_FONT_SIZE_SCALE,
-  universal_layout_x_scale_insertion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
-  universal_layout_y_scale_insertion = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
-  universal_layout_x_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
-  universal_layout_y_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
+  reverse_complement_list,
 ):
-  # if sequence_reverse_complement_list is None:
-  #   sequence_reverse_complement_list = (
-  #     [constants.GRAPH_SEQUENCE_REVERSE_COMPLEMENT] * len(data_dir_list)
-  #   )
-
-  ### Load node data ###
-  # node_data_list = [
-  #   file_utils.read_tsv(file_names.sequence_data(data_dir, node_subst_type))
-  #     .set_index('id', drop=False)
-  #   for data_dir in data_dir_list
-  # ]
-  # node_data_list = [
-  #   graph_utils.get_node_data(
-  #     file_utils.read_csv(file_names.window(data_dir, node_subst_type))
-  #   ).set_index('id', drop=False)
-  #   for data_dir in data_dir_list
-  # ]
-
-  # ### Load graph ###
-  # # graph_list = [
-  # #   graph_utils.load_graph(node_data_list[i], edge_data_list[i], node_subst_type)
-  # #   for i in range(len(data_dir_list))
-  # # ]
-  # ### Node filtering ###
-  # for i in range(len(data_dir_list)):
-  #   if node_filter_variation_types is not None:
-  #     node_data_list[i] = node_data_list[i].loc[
-  #       node_data_list[i]['variation_type'].isin(node_filter_variation_types)
-  #     ]
-  #   node_data_list[i] = node_data_list[i].loc[
-  #     node_data_list[i]['freq_mean'].between(
-  #       node_filter_freq_range[0],
-  #       node_filter_freq_range[1],
-  #       inclusive = 'both',
-  #     )
-  #   ]
-
-  #   node_data_list[i] = node_data_list[i].loc[
-  #     node_data_list[i]['dist_ref'].between(
-  #       node_filter_dist_range[0],
-  #       node_filter_dist_range[1],
-  #       inclusive = 'both',
-  #     )
-  #   ]
-
-  # edge_data_list = [
-  #   graph_utils.get_edge_data(node_data_list[i])
-  #   for i in range(len(data_dir_list))
-  # ]
-
-  # graph_list = [
-  #   graph_utils.get_graph(node_data_list[i], edge_data_list[i])
-  #   for i in range(len(data_dir_list))
-  # ]
-
-  ### Combine the nodes/edges ###
-
-  # Combine node data #
+  # Combine node data
   node_data_list_copy = [node_data.copy() for node_data in node_data_list]
   for i in range(len(data_info_list)):
-    if sequence_reverse_complement_list[i]:
+    if reverse_complement_list[i]:
       node_data_list_copy[i] = node_data_list_copy[i].assign(
         ref_align = node_data_list_copy[i]['ref_align'].apply(kmer_utils.reverse_complement),
         read_align = node_data_list_copy[i]['read_align'].apply(kmer_utils.reverse_complement),
@@ -1734,20 +1493,14 @@ def make_graph_figure_helper(
   node_data = node_data.set_index('id', drop=False)
 
   # Combine edge data
-  # edge_data_list = [
-  #   file_utils.read_tsv(file_names.edge_data(data_dir, node_subst_type))
-  #     .drop(['id_a', 'id_b'], axis='columns')
-  #   for data_dir in data_dir_list
-  # ]
   edge_data = pd.concat(
     [x.drop(columns=['id_a', 'id_b']) for x in edge_data_list],
     axis = 'index',
     ignore_index = True,
   )
-  # edge_data = edge_data.groupby(list(edge_data.columns)).first().reset_index()
   edge_data = edge_data.drop_duplicates(keep='first').reset_index(drop=True)
 
-  # Get the new id's for the edges
+  # Get the new IDs for the edges
   for suffix in ['_a', '_b']:
     edge_data = pd.merge(
       edge_data,
@@ -1763,26 +1516,68 @@ def make_graph_figure_helper(
       how = 'inner',
     )
 
-  ### Make the combined graph ###
+  # Make the combined graph
   graph = nx.Graph()
   graph.add_nodes_from(node_data.index)
   nx.set_node_attributes(graph, node_data.to_dict('index'))
 
-  graph.add_edges_from(
-    zip(
-      edge_data['id_a'],
-      edge_data['id_b'],
-      edge_data.to_dict('records')
-    ),
+  graph.add_edges_from(zip(
+    edge_data['id_a'],
+    edge_data['id_b'],
+    edge_data.to_dict('records')
+  ))
+
+  return node_data, edge_data, graph
+
+def make_graph_figure_helper(
+  figure_list,
+  data_info_list,
+  node_data_list,
+  edge_data_list,
+  graph_list,
+  reverse_complement_list = None, # Should be specified
+  edge_show = constants.GRAPH_EDGE_SHOW,
+  edge_types_show = constants.GRAPH_EDGE_SHOW_TYPES,
+  edge_labels_show = constants.GRAPH_EDGE_LABELS_SHOW,
+  edge_width_scale = constants.GRAPH_EDGE_WIDTH_SCALE,
+  graph_layout_type = constants.GRAPH_LAYOUT_TYPE,
+  graph_layout_separate_components = constants.GRAPH_LAYOUT_SEPARATE_COMPONENTS,
+  node_labels_show = constants.GRAPH_NODE_LABEL_SHOW,
+  node_label_columns = constants.GRAPH_NODE_LABEL_COLUMNS,
+  node_label_position = constants.GRAPH_NODE_LABEL_POSITION,
+  node_color_type_list = None, # Should be specified
+  node_comparison_colors = constants.GRAPH_NODE_COMPARISON_COLORS,
+  node_freq_ratio_range = constants.GRAPH_NODE_FREQ_RATIO_RANGE,
+  node_reference_outline_color = constants.GRAPH_NODE_REFERENCE_OUTLINE_COLOR,
+  node_outline_color = constants.GRAPH_NODE_OUTLINE_COLOR,
+  node_fill_color = constants.GRAPH_NODE_FILL_COLOR,
+  node_variation_type_colors = constants.GRAPH_NODE_VARIATION_TYPE_COLORS,
+  node_size_type = constants.GRAPH_NODE_SIZE_TYPE,
+  node_size_px_range = constants.GRAPH_NODE_SIZE_PX_RANGE,
+  node_size_freq_range = constants.GRAPH_NODE_SIZE_FREQ_RANGE,
+  node_outline_width_scale = constants.GRAPH_NODE_OUTLINE_WIDTH_SCALE,
+  plot_range_x = constants.GRAPH_PLOT_RANGE_X,
+  plot_range_y = constants.GRAPH_PLOT_RANGE_Y,
+  legend_plotly_show = constants.GRAPH_LEGEND_CUSTOM_SHOW,
+  axes_show = constants.GRAPH_AXES_SHOW,
+  font_size_scale = constants.GRAPH_FONT_SIZE_SCALE,
+  universal_layout_x_scale_insertion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
+  universal_layout_y_scale_insertion = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
+  universal_layout_x_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
+  universal_layout_y_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
+):
+  # Get the combined inputs data
+  node_data, edge_data, graph = get_combined_data(
+    data_info_list = data_info_list,
+    node_data_list = node_data_list,
+    edge_data_list = edge_data_list,
+    reverse_complement_list = reverse_complement_list,
   )
 
-  ### Make the common graph layout ###
-  # data_info = file_utils.read_csv_dict(file_names.data_info(data_dir_list[0]))
+  # Make the common graph layout
   data_info = data_info_list[0]
   graph_layout_common = make_graph_layout(
-    # data_dir = data_dir_list[0] if (len(data_dir_list) == 1) else None,
     data_info = data_info_list[0],
-    # node_subst_type = node_subst_type,
     graph = graph,
     layout_type = graph_layout_type,
     separate_components = False,
@@ -1790,22 +1585,19 @@ def make_graph_figure_helper(
   )
   graph_layout_common.columns = ['x', 'y']
 
-  ### Join layout with alignment string ###
+  # Join layout with alignment string
   graph_layout_common = graph_layout_common.join(node_data[['ref_align', 'read_align']])
   graph_layout_common = graph_layout_common.reset_index(drop=True)
 
-  ### Make graph layout ###
-  
+  # Make individual graph layouts
   for i in range(len(data_info_list)):
     graph_layout = make_graph_layout(
-      # data_dir = data_dir_list[i],
       data_info = data_info_list[i],
-      # node_subst_type = node_subst_type,
       graph = graph_list[i],
       layout_type = graph_layout_type,
       graph_layout_common = graph_layout_common,
       separate_components = graph_layout_separate_components,
-      reverse_complement = sequence_reverse_complement_list[i],
+      reverse_complement = reverse_complement_list[i],
       universal_layout_x_scale_insertion = universal_layout_x_scale_insertion,
       universal_layout_y_scale_insertion = universal_layout_y_scale_insertion,
       universal_layout_x_scale_deletion = universal_layout_x_scale_deletion,
@@ -1822,7 +1614,7 @@ def make_graph_figure_helper(
         show_edge_labels = edge_labels_show,
         show_edge_types = edge_types_show,
         edge_width_scale = edge_width_scale,
-        reverse_complement = sequence_reverse_complement_list[i],
+        reverse_complement = reverse_complement_list[i],
       )
 
     node_traces = plot_graph_helper.make_point_traces(
@@ -1844,26 +1636,26 @@ def make_graph_figure_helper(
       node_size_px_range = node_size_px_range,
       node_size_freq_range = node_size_freq_range,
       node_outline_width_scale = node_outline_width_scale,
-      reverse_complement = sequence_reverse_complement_list[i],
+      reverse_complement = reverse_complement_list[i],
     )
 
     for trace in (edge_traces + node_traces):
       figure_list[i].add_trace(trace)
 
-    ### Format axes ###
+    # Format axes
     if not axes_show:
-      figure_list[i].update_xaxes(visible = False)
-      figure_list[i].update_yaxes(visible = False)
+      figure_list[i].update_xaxes(visible=False)
+      figure_list[i].update_yaxes(visible=False)
     
     if not np.isnan(plot_range_x[0]):
-      figure_list[i].update_xaxes(range = plot_range_x)
+      figure_list[i].update_xaxes(range=plot_range_x)
     if not np.isnan(plot_range_y[0]):
-      figure_list[i].update_yaxes(range = plot_range_y)
+      figure_list[i].update_yaxes(range=plot_range_y)
 
-    ### Enable/disable legend ###
-    figure_list[i].update_traces(showlegend = legend_plotly_show)
+    # Enable/disable legend
+    figure_list[i].update_traces(showlegend=legend_plotly_show)
 
-    ### Format for freq ratio colors ###
+    # Format for freq ratio colors
     if node_color_type_list[i] == 'freq_ratio_continuous':
       figure_list[i].update_traces(
         marker = {
@@ -1894,22 +1686,18 @@ def get_figure_size_args(
   }
 
 def make_graph_figure(
-  # data_dir_list,
   data_info_list,
   node_data_list,
   edge_data_list,
   graph_list,
   graph_layout_type = constants.GRAPH_LAYOUT_TYPE,
   graph_layout_separate_components = constants.GRAPH_LAYOUT_SEPARATE_COMPONENTS,
-  sequence_reverse_complement_list = None,
-  # node_subst_type = constants.GRAPH_NODE_SUBST_TYPE,
+  reverse_complement_list = None, # Should be specified
   node_filter_variation_types = constants.GRAPH_NODE_FILTER_VARIATION_TYPES,
-  # node_filter_freq_range = constants.GRAPH_NODE_FILTER_FREQ_RANGE,
-  # node_filter_dist_range = constants.GRAPH_NODE_FILTER_DIST_RANGE,
   node_label_show = constants.GRAPH_NODE_LABEL_SHOW,
   node_label_columns = constants.GRAPH_NODE_LABEL_COLUMNS,
   node_label_position = constants.GRAPH_NODE_LABEL_POSITION,
-  node_color_type_list = None,
+  node_color_type_list = None, # Should be specified
   node_comparison_colors = constants.GRAPH_NODE_COMPARISON_COLORS,
   node_freq_ratio_range = constants.GRAPH_NODE_FREQ_RATIO_RANGE,
   node_reference_outline_color = constants.GRAPH_NODE_REFERENCE_OUTLINE_COLOR,
@@ -1939,13 +1727,6 @@ def make_graph_figure(
   node_outline_width_scale = constants.GRAPH_NODE_OUTLINE_WIDTH_SCALE,
   plot_range_x = constants.GRAPH_PLOT_RANGE_X,
   plot_range_y = constants.GRAPH_PLOT_RANGE_Y,
-  # graph_stats_show = constants.GRAPH_STATS_SHOW,
-  # graph_stats_x_frac = constants.GRAPH_STATS_X_FRAC,
-  # graph_stats_y_frac = constants.GRAPH_STATS_Y_FRAC,
-  # graph_stats_x_shift_px = constants.GRAPH_STATS_X_SHIFT_PX,
-  # graph_stats_y_shift_px = constants.GRAPH_STATS_Y_SHIFT_PX,
-  # graph_stats_x_anchor = constants.GRAPH_STATS_X_ANCHOR,
-  # graph_stats_y_anchor = constants.GRAPH_STATS_Y_ANCHOR,
   margin_top_px = constants.GRAPH_MARGIN_TOP_MIN_PX,
   margin_bottom_px = constants.GRAPH_MARGIN_BOTTOM_MIN_PX,
   margin_left_px = constants.GRAPH_MARGIN_LEFT_MIN_PX,
@@ -1957,11 +1738,6 @@ def make_graph_figure(
   universal_layout_x_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
   universal_layout_y_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
-  # if sequence_reverse_complement_list is None:
-  #   sequence_reverse_complement_list = (
-  #     [constants.GRAPH_SEQUENCE_REVERSE_COMPLEMENT] *
-  #     len(data_info_list)
-  #   )
   if title_list is None:
     title_list = [constants.GRAPH_TITLE] * len(data_info_list)
 
@@ -1979,21 +1755,17 @@ def make_graph_figure(
 
   make_graph_figure_helper(
     figure_list = figure_list,
-    # data_dir_list = data_dir_list,
     data_info_list = data_info_list,
     node_data_list = node_data_list,
     edge_data_list = edge_data_list,
     graph_list = graph_list,
-    # node_subst_type = node_subst_type,
-    # node_filter_freq_range = node_filter_freq_range,
-    # node_filter_dist_range = node_filter_dist_range,
     edge_show = edge_show,
     edge_types_show = edge_show_types,
     edge_labels_show = edge_show_labels,
     edge_width_scale = edge_width_scale,
     graph_layout_type = graph_layout_type,
     graph_layout_separate_components = graph_layout_separate_components,
-    sequence_reverse_complement_list = sequence_reverse_complement_list,
+    reverse_complement_list = reverse_complement_list,
     node_labels_show = node_label_show,
     node_label_columns = node_label_columns,
     node_label_position = node_label_position,
@@ -2007,7 +1779,6 @@ def make_graph_figure(
     node_size_type = node_size_type,
     node_size_px_range = node_size_px_range,
     node_size_freq_range = node_size_freq_range,
-    # node_filter_variation_types = node_filter_variation_types,
     node_outline_width_scale = node_outline_width_scale,
     plot_range_x = plot_range_x,
     plot_range_y = plot_range_y,
@@ -2030,22 +1801,6 @@ def make_graph_figure(
   )
 
   for i in range(len(data_info_list)):
-    # FIXME: DELETE
-    # if graph_stats_show:
-    #   make_graph_stats_ref_component(
-    #     figure = figure_list[i],
-    #     data_dir = data_dir_list[i],
-    #     data_info = data_info_list[i],
-    #     subst_type = node_subst_type,
-    #     x = graph_stats_x_frac,
-    #     y = graph_stats_y_frac,
-    #     x_shift = -margin_left_px + graph_stats_x_shift_px,
-    #     y_shift = graph_stats_y_shift_px,
-    #     x_anchor = graph_stats_x_anchor,
-    #     y_anchor = graph_stats_y_anchor,
-    #     font_size_scale = font_size_scale,
-    #   )
-
     figure_list[i].update_layout(
       width = figure_size_args['total_width_px'],
       height = figure_size_args['total_height_px'],
@@ -2466,24 +2221,6 @@ def parse_args():
       ' Values > 1 increase the width; values < 1 decrease the width.'
     ),
   )
-  # FIXME: DELETE
-  # parser.add_argument(
-  #   '--stats',
-  #   action = 'store_true',
-  #   help = 'If present, show graph summary statistics in the left margin.',
-  # )
-  # parser.add_argument(
-  #   '--stats_x_shift_px',
-  #   type = float,
-  #   default = constants.GRAPH_STATS_X_SHIFT_PX,
-  #   help = 'How much to shift the stats in the x direction (in pixels).',
-  # )
-  # parser.add_argument(
-  #   '--stats_y_shift_px',
-  #   type = float,
-  #   default = constants.GRAPH_STATS_Y_SHIFT_PX,
-  #   help = 'How much to shift the stats in the x direction (in pixels).',
-  # )
   parser.add_argument(
     '--width_px',
     type = int,
@@ -2694,7 +2431,6 @@ def parse_args():
 
   return args
 
-# FIXME: DELETE COMMENTS!
 def main(
   input,
   output,
@@ -2724,9 +2460,6 @@ def main(
   margin_bottom_px,
   margin_left_px,
   margin_right_px,
-  # stats,
-  # stats_x_shift_px,
-  # stats_y_shift_px,
   separate_components,
   line_width_scale,
   font_size_scale,
@@ -2795,14 +2528,12 @@ def main(
 
 
   figure_list = make_graph_figure(
-    # data_dir_list = input_list,
     data_info_list = data_info_list,
     node_data_list = node_data_list,
     edge_data_list = edge_data_list,
     graph_list = graph_list,
     title_list = title,
-    sequence_reverse_complement_list = reverse_complement,
-    # node_subst_type = subst_type,
+    reverse_complement_list = reverse_complement,
     node_size_px_range = node_px_range,
     node_size_freq_range = node_freq_range,
     node_filter_variation_types = variation_types,
@@ -2816,9 +2547,6 @@ def main(
     node_variation_type_colors = variation_type_colors,
     graph_width_px = width_px,
     graph_height_px = height_px,
-    # graph_stats_show = stats,
-    # graph_stats_x_shift_px = stats_x_shift_px,
-    # graph_stats_y_shift_px = stats_y_shift_px,
     graph_layout_type = layout,
     graph_layout_separate_components = separate_components,
     margin_top_px = margin_top_px,
@@ -2858,9 +2586,6 @@ def main(
         y_max = np.max([y_max] + [y for y in trace.y if y is not None])
       log_utils.log(f'Figure[{i}] x-range: {x_min} to {x_max}')
       log_utils.log(f'Figure[{i}] y-range: {y_min} to {y_max}')
-    # sequence_data = file_utils.read_tsv(
-    #   file_names.sequence_data(input_list[i], subst_type)
-    # )
     if universal_layout_y_axis_insertion_max_tick is None:
       try:
         max_tick_insertion = node_data_list.loc[
