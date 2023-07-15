@@ -313,8 +313,8 @@ def make_node_traces(
       
     trace_args = {
       'name': trace_name,
-      'x': layout.loc[node_data_group.index, 0],
-      'y': layout.loc[node_data_group.index, 1],
+      'x': layout.loc[node_data_group.index, 'x'],
+      'y': layout.loc[node_data_group.index, 'y'],
       'mode': 'markers+text',
       'text': node_label[node_data_group.index],
       'textposition': node_label_position,
@@ -453,10 +453,10 @@ def make_edges_traces(
     edge_type = graph.edges[id_a, id_b]['edge_type']
 
     if edge_type in show_edge_types:
-      x1 = layout.loc[id_a, 0]
-      x2 = layout.loc[id_b, 0]
-      y1 = layout.loc[id_a, 1]
-      y2 = layout.loc[id_b, 1]
+      x1 = layout.loc[id_a, 'x']
+      x2 = layout.loc[id_b, 'x']
+      y1 = layout.loc[id_a, 'y']
+      y2 = layout.loc[id_b, 'y']
 
       edge_args[edge_type]['x'] += [x1, x2, None]
       edge_args[edge_type]['y'] += [y1, y2, None]

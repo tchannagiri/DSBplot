@@ -24,19 +24,19 @@ import DSBplot.utils.file_names as file_names
 import DSBplot.plot_graph.plot_graph_helper as plot_graph_helper
 
 LAYOUT_PROPERTIES = {
- 'radial_layout': {
+ 'radial': {
     'only_2d': True,
     'do_pca': False,
     'normalize': False,
     'has_edges': True,
   },
- 'universal_layout': {
+ 'universal': {
     'only_2d': True,
     'do_pca': False,
     'normalize': False,
     'has_edges': True,
   },
- 'fractal_layout': {
+ 'fractal': {
     'only_2d': True,
     'do_pca': False,
     'normalize': False,
@@ -44,7 +44,7 @@ LAYOUT_PROPERTIES = {
     'plot_range_x': (-1, 1),
     'plot_range_y': (-1, 1),
   },
- 'kamada_layout': {
+ 'kamada': {
     'only_2d': False,
     'do_pca': True,
     'normalize': True,
@@ -52,37 +52,37 @@ LAYOUT_PROPERTIES = {
     'plot_range_x': (0, 1),
     'plot_range_y': (0, 1),
   },
-  'spectral_layout': {
+  'spectral': {
     'only_2d': False,
     'do_pca': True,
     'normalize': False,
     'has_edges': True, 
   },
-  'spring_layout': {
+  'spring': {
     'only_2d': False,
     'do_pca': True,
     'normalize': False,
     'has_edges': True, 
   },
-  'shell_layout': {
+  'shell': {
     'only_2d': True,
     'do_pca': False,
     'normalize': False,
     'has_edges': True, 
   },
-  'spiral_layout': {
+  'spiral': {
     'only_2d': True,
     'do_pca': False,
     'normalize': False,
     'has_edges': True, 
   },
-  'circular_layout': {
+  'circular': {
     'only_2d': True,
     'do_pca': False,
     'has_edges': True, 
     'normalize': False,
   },
-  'multipartite_layout': {
+  'multipartite': {
     'only_2d': True,
     'do_pca': False,
     'normalize': False,
@@ -662,9 +662,9 @@ def make_graph_layout_single(
   universal_layout_x_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
   universal_layout_y_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
-  if layout_type == 'radial_layout':
+  if layout_type == 'radial':
     layout = make_radial_layout(graph)
-  elif layout_type == 'universal_layout':
+  elif layout_type == 'universal':
     layout = make_universal_layout(
       graph,
       len(data_info['ref_seq_window']) // 2,
@@ -673,58 +673,57 @@ def make_graph_layout_single(
       x_scale_deletion = universal_layout_x_scale_deletion,
       y_scale_deletion = universal_layout_y_scale_deletion,
     )
-  elif layout_type == 'fractal_layout':
+  elif layout_type == 'fractal':
     layout = make_fractal_layout(graph)
-  elif layout_type == 'kamada_layout':
+  elif layout_type == 'kamada':
     layout = nx.kamada_kawai_layout(graph, dim = 2)
-  elif layout_type == 'spectral_layout':
+  elif layout_type == 'spectral':
     layout = nx.spectral_layout(graph, dim=2)
-  elif layout_type == 'spring_layout':
+  elif layout_type == 'spring':
     layout = nx.spring_layout(graph, dim=2)
-  elif layout_type == 'shell_layout':
+  elif layout_type == 'shell':
     layout = nx.shell_layout(
       graph,
       dim = 2,
       nlist = group_graph_nodes_by(graph, 'dist_ref'),
     )
-  elif layout_type == 'spiral_layout':
+  elif layout_type == 'spiral':
     layout = nx.spiral_layout(graph, dim=2)
-  elif layout_type == 'circular_layout':
+  elif layout_type == 'circular':
     layout = nx.circular_layout(graph, dim=2)
-  elif layout_type == 'multipartite_layout':
+  elif layout_type == 'multipartite':
     layout = nx.multipartite_layout(graph, subset_key='dist_ref')
   else:
     raise Exception('Unknown layout type: ' + str(layout_type))
 
-  layout = pd.DataFrame.from_dict(layout, orient='index', columns=[0, 1])
+  layout = pd.DataFrame.from_dict(layout, orient='index', columns=['x', 'y'])
 
   if (layout.shape[0] >= 2) and LAYOUT_PROPERTIES[layout_type]['do_pca']:
     layout = pd.DataFrame(
       data = (
         sklearn.decomposition.PCA(n_components=2)
-          .fit_transform(layout.to_numpy())
+        .fit_transform(layout.to_numpy())
       ),
       index = layout.index,
-      columns = [0, 1],
+      columns = ['x', 'y'],
     )
 
   if LAYOUT_PROPERTIES[layout_type]['normalize']:
-    dim_mins = []
-    scales = []
-    for i in range(layout.shape[1]):
-      dim_min = np.min(layout.loc[:, i])
-      dim_max = np.max(layout.loc[:, i])
-      dim_mins.append(dim_min)
+    dim_mins = {}
+    scales = {}
+    for i in ['x', 'y']:
+      dim_min = np.min(layout[i])
+      dim_max = np.max(layout[i])
+      dim_mins[i] = dim_min
       if np.isclose(dim_min, dim_max):
-        scales.append(0)
+        scales[i] = 0
       else:
-        scales.append(1 / (dim_max - dim_min))
+        scales[i] = 1 / (dim_max - dim_min)
     if LAYOUT_PROPERTIES[layout_type].get('preserve_aspect', False):
       scales = [min(scales)] * layout.shape[1]
-    for i in range(layout.shape[1]):
-      layout.loc[:, i] = (layout.loc[:, i] - dim_mins[i]) * scales[i]
+    for i in ['x', 'y']:
+      layout[i] = (layout[i] - dim_mins[i]) * scales[i]
   return layout
-
 
 def make_grid_spec(
   num_panels,
@@ -808,10 +807,7 @@ def make_graph_layout(
       on = ['ref_align', 'read_align'],
       how = 'inner',
     )[['id', 'x', 'y']]
-    node_data = node_data.set_index('id', drop=True).rename(
-      {'x': 0, 'y': 1},
-      axis = 'columns',
-    )
+    node_data = node_data.set_index('id', drop=True)
     layout_list = [node_data]
   else:
     if separate_components:
@@ -849,8 +845,8 @@ def make_graph_layout(
     else:
       grid_spec = make_grid_spec(len(node_groups), False)
     for layout, panel in zip(layout_list, grid_spec):
-      layout.loc[:, 0] = layout.loc[:, 0] * panel['width'] + panel['x']
-      layout.loc[:, 1] = layout.loc[:, 1] * panel['height'] + panel['y']
+      layout.loc['x'] = layout.loc['x'] * panel['width'] + panel['x']
+      layout.loc['y'] = layout.loc['y'] * panel['height'] + panel['y']
 
   layout = pd.concat(layout_list, axis='index')
 
@@ -860,7 +856,6 @@ def make_graph_layout(
       layout = layout.applymap(lambda x: 0.33 + 0.33 * x)
     else:
       layout = layout.applymap(lambda x: 0.1 + 0.8 * x)
-
   return layout
 
 def make_legend(
@@ -1547,13 +1542,26 @@ def make_graph_figure_helper(
     separate_components = False,
     graph_layout_precomputed = None,
   )
-  graph_layout_combined.columns = ['x', 'y']
 
   # Join layout with alignment string
   graph_layout_combined = graph_layout_combined.join(
     node_data_combined[['ref_align', 'read_align']]
   )
   graph_layout_combined = graph_layout_combined.reset_index(drop=True)
+
+  # Get default x/y ranges
+  if np.isnan(plot_range_x[0]):
+    plot_range_x = graph_layout_combined['x'].agg(['min', 'max']).to_numpy()
+    plot_range_x = (
+      plot_range_x +
+      (np.array([-0.05, 0.05]) * (plot_range_x[1] - plot_range_x[0]))
+     ) # Add padding
+  if np.isnan(plot_range_y[0]):
+    plot_range_y = graph_layout_combined['y'].agg(['min', 'max']).to_numpy()
+    plot_range_y = (
+      plot_range_y +
+      (np.array([-0.05, 0.05]) * (plot_range_y[1] - plot_range_y[0]))
+    ) # Add padding
 
   # Make individual graph layouts
   for i in range(len(data_info_list)):
@@ -1888,7 +1896,7 @@ def parse_args():
   parser.add_argument(
     '--layout',
     choices = list(LAYOUT_PROPERTIES),
-    default = 'universal_layout',
+    default = 'universal',
     help = 'The algorithm to use for laying out the graph.',
   )
   parser.add_argument(
@@ -1931,8 +1939,8 @@ def parse_args():
       'If present, shows a x-axis for insertions at the given y position' +
       ' showing the first nucleotide of inserted sequences.' +
       ' Universal layout only.' +
-      ' To determine appropriate values to set please see the console log, which' +
-      ' shows the range of y-values of the nodes.'
+      ' To determine appropriate values to set please see the console log,' +
+      ' which shows the range of y-values of the nodes.'
     ),
   )
   parser.add_argument(
@@ -2580,7 +2588,7 @@ def main(
     else:
       max_tick_deletion = universal_layout_y_axis_deletion_max_tick
 
-    if layout == 'universal_layout':
+    if layout == 'universal':
       if universal_layout_y_axis_x_pos is not None:
         make_universal_layout_y_axis(
           figure = figure_list[i],
