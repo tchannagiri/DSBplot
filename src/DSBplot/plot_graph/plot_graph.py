@@ -1407,8 +1407,8 @@ def make_graph_layout(
     else:
       grid_spec = make_grid_spec(len(node_groups), False)
     for layout, panel in zip(layout_list, grid_spec):
-      layout.loc['x'] = layout.loc['x'] * panel['width'] + panel['x']
-      layout.loc['y'] = layout.loc['y'] * panel['height'] + panel['y']
+      layout['x'] = layout['x'] * panel['width'] + panel['x']
+      layout['y'] = layout['y'] * panel['height'] + panel['y']
 
   layout = pd.concat(layout_list, axis='index')
 
@@ -2076,7 +2076,7 @@ def make_graph_layout_all(
     data_info = data_info_list[0],
     graph = graph_combined,
     layout_type = graph_layout_type,
-    separate_components = False,
+    separate_components = graph_layout_separate_components,
     graph_layout_precomputed = None,
   )
 
