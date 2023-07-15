@@ -171,7 +171,7 @@ def write_window(
   ).reset_index()
   data = data.drop(columns='read_seq').reset_index(drop=True)
 
-  data = data.sort_values('freq_mean', ascending=False)
+  data = data.sort_values('freq_mean', ascending=False).reset_index(drop=True)
 
   file_utils.write_csv(data, output)
   log_utils.log_output(output)

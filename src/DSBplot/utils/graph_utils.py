@@ -187,6 +187,11 @@ def get_node_data(data):
   deletion = []
   indel = []
 
+  data = data.sort_values(
+    ['freq_mean', 'ref_align', 'read_align'],
+    ascending = [False, True, True],
+  )
+
   for row in data.to_dict('records'):
     num_ins, num_del, num_subst = (
       alignment_utils.count_variations(row['ref_align'], row['read_align'])
@@ -208,11 +213,11 @@ def get_node_data(data):
     deletion.append(num_del)
     indel.append(num_ins + num_del)
 
-  all_data = data[
+  data = data[
     ['ref_align', 'read_align'] +
-    [x for x in data.columns if x.startswith('freq_mean')]
+    [x for x in data.columns if x in ['freq_mean', 'freq_mean_1', 'freq_mean_2']]
   ].to_dict('list')
-  all_data.update({
+  data.update({
     'is_ref': [x == 0 for x in dist_ref],
     'dist_ref': dist_ref,
     'variation_type': variation_type,
@@ -222,12 +227,13 @@ def get_node_data(data):
     'indel': indel,
   })
 
-  all_data = pd.DataFrame(all_data)
-  all_data = all_data.sort_values('freq_mean', ascending=False)
-  all_data['id'] = 'S' + pd.Series(range(1, all_data.shape[0] + 1), dtype=str)
-  all_data = all_data[['id'] + list(all_data.columns[all_data.columns != 'id'])]
+  data = pd.DataFrame(data)
+  data = data.sort_values('freq_mean', ascending=False)
+  data['id'] = 'S' + pd.Series(range(1, data.shape[0] + 1), dtype=str)
+  data = data[['id'] + list(data.columns[data.columns != 'id'])]
+  data = data.set_index('id', drop=False)
 
-  return pd.DataFrame(all_data)
+  return pd.DataFrame(data)
 
 def get_edge_data(node_data):
   """
@@ -285,8 +291,10 @@ def get_comparison_data(data_info_1, data_info_2, data_1, data_2):
   # Make the comparison info
   data_info = {
     'format': 'comparison',
-    'labels': [data_info_1['label'], data_info_2['label']],
-    'ref_seqs': [data_info_1['ref_seq'], data_info_2['ref_seq']],
+    'label_1': data_info_1['label'],
+    'label_2': data_info_2['label'],
+    'ref_seq_1': data_info_1['ref_seq'],
+    'ref_seq_2': data_info_2['ref_seq'],
     'ref_seq_window': data_info_1['ref_seq_window'],
   }
 

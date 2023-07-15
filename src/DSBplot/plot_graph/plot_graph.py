@@ -171,7 +171,7 @@ def get_kmer_fractal_x_y(kmer):
 
   return (x, y) 
 
-def make_fractal_layout(graph, reverse_complement=False):
+def make_fractal_layout(graph):
   node_list = graph.nodes(data=True)
 
   bucket_dict = {
@@ -204,10 +204,6 @@ def make_fractal_layout(graph, reverse_complement=False):
       for data in bucket:
         ref_align = data['ref_align']
         read_align = data['read_align']
-
-        if reverse_complement:
-          ref_align = kmer_utils.reverse_complement(ref_align)
-          read_align = kmer_utils.reverse_complement(read_align)
 
         if var_type == 'insertion':
           xy_dict[data['id']] = get_kmer_fractal_x_y(
@@ -295,7 +291,6 @@ def get_pos_universal_layout(
 def make_universal_layout(
   graph,
   cut_pos_ref,
-  reverse_complement = False,
   x_scale_insertion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
   y_scale_insertion = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
   x_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
@@ -334,10 +329,6 @@ def make_universal_layout(
       for data in bucket:
         ref_align = data['ref_align']
         read_align = data['read_align']
-
-        if reverse_complement:
-          ref_align = kmer_utils.reverse_complement(ref_align)
-          read_align = kmer_utils.reverse_complement(read_align)
 
         xy_dict[data['id']] = get_pos_universal_layout(
           ref_align = ref_align,
@@ -666,7 +657,6 @@ def make_graph_layout_single(
   data_info,
   graph,
   layout_type,
-  reverse_complement = False,
   universal_layout_x_scale_insertion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
   universal_layout_y_scale_insertion = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
   universal_layout_x_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
@@ -678,17 +668,13 @@ def make_graph_layout_single(
     layout = make_universal_layout(
       graph,
       len(data_info['ref_seq_window']) // 2,
-      reverse_complement = reverse_complement,
       x_scale_insertion = universal_layout_x_scale_insertion,
       y_scale_insertion = universal_layout_y_scale_insertion,
       x_scale_deletion = universal_layout_x_scale_deletion,
       y_scale_deletion = universal_layout_y_scale_deletion,
     )
   elif layout_type == 'fractal_layout':
-    layout = make_fractal_layout(
-      graph,
-      reverse_complement = reverse_complement,
-    )
+    layout = make_fractal_layout(graph)
   elif layout_type == 'kamada_layout':
     layout = nx.kamada_kawai_layout(graph, dim = 2)
   elif layout_type == 'spectral_layout':
@@ -802,29 +788,23 @@ def make_graph_layout(
   data_info,
   graph,
   layout_type,
-  graph_layout_common = None,
+  graph_layout_precomputed = None,
   separate_components = True,
-  reverse_complement = False,
   universal_layout_x_scale_insertion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_INSERTION,
   universal_layout_y_scale_insertion = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_INSERTION,
   universal_layout_x_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
   universal_layout_y_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
-  if graph_layout_common is not None:
+  if graph_layout_precomputed is not None:
     separate_components = False
     node_groups = None
     node_data = pd.DataFrame.from_dict(
       dict(graph.nodes(data=True)),
       orient = 'index',
     ).reset_index(drop=True)
-    if reverse_complement:
-      node_data = node_data.assign(
-        ref_align = node_data['ref_align'].apply(kmer_utils.reverse_complement),
-        read_align = node_data['read_align'].apply(kmer_utils.reverse_complement),
-      )
     node_data = pd.merge(
       node_data[['id', 'ref_align', 'read_align']],
-      graph_layout_common[['ref_align', 'read_align', 'x', 'y']],
+      graph_layout_precomputed[['ref_align', 'read_align', 'x', 'y']],
       on = ['ref_align', 'read_align'],
       how = 'inner',
     )[['id', 'x', 'y']]
@@ -855,7 +835,6 @@ def make_graph_layout(
         data_info = data_info,
         graph = subgraph,
         layout_type = layout_type,
-        reverse_complement = reverse_complement,
         universal_layout_x_scale_insertion = universal_layout_x_scale_insertion,
         universal_layout_y_scale_insertion = universal_layout_y_scale_insertion,
         universal_layout_x_scale_deletion = universal_layout_x_scale_deletion,
@@ -1404,20 +1383,22 @@ def make_custom_legends(
       y_shift_curr_px -= legend_vertical_space_px
   
   return y_shift_curr_px
+
 # Load all the data needed for making the graphs
 def get_data(
   data_dir_list,
   node_subst_type,
   node_filter_variation_types,
   node_filter_freq_range,
-  node_filter_dist_range
+  node_filter_dist_range,
+  reverse_complement_list,
+  debug_dir,
 ):
   data_info_list = []
   node_data_list = []
-  edge_data_list = []
   graph_list = []
 
-  for data_dir in data_dir_list:
+  for data_dir, rc in zip(data_dir_list, reverse_complement_list):
     if constants.COMPARISON_SEP in data_dir:
       data_dir_1, data_dir_2 = data_dir.split(constants.COMPARISON_SEP)
       log_utils.log_input(data_dir_1)
@@ -1433,11 +1414,13 @@ def get_data(
         data_2 = data_2,
       )
       node_data = graph_utils.get_node_data(data)
+      debug_name = os.path.basename(data_dir_1) + '_' + os.path.basename(data_dir_2)
     else:
       log_utils.log_input(data_dir)
       data_info = file_utils.read_csv_dict(file_names.data_info(data_dir))
       data = file_utils.read_csv(file_names.window(data_dir, node_subst_type))
       node_data = graph_utils.get_node_data(data)
+      debug_name = os.path.basename(data_dir)
 
     node_data = node_data.loc[
       node_data['variation_type'].isin(node_filter_variation_types)
@@ -1456,7 +1439,12 @@ def get_data(
         inclusive = 'both',
       )
     ]
-    node_data = node_data.set_index('id', drop=False)
+    if rc:
+      node_data['ref_align'] = node_data['ref_align'].apply(kmer_utils.reverse_complement)
+      node_data['read_align'] = node_data['read_align'].apply(kmer_utils.reverse_complement)
+      for x in data_info.keys():
+        if x.startswith('ref_seq'):
+          data_info[x] = kmer_utils.reverse_complement(data_info[x])
 
     edge_data = graph_utils.get_edge_data(node_data)
 
@@ -1464,78 +1452,62 @@ def get_data(
 
     data_info_list.append(data_info)
     node_data_list.append(node_data)
-    edge_data_list.append(edge_data)
     graph_list.append(graph)
 
-  return data_info_list, node_data_list, edge_data_list, graph_list
-
-def get_combined_data(
-  data_info_list,
-  node_data_list,
-  edge_data_list,
-  reverse_complement_list,
-):
-  # Combine node data
-  node_data_list_copy = [node_data.copy() for node_data in node_data_list]
-  for i in range(len(data_info_list)):
-    if reverse_complement_list[i]:
-      node_data_list_copy[i] = node_data_list_copy[i].assign(
-        ref_align = node_data_list_copy[i]['ref_align'].apply(kmer_utils.reverse_complement),
-        read_align = node_data_list_copy[i]['read_align'].apply(kmer_utils.reverse_complement),
+    if debug_dir is not None:
+      file_utils.write_csv(
+        pd.DataFrame(data_info, index=[0]),
+        os.path.join(debug_dir, debug_name + '_data_info.csv'),
       )
-  node_data = pd.concat(node_data_list_copy, axis='index', ignore_index=True)
-  node_data = node_data.groupby(['ref_align', 'read_align'])
-  freq_mean_max = node_data['freq_mean'].max()
-  node_data = node_data.first()
-  node_data['freq_mean'] = freq_mean_max
-  node_data = node_data.sort_values('freq_mean', ascending=False).reset_index()
-  node_data['id'] = 'S' + pd.Series(range(1, node_data.shape[0] + 1), dtype=str)
-  node_data = node_data.set_index('id', drop=False)
+      file_utils.write_csv(
+        node_data,
+        os.path.join(debug_dir, debug_name + '_node_data.csv'),
+      )
+      file_utils.write_csv(
+        edge_data,
+        os.path.join(debug_dir, debug_name + '_edge_data.csv'),
+      )
 
-  # Combine edge data
-  edge_data = pd.concat(
-    [x.drop(columns=['id_a', 'id_b']) for x in edge_data_list],
-    axis = 'index',
+  # Make the combined data
+  node_data_combined = pd.concat(
+    [x[['ref_align', 'read_align', 'freq_mean']] for x in node_data_list],
     ignore_index = True,
+    axis = 'index',
   )
-  edge_data = edge_data.drop_duplicates(keep='first').reset_index(drop=True)
+  node_data_combined = (
+    node_data_combined.groupby(['ref_align', 'read_align'])
+    .max().reset_index() # max of freq_mean
+  )
+  node_data_combined = graph_utils.get_node_data(node_data_combined)
+ 
+  edge_data_combined = graph_utils.get_edge_data(node_data_combined)
+  graph_combined = graph_utils.get_graph(node_data_combined, edge_data_combined)
 
-  # Get the new IDs for the edges
-  for suffix in ['_a', '_b']:
-    edge_data = pd.merge(
-      edge_data,
-      node_data[['id', 'ref_align', 'read_align']].rename(
-        {
-          'id': 'id' + suffix,
-          'ref_align': 'ref_align' + suffix,
-          'read_align': 'read_align' + suffix,
-        },
-        axis = 'columns',
-      ),
-      on = ['ref_align' + suffix, 'read_align' + suffix],
-      how = 'inner',
+  if debug_dir is not None:
+    file_utils.write_csv(
+      node_data_combined,
+      os.path.join(debug_dir, 'combined_node_data.csv'),
+    )
+    file_utils.write_csv(
+      edge_data_combined,
+      os.path.join(debug_dir, 'combined_edge_data.csv'),
     )
 
-  # Make the combined graph
-  graph = nx.Graph()
-  graph.add_nodes_from(node_data.index)
-  nx.set_node_attributes(graph, node_data.to_dict('index'))
-
-  graph.add_edges_from(zip(
-    edge_data['id_a'],
-    edge_data['id_b'],
-    edge_data.to_dict('records')
-  ))
-
-  return node_data, edge_data, graph
+  return (
+    data_info_list,
+    node_data_list,
+    graph_list,
+    node_data_combined,
+    graph_combined,
+  )
 
 def make_graph_figure_helper(
   figure_list,
   data_info_list,
   node_data_list,
-  edge_data_list,
+  node_data_combined,
+  graph_combined,
   graph_list,
-  reverse_complement_list = None, # Should be specified
   edge_show = constants.GRAPH_EDGE_SHOW,
   edge_types_show = constants.GRAPH_EDGE_SHOW_TYPES,
   edge_labels_show = constants.GRAPH_EDGE_LABELS_SHOW,
@@ -1566,28 +1538,22 @@ def make_graph_figure_helper(
   universal_layout_x_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_X_SCALE_DELETION,
   universal_layout_y_scale_deletion = constants.GRAPH_UNIVERSAL_LAYOUT_Y_SCALE_DELETION,
 ):
-  # Get the combined inputs data
-  node_data, edge_data, graph = get_combined_data(
-    data_info_list = data_info_list,
-    node_data_list = node_data_list,
-    edge_data_list = edge_data_list,
-    reverse_complement_list = reverse_complement_list,
-  )
-
-  # Make the common graph layout
+  # Make the combined graph layout
   data_info = data_info_list[0]
-  graph_layout_common = make_graph_layout(
+  graph_layout_combined = make_graph_layout(
     data_info = data_info_list[0],
-    graph = graph,
+    graph = graph_combined,
     layout_type = graph_layout_type,
     separate_components = False,
-    graph_layout_common = None,
+    graph_layout_precomputed = None,
   )
-  graph_layout_common.columns = ['x', 'y']
+  graph_layout_combined.columns = ['x', 'y']
 
   # Join layout with alignment string
-  graph_layout_common = graph_layout_common.join(node_data[['ref_align', 'read_align']])
-  graph_layout_common = graph_layout_common.reset_index(drop=True)
+  graph_layout_combined = graph_layout_combined.join(
+    node_data_combined[['ref_align', 'read_align']]
+  )
+  graph_layout_combined = graph_layout_combined.reset_index(drop=True)
 
   # Make individual graph layouts
   for i in range(len(data_info_list)):
@@ -1595,9 +1561,8 @@ def make_graph_figure_helper(
       data_info = data_info_list[i],
       graph = graph_list[i],
       layout_type = graph_layout_type,
-      graph_layout_common = graph_layout_common,
+      graph_layout_precomputed = graph_layout_combined,
       separate_components = graph_layout_separate_components,
-      reverse_complement = reverse_complement_list[i],
       universal_layout_x_scale_insertion = universal_layout_x_scale_insertion,
       universal_layout_y_scale_insertion = universal_layout_y_scale_insertion,
       universal_layout_x_scale_deletion = universal_layout_x_scale_deletion,
@@ -1614,7 +1579,6 @@ def make_graph_figure_helper(
         show_edge_labels = edge_labels_show,
         show_edge_types = edge_types_show,
         edge_width_scale = edge_width_scale,
-        reverse_complement = reverse_complement_list[i],
       )
 
     node_traces = plot_graph_helper.make_point_traces(
@@ -1636,7 +1600,6 @@ def make_graph_figure_helper(
       node_size_px_range = node_size_px_range,
       node_size_freq_range = node_size_freq_range,
       node_outline_width_scale = node_outline_width_scale,
-      reverse_complement = reverse_complement_list[i],
     )
 
     for trace in (edge_traces + node_traces):
@@ -1688,11 +1651,11 @@ def get_figure_size_args(
 def make_graph_figure(
   data_info_list,
   node_data_list,
-  edge_data_list,
   graph_list,
+  node_data_combined,
+  graph_combined,
   graph_layout_type = constants.GRAPH_LAYOUT_TYPE,
   graph_layout_separate_components = constants.GRAPH_LAYOUT_SEPARATE_COMPONENTS,
-  reverse_complement_list = None, # Should be specified
   node_filter_variation_types = constants.GRAPH_NODE_FILTER_VARIATION_TYPES,
   node_label_show = constants.GRAPH_NODE_LABEL_SHOW,
   node_label_columns = constants.GRAPH_NODE_LABEL_COLUMNS,
@@ -1757,15 +1720,15 @@ def make_graph_figure(
     figure_list = figure_list,
     data_info_list = data_info_list,
     node_data_list = node_data_list,
-    edge_data_list = edge_data_list,
     graph_list = graph_list,
+    node_data_combined = node_data_combined,
+    graph_combined = graph_combined,
     edge_show = edge_show,
     edge_types_show = edge_show_types,
     edge_labels_show = edge_show_labels,
     edge_width_scale = edge_width_scale,
     graph_layout_type = graph_layout_type,
     graph_layout_separate_components = graph_layout_separate_components,
-    reverse_complement_list = reverse_complement_list,
     node_labels_show = node_label_show,
     node_label_columns = node_label_columns,
     node_label_position = node_label_position,
@@ -1888,7 +1851,7 @@ def parse_args():
       'Input data directories.' +
       ' All libraries specified here must have the same windowed reference sequence' +
       ' (i.e., the 20bp section of the reference around the DSB site should be the same' +
-      ' in all libraries). All the libraries will be laid out using common x/y-coordinate' +
+      ' in all libraries). All the libraries will be laid out using combined x/y-coordinate' +
       ' assignments to the vertices. To plot plot a comparion graph between two libraries,' +
       f' specify both directories as a single argument separated by "{constants.COMPARISON_SEP}".'
     ),
@@ -1906,6 +1869,11 @@ def parse_args():
       ' If not omitted, number of arguments should match' +
       ' the number of input directories.'
     ),
+  )
+  parser.add_argument(
+    '--debug',
+    type = common_utils.check_dir_output,
+    help = 'If present, write debug files to the given directory.',
   )
   parser.add_argument(
     '--title',
@@ -2434,6 +2402,7 @@ def parse_args():
 def main(
   input,
   output,
+  debug,
   layout,
   title,
   reverse_complement,
@@ -2489,12 +2458,20 @@ def main(
 ):
   input_list = input
   output_list = output
-  data_info_list, node_data_list, edge_data_list, graph_list = get_data(
+  (
+    data_info_list,
+    node_data_list,
+    graph_list,
+    node_data_combined,
+    graph_combined,
+  ) = get_data(
     data_dir_list = input_list,
     node_subst_type = subst_type,
     node_filter_variation_types = variation_types,
     node_filter_freq_range = filter_freq,
     node_filter_dist_range = filter_dist,
+    reverse_complement_list = reverse_complement,
+    debug_dir = debug,
   )
 
   node_color_type_list = []
@@ -2504,15 +2481,10 @@ def main(
     elif data_info_list[i]['format'] == 'comparison':
       node_color_type_list.append(node_comparison_color_type)
     else:
-      # impossible
+      # Impossible
       raise Exception('Unknown data format: ' + str(data_info_list[i]['format']))
 
-  ref_seq_set = set()
-  for i in range(len(data_info_list)):
-    if reverse_complement[i]:
-      ref_seq_set.add(kmer_utils.reverse_complement(data_info_list[i]['ref_seq_window']))
-    else:
-      ref_seq_set.add(data_info_list[i]['ref_seq_window'])
+  ref_seq_set = set(data_info['ref_seq_window'] for data_info in data_info_list)
   if len(ref_seq_set) > 1:
     raise Exception(
       'Not all reference sequences are identical.' +
@@ -2524,16 +2496,14 @@ def main(
       x for x in variation_types
       if x not in ['substitution', 'mixed']
     ]
-  
-
 
   figure_list = make_graph_figure(
     data_info_list = data_info_list,
     node_data_list = node_data_list,
-    edge_data_list = edge_data_list,
     graph_list = graph_list,
+    node_data_combined = node_data_combined,
+    graph_combined = graph_combined,
     title_list = title,
-    reverse_complement_list = reverse_complement,
     node_size_px_range = node_px_range,
     node_size_freq_range = node_freq_range,
     node_filter_variation_types = variation_types,
