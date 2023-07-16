@@ -63,7 +63,9 @@ def parse_args():
     type = common_utils.check_dir_output,
     help = (
       'Working output directory. Required for all stages.' +
-      ' If running stages separately, the same directory must be given for all stages.'
+      ' If running stages separately, the same directory must be given for all stages.' +
+      ' The base part of the directory name is used as a unique identifier for the experiment' +
+      ' so should not conflict with other experiments.'
     ),
     required = True,
   )
@@ -286,8 +288,10 @@ def do_2_window(
     raise Exception('ANCHOR_SIZE must be provided for stage 2_window.')
   if anchor_mismatches is None:
     raise Exception('ANCHOR_MISMATCHES must be provided for stage 2_window.')
+
+  name = os.path.basename(output)
   if label is None:
-    label = os.path.basename(output)
+    label = name
 
   for subst_type in constants.SUBST_TYPES:
     get_window.main(
@@ -300,6 +304,7 @@ def do_2_window(
       anchor_size = anchor_size,
       anchor_mismatches = anchor_mismatches,
       subst_type = subst_type,
+      name = name,
       label = label,
     )
 

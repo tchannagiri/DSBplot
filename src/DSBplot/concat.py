@@ -1,3 +1,4 @@
+import os
 import argparse
 
 import pandas as pd
@@ -33,7 +34,11 @@ def parse_args():
   parser.add_argument(
     '--output',
     type = common_utils.check_dir_output,
-    help = 'Output directory.',
+    help = (
+      'Output directory.' +
+      ' The basename of the output directory is used as a unique identifier ' +
+      ' for the experiment so it should not conflict with other experiments.'
+    ),
     required = True,
   )
   parser.add_argument(
@@ -128,16 +133,26 @@ def main(
     log_utils.log_output(output_file)
     log_utils.blank_line()
 
-  data_info = [file_utils.read_csv_dict(file_names.data_info(x)) for x in input]
-  ref_seq_window = set(x['ref_seq_window'] for x in data_info)
+  ref_seq_window = set(
+    file_utils.read_csv_dict(file_names.data_info(x))['ref_seq_window']
+    for x in input
+  )
   if len(ref_seq_window) > 1:
     raise Exception(
       'Libraries begin merged have different window reference sequences.' +
       ' Got {}.'.format(ref_seq_window)
     )
-  data_info = data_info[0]
-  data['label'] = label
-  data_info['ref_seq'] = None
+  
+  name = os.path.basename(output)
+  if label is None:
+    label = name
+  data_info = common_utils.make_data_info(
+    format = 'individual',
+    names = [name],
+    labels = [label],
+    ref_seqs = [None],
+    ref_seq_window = ref_seq_window.pop(),
+  )
   output_file = file_names.data_info(output)
   file_utils.write_csv(pd.DataFrame(data_info, index=[0]), output_file)
   log_utils.log_output(output_file)

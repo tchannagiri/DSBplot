@@ -1949,7 +1949,7 @@ def get_data(
   node_filter_freq_range,
   node_filter_dist_range,
   reverse_complement_list,
-  debug_dir,
+  debug_dir = None,
 ):
   data_info_list = []
   node_data_list = []
@@ -1971,13 +1971,11 @@ def get_data(
         data_2 = data_2,
       )
       node_data = graph_utils.get_node_data(data)
-      debug_name = os.path.basename(data_dir_1) + '_' + os.path.basename(data_dir_2)
     else:
       log_utils.log_input(data_dir)
       data_info = file_utils.read_csv_dict(file_names.data_info(data_dir))
       data = file_utils.read_csv(file_names.window(data_dir, node_subst_type))
       node_data = graph_utils.get_node_data(data)
-      debug_name = os.path.basename(data_dir)
 
     node_data = node_data.loc[
       node_data['variation_type'].isin(node_filter_variation_types)
@@ -2018,15 +2016,15 @@ def get_data(
       log_utils.log_output(debug_dir)
       file_utils.write_csv(
         pd.DataFrame(data_info, index=[0]),
-        os.path.join(debug_dir, debug_name + '_data_info.csv'),
+        os.path.join(debug_dir, data_info['name'] + '_data_info.csv'),
       )
       file_utils.write_csv(
         node_data,
-        os.path.join(debug_dir, debug_name + '_node_data.csv'),
+        os.path.join(debug_dir, data_info['name'] + '_node_data.csv'),
       )
       file_utils.write_csv(
         edge_data,
-        os.path.join(debug_dir, debug_name + '_edge_data.csv'),
+        os.path.join(debug_dir, data_info['name'] + '_edge_data.csv'),
       )
 
   # Make the combined data
@@ -2044,7 +2042,7 @@ def get_data(
   edge_data_combined = graph_utils.get_edge_data(node_data_combined)
   graph_combined = graph_utils.get_graph(node_data_combined, edge_data_combined)
 
-  if debug_dir is not None:
+  if (debug_dir is not None) and (len(data_dir_list) > 1):
     file_utils.write_csv(
       node_data_combined,
       os.path.join(debug_dir, 'combined_node_data.csv'),
@@ -2073,6 +2071,7 @@ def make_graph_layout_all(
   universal_x_scale_deletion,
   universal_y_scale_insertion,
   universal_y_scale_deletion,
+  debug_dir = None,
 ):
    # Make the combined graph layout
   graph_layout_combined = make_graph_layout(
@@ -2086,7 +2085,7 @@ def make_graph_layout_all(
   # Join layout with alignment string
   graph_layout_combined = graph_layout_combined.join(
     node_data_combined[['ref_align', 'read_align']]
-  )
+  )[['ref_align', 'read_align', 'x', 'y']]
   graph_layout_combined = graph_layout_combined.reset_index(drop=True)
 
   # Make individual graph layouts
@@ -2104,6 +2103,18 @@ def make_graph_layout_all(
       universal_y_scale_deletion = universal_y_scale_deletion,
     ))
   
+  if debug_dir is not None:
+    if len(graph_layout_list) > 1:
+      file_utils.write_csv(
+        graph_layout_combined,
+        os.path.join(debug_dir, 'combined_graph_layout.csv'),
+      )
+    for i in range(len(graph_layout_list)):
+      file_utils.write_csv(
+        graph_layout_list[i].reset_index(),
+        os.path.join(debug_dir, data_info_list[i]['name'] + '_graph_layout.csv'),
+      )
+
   return graph_layout_list, graph_layout_combined
 
 def make_graph_figure_helper(
@@ -2471,6 +2482,7 @@ def main(
     universal_x_scale_deletion = universal_x_scale_deletion,
     universal_y_scale_insertion = universal_y_scale_insertion,
     universal_y_scale_deletion = universal_y_scale_deletion,
+    debug_dir = debug,
   )
 
   # Determine the x/y plot ranges

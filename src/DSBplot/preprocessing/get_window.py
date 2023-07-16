@@ -93,9 +93,18 @@ def parse_args():
     required = True,
   )
   parser.add_argument(
+    '--name',
+    type = str,
+    help = (
+      'Name identifying the experiment' +
+      ' Should be a legal part of a file name without path separators.'
+    ),
+    required = True,
+  )
+  parser.add_argument(
     '--label',
     type = str,
-    help = 'Label of the library.',
+    help = 'Label of the experiment.',
     required = True,
   )
   args = vars(parser.parse_args())
@@ -176,39 +185,6 @@ def write_window(
   file_utils.write_csv(data, output)
   log_utils.log_output(output)
 
-def write_data_info(
-  output,
-  format,
-  labels,
-  ref_seqs,
-  ref_seq_window,
-):
-  data_info = {
-    'format': format,
-    'ref_seq_window': ref_seq_window,
-  }
-  if format == 'individual':
-    if len(labels) != 1:
-      raise Exception(f'Expected 1 name for individual format. Got: {len(labels)}')
-    if len(ref_seqs) != 1:
-      raise Exception(f'Expected 1 reference sequence for individual format. Got: {len(ref_seqs)}')
-    data_info['label'] = labels[0]
-    data_info['ref_seq'] = ref_seqs[0]
-  elif format == 'comparison':
-    if len(labels) != 2:
-      raise Exception(f'Expected 2 names for comparison format. Got: {len(labels)}')
-    if len(ref_seqs) != 2:
-      raise Exception(f'Expected 2 reference sequences for comparison format. Got: {len(ref_seqs)}')
-    data_info['label_1'] = labels[0]
-    data_info['label_2'] = labels[1]
-    data_info['ref_seq_1'] = ref_seqs[0]
-    data_info['ref_seq_2'] = ref_seqs[1]
-  else:
-    raise Exception('Unknown data format: ' + str(format))
-  data_info = pd.DataFrame(data_info, index = [0])
-  log_utils.log_output(output)
-  file_utils.write_csv(data_info, output)
-
 def get_ref_seq_window(ref_seq, dsb_pos, window_size):
   """
     Get the window of the reference sequence around the DSB.
@@ -236,6 +212,7 @@ def main(
   anchor_size,
   anchor_mismatches,
   subst_type,
+  name,
   label,
 ):
   log_utils.log_input(input)
@@ -251,9 +228,10 @@ def main(
     anchor_mismatches = anchor_mismatches,
     subst_type = subst_type,
   )
-  write_data_info(
-    output = output_info,
+
+  data_info = common_utils.make_data_info(
     format = 'individual',
+    names = [name],
     labels = [label],
     ref_seqs = [ref_seq],
     ref_seq_window = get_ref_seq_window(
@@ -262,6 +240,10 @@ def main(
       window_size,
     ),
   )
+  data_info = pd.DataFrame(data_info, index=[0])
+  log_utils.log_output(output_info)
+  file_utils.write_csv(data_info, output_info)
+
   log_utils.blank_line()
 
 if __name__ == '__main__':
