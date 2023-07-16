@@ -289,7 +289,7 @@ def do_2_window(
   if anchor_mismatches is None:
     raise Exception('ANCHOR_MISMATCHES must be provided for stage 2_window.')
 
-  name = os.path.basename(output)
+  name = file_names.get_file_name(output)
   if label is None:
     label = name
 

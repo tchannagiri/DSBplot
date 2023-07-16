@@ -143,7 +143,7 @@ def main(
       ' Got {}.'.format(ref_seq_window)
     )
   
-  name = os.path.basename(output)
+  name = file_names.get_file_name(output)
   if label is None:
     label = name
   data_info = common_utils.make_data_info(
