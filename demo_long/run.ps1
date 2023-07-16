@@ -99,10 +99,10 @@ foreach ($layout in @("universal", "kamada", "radial")) {
 }
 
 ### Plot histograms ###
-foreach ($ext in @("png", "pdf", "html")) {
+foreach ($ext in @("png", "pdf")) {
   foreach ($var in @("substitution", "insertion", "deletion")) {
     foreach ($con in $constructs) {
-      DSBplot-histogram --input output/${con} --output plots/histogram/png/${con}_${var}.png --color $variation_color[$var] --variation_type $var --label_type relative
+      DSBplot-histogram --input output/${con} --output plots/histogram/$ext/${con}_${var}.${ext} --color $variation_color[$var] --variation_type $var --label_type relative
     }
   }
 }
