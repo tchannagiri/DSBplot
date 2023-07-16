@@ -10,9 +10,9 @@ import DSBplot.utils.file_utils as file_utils
 import DSBplot.utils.log_utils as log_utils
 import DSBplot.utils.constants as constants
 
-import DSBplot.get_nhej_data.filter_nhej as filter_nhej
-import DSBplot.get_window_data.get_window as get_window
-import DSBplot.get_histogram_data.get_variation as get_variation
+import DSBplot.preprocessing.filter_nhej as filter_nhej
+import DSBplot.preprocessing.get_window as get_window
+import DSBplot.preprocessing.get_variation as get_variation
 
 STAGES = ['0_align', '1_filter', '2_window', '3_variation']
 
@@ -194,6 +194,7 @@ def parse_args():
       raise Exception('Number of NAMES must be the same as the number of INPUTs.')
   if args['no_align']:
     args['stages'] = [x for x in args['stages'] if (x != '0_align')]
+  del args['no_align']
   return args
 
 def do_0_align(
@@ -377,7 +378,6 @@ def main(
   label,
   bowtie2_args,
   quiet,
-  no_align = False, # Not used
   stages = STAGES,
 ):
   do_stages(

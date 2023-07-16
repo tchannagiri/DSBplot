@@ -7,8 +7,8 @@ import DSBplot.utils.log_utils as log_utils
 import DSBplot.utils.alignment_utils as alignment_utils
 import DSBplot.utils.constants as constants
 import DSBplot.utils.file_names as file_names
-import DSBplot.get_window_data.alignment_window as alignment_window
-import DSBplot.get_window_data.remove_substitution as remove_substitution
+import DSBplot.preprocessing.alignment_window as alignment_window
+import DSBplot.preprocessing.remove_substitution as remove_substitution
 
 def parse_args():
   parser = argparse.ArgumentParser(

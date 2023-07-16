@@ -1,7 +1,9 @@
+# Note: This is a heavily outdated test and will no longer work.
+
 import os
 import unittest
 
-import DSBplot.preprocess as preprocess
+import DSBplot.preprocessing as preprocessing
 
 class TestFilterNhej(unittest.TestCase):
   def get_check_files():
@@ -81,7 +83,7 @@ class TestFilterNhej(unittest.TestCase):
       'data/output_expected/',
       'Sense_R1_' + ext_reads
     )
-    preprocess.main(
+    preprocessing.main(
       input = [file_reads],
       output = dir_output,
       ref_seq_file = file_ref_seq,

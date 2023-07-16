@@ -17,7 +17,9 @@ def check_dir_output(dir_name):
   return check_dir(dir_name)
 
 def check_file_output(file_name):
-  os.makedirs(os.path.dirname(file_name), exist_ok=True)
+  dir_name = os.path.dirname(file_name)
+  if dir_name != '':
+    os.makedirs(dir_name, exist_ok=True)
   return file_name
 
 def join_with_comma(arr):

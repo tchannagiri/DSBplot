@@ -2001,7 +2001,10 @@ def get_data(
       node_data['read_align'] = node_data['read_align'].apply(kmer_utils.reverse_complement)
       for x in data_info.keys():
         if x.startswith('ref_seq'):
-          data_info[x] = kmer_utils.reverse_complement(data_info[x])
+          if not pd.isna(data_info[x]):
+            data_info[x] = kmer_utils.reverse_complement(data_info[x])
+          else:
+            data_info[x] = None
 
     edge_data = graph_utils.get_edge_data(node_data)
 

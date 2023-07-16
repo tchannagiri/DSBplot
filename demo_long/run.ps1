@@ -34,14 +34,21 @@ $constructs = @(
 
 ### Preprocessing ###
 foreach ($con in $constructs) {
-  DSBplot-preprocess --input input/fastq/${c}_1.fq input/fastq/${c}_2.fq input/fastq/${c}_3.fq input/fastq/${c}_4.fq --output output/$con --ref_seq_file input/ref_seq/2DSB_${c}.fa --label $labels[$con] --total_reads 3000 3000 3000 3000 --dsb_pos $dsb_pos[$con]
+  DSBplot-preprocess --input input/fastq/${con}_1.fq input/fastq/${con}_2.fq input/fastq/${con}_3.fq input/fastq/${con}_4.fq --output output/$con --ref_seq_file input/ref_seq/2DSB_${con}.fa --label $labels[$con] --total_reads 3000 3000 3000 3000 --dsb_pos $dsb_pos[$con]
 }
-  
+
 # Example of running preprocessing stages separately for one experiment
 DSBplot-preprocess --input input/fastq/Sense_R1_1.fq input/fastq/Sense_R1_2.fq input/fastq/Sense_R1_3.fq input/fastq/Sense_R1_4.fq --ref_seq_file input/ref_seq/2DSB_Sense_R1.fa --output output/Sense_R1 --stages 0_align
 DSBplot-preprocess --ref_seq_file input/ref_seq/2DSB_Sense_R1.fa --dsb_pos 67 --output output/Sense_R1 --stages 1_filter
 DSBplot-preprocess --ref_seq_file input/ref_seq/2DSB_Sense_R1.fa --dsb_pos 67 --output output/Sense_R1 --label Sense_R1 --total_reads 3000 3000 3000 3000 --stages 2_window
 DSBplot-preprocess --output output/Sense_R1 --stages 3_variation
+
+# Example of concatenating three experiments.
+# Note, this does not make biological sense, but is used here for demonstration purposes.
+# The three experiments have the same windowed reference sequence and number of repeats,
+# which allows them to be concatenated.
+DSBplot-concat --input output/Sense_R1 output/BranchD_R1 output/pCMVD_R1 --output output/concat_R1 --names 1 2 3 4 --total_reads 3000 3000 3000 3000 3000 3000 3000 3000 3000 3000 3000 3000
+DSBplot-concat --input output/Sense_R2 output/BranchD_R2 output/pCMVD_R2 --output output/concat_R2 --names 1 2 3 4 --total_reads 3000 3000 3000 3000 3000 3000 3000 3000 3000 3000 3000 3000
 
 ### Plot graphs with individual layouts ###
 foreach ($ext in @("png", "pdf", "html")) {
