@@ -276,7 +276,7 @@ def parse_args():
     '--subst_type',
     choices = constants.SUBST_TYPES,
     help = 'Whether to plot data with or without substitutions.',
-    default = constants.SUBST_WITHOUT,
+    default = 'withoutSubst',
   )
   parser.add_argument(
     '--node_freq_range',
@@ -2522,7 +2522,7 @@ def main(
       raise Exception('Unknown data format: ' + str(data_info_list[i]['format']))
   
   # Set some default values
-  if subst_type == constants.SUBST_WITHOUT:
+  if subst_type == 'withoutSubst':
     variation_types = [
       x for x in variation_types
       if x not in ['substitution', 'mixed']

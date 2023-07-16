@@ -3,23 +3,11 @@ import numpy as np
 FASTA_EXT = ['fasta', 'fa', 'fna']
 FASTQ_EXT = ['fastq', 'fq']
 
-SUBST_WITH = 'withSubst'
-SUBST_WITHOUT = 'withoutSubst'
-SUBST_TYPES = [SUBST_WITH, SUBST_WITHOUT]
+SUBST_TYPES = ['withSubst', 'withoutSubst']
 
 def check_subst_type(subst_type):
   if subst_type not in SUBST_TYPES:
     raise Exception('Not a valid subst type: ' + str(subst_type))
-
-FREQ = 'freq'
-FREQ_FILTER = 'freq_filter'
-FREQ_FILTER_MEAN = 'freq_filter_mean'
-COUNT = 'count'
-FREQ_TYPES = [COUNT, FREQ, FREQ_FILTER, FREQ_FILTER_MEAN]
-
-def check_freq_type(freq_type):
-  if freq_type not in FREQ_TYPES:
-    raise Exception('Not a valid freq type: ' + str(freq_type))
 
 def get_position_labels(label_type, ref_length):
   if label_type == 'relative':
@@ -160,7 +148,7 @@ GRAPH_LAYOUT_TYPE = 'universal'
 GRAPH_LAYOUT_SEPARATE_COMPONENTS = False
 GRAPH_WIDTH_PX = 2400
 GRAPH_HEIGHT_PX = 2400
-GRAPH_NODE_SUBST_TYPE = SUBST_WITHOUT
+GRAPH_NODE_SUBST_TYPE = 'withoutSubst'
 GRAPH_NODE_SIZE_FREQ_RANGE = [1e-5, 1]
 GRAPH_NODE_SIZE_PX_RANGE = [10, 120]
 GRAPH_NODE_FILTER_VARIATION_TYPES = [

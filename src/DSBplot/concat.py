@@ -83,7 +83,7 @@ def main(
   count_cols = ['count_' + x for x in names]
   freq_cols = ['freq_' + x for x in names]
 
-  for subst_type in [constants.SUBST_WITH, constants.SUBST_WITHOUT]:
+  for subst_type in constants.SUBST_TYPES:
     data_list = []
     for i in range(len(input)):
       in_file = file_names.window(input[i], subst_type)

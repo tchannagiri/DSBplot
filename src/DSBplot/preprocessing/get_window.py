@@ -80,11 +80,8 @@ def parse_args():
   parser.add_argument(
     '--subst_type',
     type = str,
-    default = constants.SUBST_WITHOUT,
-    choices = [
-      constants.SUBST_WITH,
-      constants.SUBST_WITHOUT
-    ],
+    default = 'withoutSubst',
+    choices = constants.SUBST_TYPES,
     help = (
       'Whether to keep or ignore substitutions.' +
       ' If ignoring alignment substitutions, the corresponding nucleotide on the' +
