@@ -361,7 +361,7 @@ def main(
 
         ref_align, read_align = alignment_utils.get_alignment(ref_seq, read_seq, 1, cigar)
 
-        ins_pos, del_pos, subst_pos = alignment_utils.get_variation_pos(ref_align, read_align)
+        ins_pos, del_pos, subst_pos = alignment_utils.get_var_pos(ref_align, read_align)
         num_ins = len(ins_pos)
         num_del = len(del_pos)
         num_subst = len(subst_pos)
@@ -408,7 +408,7 @@ def main(
             if insertion_special_case or deletion_special_case:
               # if special case used, recompute info and do checks again
               cigar = alignment_utils.get_cigar(ref_align, read_align)
-              ins_pos, del_pos, subst_pos = alignment_utils.get_variation_pos(ref_align, read_align)
+              ins_pos, del_pos, subst_pos = alignment_utils.get_var_pos(ref_align, read_align)
               num_ins = len(ins_pos)
               num_del = len(del_pos)
               num_subst = len(subst_pos)

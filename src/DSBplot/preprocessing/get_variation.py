@@ -45,9 +45,9 @@ def split_seqs_into_variations(window_data):
         new_data.append({
           **{k: row[k] for k in value_cols},
           'dist_ref': dist_ref,
-          'variation_pos': var[0],
-          'variation_type': var[1],
-          'variation_letter': var[2],
+          'var_pos': var[0],
+          'var_type': var[1],
+          'var_letter': var[2],
         })
   if len(new_data) > 0:
     variation_data = pd.DataFrame.from_records(new_data)
@@ -57,18 +57,18 @@ def split_seqs_into_variations(window_data):
         value_cols + [
           'freq_mean',
           'dist_ref',
-          'variation_pos',
-          'variation_type',
-          'variation_letter',
+          'var_pos',
+          'var_type',
+          'var_letter',
         ]
       )
     )
   
   variation_data = variation_data.groupby([
     'dist_ref',
-    'variation_pos',
-    'variation_type',
-    'variation_letter',
+    'var_pos',
+    'var_type',
+    'var_letter',
   ]).sum().reset_index()
 
   variation_data = variation_data.sort_values('freq_mean', ascending=False)
@@ -76,9 +76,9 @@ def split_seqs_into_variations(window_data):
   variation_data = variation_data[
     value_cols + [
       'dist_ref',
-      'variation_pos',
-      'variation_type',
-      'variation_letter',
+      'var_pos',
+      'var_type',
+      'var_letter',
     ]
   ]
 

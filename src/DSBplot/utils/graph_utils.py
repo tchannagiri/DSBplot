@@ -34,10 +34,10 @@ def get_node_data(data):
     Get the data for the vertices of the graph.
   """
   dist_ref = []
-  variation_type = []
-  substitution = []
-  insertion = []
-  deletion = []
+  var_type = []
+  sub = []
+  ins = []
+  dels = []
   indel = []
 
   data = data.sort_values(
@@ -50,20 +50,20 @@ def get_node_data(data):
       alignment_utils.count_variations(row['ref_align'], row['read_align'])
     )
     if num_ins + num_del + num_subst == 0:
-      var_type = 'none'
+      var = 'none'
     elif num_del + num_subst == 0:
-      var_type = 'insertion'
+      var = 'ins'
     elif num_subst + num_ins == 0:
-      var_type = 'deletion'
+      var = 'del'
     elif num_ins + num_del == 0:
-      var_type = 'substitution'
+      var = 'sub'
     else:
-      var_type = 'mixed'
-    variation_type.append(var_type)
+      var = 'mix'
+    var_type.append(var)
     dist_ref.append(num_ins + num_del + num_subst)
-    substitution.append(num_subst)
-    insertion.append(num_ins)
-    deletion.append(num_del)
+    sub.append(num_subst)
+    ins.append(num_ins)
+    dels.append(num_del)
     indel.append(num_ins + num_del)
 
   data = data[
@@ -73,10 +73,10 @@ def get_node_data(data):
   data.update({
     'is_ref': [x == 0 for x in dist_ref],
     'dist_ref': dist_ref,
-    'variation_type': variation_type,
-    'substitution': substitution,
-    'insertion': insertion,
-    'deletion': deletion,
+    'var_type': var_type,
+    'sub': sub,
+    'ins': ins,
+    'del': dels,
     'indel': indel,
   })
 
@@ -98,10 +98,10 @@ def get_edge_data(node_data):
     'id_b': [],
     'ref_align_a': [],
     'read_align_a': [],
-    'variation_type_a': [],
+    'var_type_a': [],
     'ref_align_b': [],
     'read_align_b': [],
-    'variation_type_b': [],
+    'var_type_b': [],
     'edge_type': [],
   }
   for row_a, row_b in itertools.combinations(node_data.to_dict('records'), 2):
@@ -113,24 +113,21 @@ def get_edge_data(node_data):
       read_align_a,
       read_align_b,
     ):
-      if (
-        (row_a['insertion'] != row_b['insertion']) or
-        (row_a['deletion'] != row_b['deletion'])
-      ):
+      if (row_a['ins'] != row_b['ins']) or (row_a['del'] != row_b['del']):
         edge_type = 'indel'
       else:
-        edge_type = 'substitution'
+        edge_type = 'sub'
       
       edges['id_a'].append(row_a['id'])
       edges['id_b'].append(row_b['id'])
 
       edges['ref_align_a'].append(ref_align_a)
       edges['read_align_a'].append(read_align_a)
-      edges['variation_type_a'].append(row_a['variation_type'])
+      edges['var_type_a'].append(row_a['var_type'])
 
       edges['ref_align_b'].append(ref_align_b)
       edges['read_align_b'].append(read_align_b)
-      edges['variation_type_b'].append(row_b['variation_type'])
+      edges['var_type_b'].append(row_b['var_type'])
 
       edges['edge_type'].append(edge_type)
   return pd.DataFrame(edges)

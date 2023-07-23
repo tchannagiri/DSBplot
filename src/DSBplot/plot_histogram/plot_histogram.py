@@ -62,7 +62,7 @@ def get_figure_args_pyplot(
 def get_variation_data(
   data_dir,
   data_info,
-  variation_type,
+  var_type,
   format,
   y_axis_column = 'dist_ref',
   reverse_pos = False,
@@ -72,13 +72,13 @@ def get_variation_data(
   data_long = file_utils.read_csv(
     file_names.variation(data_dir, 'withSubst')
   )
-  data_long = data_long.loc[data_long['variation_type'] == variation_type]
+  data_long = data_long.loc[data_long['var_type'] == var_type]
   if reverse_pos:
-    data_long['variation_pos'] = ref_length + 1 - data_long['variation_pos']
-  data_long = data_long.groupby(['variation_pos', y_axis_column])['freq_mean'].sum()
+    data_long['var_pos'] = ref_length + 1 - data_long['var_pos']
+  data_long = data_long.groupby(['var_pos', y_axis_column])['freq_mean'].sum()
   data_long = data_long.reindex(pd.MultiIndex.from_product(
     [list(range(ref_length + 1)), list(range(ref_length + 1))],
-    names = ['variation_pos', y_axis_column],
+    names = ['var_pos', y_axis_column],
   ))
   data_long = data_long.reset_index()
   data_long = data_long.fillna(0)
@@ -89,7 +89,7 @@ def get_variation_data(
     data_grid = data_long.copy()
     data_grid = data_grid.pivot(
       index = y_axis_column,
-      columns = 'variation_pos',
+      columns = 'var_pos',
       values = 'freq_mean',
     )
     data_grid = data_grid.rename_axis(
@@ -103,7 +103,7 @@ def get_variation_data(
       ],
     )
     data_grid.columns = pd.MultiIndex.from_product(
-      [['variation_pos'], data_grid.columns],
+      [['var_pos'], data_grid.columns],
     )
     return data_grid
   else:
@@ -112,13 +112,13 @@ def get_variation_data(
 def plot_histogram_impl(
   data_dir,
   data_info,
-  variation_type,
+  var_type,
   freq_range,
   freq_log,
   axis,
   label_type,
   color,
-  axis_tick_multiplier = constants.HISTOGRAM_AXIS_TICK_MULTIPLIER,
+  axis_tick_multiplier = constants.HISTOGRAM_AXIS_TICK_MULTIPLE,
   axis_label_font_size = constants.HISTOGRAM_AXIS_LABEL_FONT_SIZE,
   axis_tick_font_size = constants.HISTOGRAM_AXIS_TICK_FONT_SIZE,
   font_size_scale = constants.HISTOGRAM_FONT_SIZE_SCALE,
@@ -137,7 +137,7 @@ def plot_histogram_impl(
   data_sub_long = get_variation_data(
     data_dir = data_dir,
     data_info = data_info,
-    variation_type = variation_type,
+    var_type = var_type,
     format = 'long',
     reverse_pos = reverse_pos,
   )
@@ -165,9 +165,9 @@ def plot_histogram_impl(
     color = color,
   )
 
-  if label_type == 'relative':
+  if label_type == 'rel':
     x_label = 'Position (from DSB)'
-  elif label_type == 'absolute':
+  elif label_type == 'abs':
     x_label = 'Position'
   else:
     raise Exception('Impossible')
@@ -234,7 +234,7 @@ def plot_histogram(
   file_out,
   data_dir,
   data_info,
-  variation_type,
+  var_type,
   freq_range,
   freq_log,
   label_type,
@@ -246,7 +246,7 @@ def plot_histogram(
   margin_right_px = constants.HISTOGRAM_MARGIN_RIGHT_PX,
   margin_top_px = constants.HISTOGRAM_MARGIN_TOP_PX,
   margin_bottom_px = constants.HISTOGRAM_MARGIN_BOTTOM_PX,
-  axis_tick_multiplier = constants.HISTOGRAM_AXIS_TICK_MULTIPLIER,
+  axis_tick_multiplier = constants.HISTOGRAM_AXIS_TICK_MULTIPLE,
   font_size_scale = constants.HISTOGRAM_FONT_SIZE_SCALE,
   title = constants.HISTOGRAM_TITLE,
 ):
@@ -277,7 +277,7 @@ def plot_histogram(
   plot_histogram_impl(
     data_dir = data_dir,
     data_info = data_info,
-    variation_type = variation_type,
+    var_type = var_type,
     freq_range = freq_range,
     freq_log = freq_log,
     axis = axis,
@@ -304,13 +304,17 @@ def parse_args():
     description = 'Plot 3d histograms showing variation type/position/frequency.',
     formatter_class = argparse.ArgumentDefaultsHelpFormatter,
   )
-  parser.add_argument(
+  group_io = parser.add_argument_group('Input/output arguments')
+  group_main = parser.add_argument_group('Main aesthestic arguments')
+  group_framing = parser.add_argument_group('Framing arguments')
+  group_axes = parser.add_argument_group('Axes arguments')
+  group_io.add_argument(
     '--input',
     type = common_utils.check_dir,
     help = 'Directory with the data files.',
     required = True,
   )
-  parser.add_argument(
+  group_io.add_argument(
     '--output',
     type = common_utils.check_file_output,
     help = (
@@ -319,102 +323,36 @@ def parse_args():
     ),
     required = True,
   )
-  parser.add_argument(
-    '--variation_type',
-    choices = ['substitution', 'insertion', 'deletion'],
-    help = 'Which variation type to show in the histogram.',
-    required = True,
-  )
-  parser.add_argument(
-    '--reverse_pos',
-    action = 'store_true',
+  group_main.add_argument(
+    '--var',
+    choices = ['sub', 'ins', 'del'],
     help = (
-      'Whether to reverse the x-axis positions.' +
-      ' Useful if comparing reverse strand data with forward strand data.'
-    ),
-  )
-  parser.add_argument(
-    '--label_type',
-    choices = ['relative', 'absolute'],
-    help = (
-      'Whether to index the x-axis by "absolute" positions on the' +
-      ' reference sequence from 1 to [reference length], or "relative" positions' +
-      ' from -[reference length]/2 to [reference length]/2 (skipping 0).' +
-      ' [reference length] refers to the length of the reference sequence' +
-      ' after extracting the window around the DSB site.'
+      'Which variation type to show in the histogram.' +
+      ' "sub" = substitutions, "ins" = insertions, "del" = deletions.'
     ),
     required = True,
   )
-  parser.add_argument(
+  group_main.add_argument(
     '--color',
     type = str,
     default = None,
     help = (
       'Color of the bar graph. If not specified,' +
-      ' a default color based on VARIATION_TYPE will be chosen.'
+      ' a default color based on VARIATION_TYPE will be chosen.' +
+      ' Default colors are: "sub" = "{}", "ins" = "{}", "del" = "{}".'.format(
+        constants.VARIATION_TYPES['sub']['color_3d'],
+        constants.VARIATION_TYPES['ins']['color_3d'],
+        constants.VARIATION_TYPES['del']['color_3d'],
+      )
     ),
   )
-  parser.add_argument(
-    '--freq_range',
-    type = float,
-    nargs = 2,
-    default = constants.HISTOGRAM_FREQ_RANGE,
-    help = 'Range of the z-axis frequency values to show.',
-  )
-  parser.add_argument(
-    '--freq_scale',
+  group_main.add_argument(
+    '--title',
     type = str,
-    choices = ['linear', 'log'],
-    default = constants.HISTOGRAM_FREQ_SCALE,
-    help = 'Whether to use a linear or log scale for the z-axis frequency values.',
+    help = 'Optional title of the plot. Must adjust top margins accordingly.',
   )
-  parser.add_argument(
-    '--height',
-    type = int,
-    default = constants.HISTOGRAM_HEIGHT_PX,
-    help = 'Height of the output image in pixels.',
-  )
-  parser.add_argument(
-    '--width',
-    type = int,
-    default = constants.HISTOGRAM_WIDTH_PX,
-    help = 'Width of the output image in pixels.',
-  )
-  parser.add_argument(
-    '--margin_left',
-    type = int,
-    default = constants.HISTOGRAM_MARGIN_LEFT_PX,
-    help = 'Left margin of the output image in pixels.',
-  )
-  parser.add_argument(
-    '--margin_right',
-    type = int,
-    default = constants.HISTOGRAM_MARGIN_RIGHT_PX,
-    help = 'Right margin of the output image in pixels.',
-  )
-  parser.add_argument(
-    '--margin_top',
-    type = int,
-    default = constants.HISTOGRAM_MARGIN_TOP_PX,
-    help = 'Top margin of the output image in pixels.',
-  )
-  parser.add_argument(
-    '--margin_bottom',
-    type = int,
-    default = constants.HISTOGRAM_MARGIN_BOTTOM_PX,
-    help = 'Bottom margin of the output image in pixels.',
-  )
-  parser.add_argument(
-    '--tick_multiplier',
-    type = int,
-    default = constants.HISTOGRAM_AXIS_TICK_MULTIPLIER,
-    help = (
-      'Multiplier of the axis tick labels.' +
-      ' Only multiples of this value will be shown on the axes.'
-    ),
-  )
-  parser.add_argument(
-    '--font_size_scale',
+  group_main.add_argument(
+    '--font_scale',
     type = float,
     default = constants.HISTOGRAM_FONT_SIZE_SCALE,
     help = (
@@ -422,33 +360,107 @@ def parse_args():
       ' Must adjust margins accordingly.'
     ),
   )
-  parser.add_argument(
-    '--title',
+  group_axes.add_argument(
+    '--xax',
+    choices = ['rel', 'abs'],
+    help = (
+      'Whether to index the x-axis by "abs" = "absolute" positions on the' +
+      ' reference sequence from 1 to [reference length], or "rel" = "relative" positions' +
+      ' from -[reference length]/2 to [reference length]/2 (skipping 0).' +
+      ' [reference length] refers to the length of the reference sequence' +
+      ' after extracting the window around the DSB site.'
+    ),
+    required = True,
+  )
+  group_axes.add_argument(
+    '--zax',
     type = str,
-    help = 'Optional title of the plot. Must adjust top margins accordingly.',
+    choices = ['linear', 'log'],
+    default = constants.HISTOGRAM_FREQ_SCALE,
+    help = 'Whether to use a linear or log scale for the z-axis frequency values.',
+  )
+  group_axes.add_argument(
+    '--rev',
+    action = 'store_true',
+    help = (
+      'If present, reverse the x-axis positions.' +
+      ' Useful if comparing reverse strand data with forward strand data.'
+    ),
+  )
+  group_axes.add_argument(
+    '--freq',
+    type = float,
+    nargs = 2,
+    default = constants.HISTOGRAM_FREQ_RANGE,
+    help = 'Range of the z-axis frequency values to show.',
+  )
+  group_axes.add_argument(
+    '--mult',
+    type = int,
+    default = constants.HISTOGRAM_AXIS_TICK_MULTIPLE,
+    help = (
+      'Multiple to use on the axis tick labels.' +
+      ' Only multiples of this value will be shown on the axes.'
+    ),
+  )
+  group_framing.add_argument(
+    '--height',
+    type = int,
+    default = constants.HISTOGRAM_HEIGHT_PX,
+    help = 'Height of the output image in pixels.',
+  )
+  group_framing.add_argument(
+    '--width',
+    type = int,
+    default = constants.HISTOGRAM_WIDTH_PX,
+    help = 'Width of the output image in pixels.',
+  )
+  group_framing.add_argument(
+    '--mar_l',
+    type = int,
+    default = constants.HISTOGRAM_MARGIN_LEFT_PX,
+    help = 'Left margin of the output image in pixels.',
+  )
+  group_framing.add_argument(
+    '--mar_r',
+    type = int,
+    default = constants.HISTOGRAM_MARGIN_RIGHT_PX,
+    help = 'Right margin of the output image in pixels.',
+  )
+  group_framing.add_argument(
+    '--mar_t',
+    type = int,
+    default = constants.HISTOGRAM_MARGIN_TOP_PX,
+    help = 'Top margin of the output image in pixels.',
+  )
+  group_framing.add_argument(
+    '--mar_b',
+    type = int,
+    default = constants.HISTOGRAM_MARGIN_BOTTOM_PX,
+    help = 'Bottom margin of the output image in pixels.',
   )
   args = vars(parser.parse_args())
   if args['color'] is None:
-    args['color'] = constants.VARIATION_TYPES[args['variation_type']]['color_3d']
+    args['color'] = constants.VARIATION_TYPES[args['var_type']]['color_3d']
   return args
 
 def main(
     input,
     output,
-    variation_type,
-    reverse_pos,
-    label_type,
+    var,
+    rev,
+    xax,
     color,
-    freq_range,
-    freq_scale,
+    freq,
+    zax,
     height = constants.HISTOGRAM_HEIGHT_PX,
     width = constants.HISTOGRAM_WIDTH_PX,
-    margin_left = constants.HISTOGRAM_MARGIN_LEFT_PX,
-    margin_right = constants.HISTOGRAM_MARGIN_RIGHT_PX,
-    margin_top = constants.HISTOGRAM_MARGIN_TOP_PX,
-    margin_bottom = constants.HISTOGRAM_MARGIN_BOTTOM_PX,
-    tick_multiplier = constants.HISTOGRAM_AXIS_TICK_MULTIPLIER,
-    font_size_scale = constants.HISTOGRAM_FONT_SIZE_SCALE,
+    mar_l = constants.HISTOGRAM_MARGIN_LEFT_PX,
+    mar_r = constants.HISTOGRAM_MARGIN_RIGHT_PX,
+    mar_t = constants.HISTOGRAM_MARGIN_TOP_PX,
+    mar_b = constants.HISTOGRAM_MARGIN_BOTTOM_PX,
+    mult = constants.HISTOGRAM_AXIS_TICK_MULTIPLE,
+    font_scale = constants.HISTOGRAM_FONT_SIZE_SCALE,
     title = constants.HISTOGRAM_TITLE,
   ):
   data_dir = input
@@ -457,20 +469,20 @@ def main(
     file_out = output,
     data_dir = data_dir,
     data_info = data_info,
-    variation_type = variation_type,
-    freq_range = freq_range,
-    freq_log = freq_scale == 'log',
-    label_type = label_type,
+    var_type = var,
+    freq_range = freq,
+    freq_log = (zax == 'log'),
+    label_type = xax,
     color = color,
-    reverse_pos = reverse_pos,
+    reverse_pos = rev,
     height_px = height,
     width_px = width,
-    margin_left_px = margin_left,
-    margin_right_px = margin_right,
-    margin_top_px = margin_top,
-    margin_bottom_px = margin_bottom,
-    axis_tick_multiplier = tick_multiplier,
-    font_size_scale = font_size_scale,
+    margin_left_px = mar_l,
+    margin_right_px = mar_r,
+    margin_top_px = mar_t,
+    margin_bottom_px = mar_b,
+    axis_tick_multiplier = mult,
+    font_size_scale = font_scale,
     title = title,
   )
 

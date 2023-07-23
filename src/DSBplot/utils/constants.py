@@ -10,23 +10,20 @@ def check_subst_type(subst_type):
     raise Exception('Not a valid subst type: ' + str(subst_type))
 
 def get_position_labels(label_type, ref_length):
-  if label_type == 'relative':
+  if label_type == 'rel':
     return (
       [str(-x) for x in range(1, 1 + ref_length // 2)][::-1] +
       [str(x) for x in range(1, 1 + ref_length // 2)]
     )
-  elif label_type == 'absolute':
+  elif label_type == 'abs':
     return [str(x) for x in range(1, ref_length + 1)]
   else:
     raise Exception('Unknown label type: ' + str(label_type))
 
-POSITION_TITLE = {
-  'relative': 'Position (from cut)',
-  'absolute': 'Position',
-}
+POSITION_TITLE = {'rel': 'Position (from cut)', 'abs': 'Position'}
 
 EDGE_TYPES = {
-  'substitution': {
+  'sub': {
     'label': 'Substitution',
     'line_dash': 'dash',
     'legend_color': 'black',
@@ -41,25 +38,25 @@ EDGE_TYPES = {
 }
 
 VARIATION_TYPES = {
-  'insertion': {
+  'ins': {
     'label': 'Insertion',
     'short_label': 'I',
     'color': '#ffa500',
     'color_3d': '#ffa500',
   },
-  'deletion': {
+  'del': {
     'label': 'Deletion',
     'short_label': 'D',
     'color': '#8080ff',
     'color_3d': '#8080ff',
   },
-  'substitution': {
+  'sub': {
     'label': 'Substitution',
     'short_label': 'S',
     'color': '#808080',
     'color_3d': '#bfbfbf',
   },
-  'mixed': {
+  'mix': {
     'label': 'Mixed',
     'short_label': 'M',
     'color': '#00ff00',
@@ -125,7 +122,7 @@ HISTOGRAM_TITLE = None
 HISTOGRAM_TITLE_FONT_SIZE = 16
 HISTOGRAM_AXIS_LABEL_FONT_SIZE = 12
 HISTOGRAM_AXIS_TICK_FONT_SIZE = 8
-HISTOGRAM_AXIS_TICK_MULTIPLIER = 4
+HISTOGRAM_AXIS_TICK_MULTIPLE = 4
 HISTOGRAM_FONT_SIZE_SCALE = 6
 HISTOGRAM_AXIS_LABEL_PAD_PX = 10
 HISTOGRAM_WIDTH_PX = 1500
@@ -138,9 +135,9 @@ HISTOGRAM_DPI = 100
 HISTOGRAM_FREQ_RANGE = [1e-5, 1]
 HISTOGRAM_FREQ_SCALE = 'log'
 HISTOGRAM_VARIATION_TYPE_COLORS = [
-  VARIATION_TYPES['insertion']['color_3d'],
-  VARIATION_TYPES['deletion']['color_3d'],
-  VARIATION_TYPES['substitution']['color_3d'],
+  VARIATION_TYPES['ins']['color_3d'],
+  VARIATION_TYPES['del']['color_3d'],
+  VARIATION_TYPES['sub']['color_3d'],
 ]
 
 ### Constants for graphs ###
@@ -151,13 +148,7 @@ GRAPH_HEIGHT_PX = 2400
 GRAPH_NODE_SUBST_TYPE = 'withoutSubst'
 GRAPH_NODE_SIZE_FREQ_RANGE = [1e-5, 1]
 GRAPH_NODE_SIZE_PX_RANGE = [10, 120]
-GRAPH_NODE_FILTER_VARIATION_TYPES = [
-  'insertion',
-  'deletion',
-  'substitution',
-  'mixed',
-  'none',
-]
+GRAPH_NODE_FILTER_VARIATION_TYPES = ['ins', 'del', 'sub', 'mix', 'none']
 GRAPH_NODE_FILTER_FREQ_RANGE = [1e-5, np.inf]
 GRAPH_NODE_FILTER_DIST_RANGE = [0, np.inf]
 GRAPH_NODE_OUTLINE_WIDTH_SCALE = 4
@@ -165,10 +156,10 @@ GRAPH_NODE_LABEL_SHOW = False
 GRAPH_NODE_LABEL_COLUMNS = ['id']
 GRAPH_NODE_LABEL_POSITION = 'bottom center'
 GRAPH_NODE_SIZE_TYPE = 'freq'
-GRAPH_NODE_COLOR_TYPE_COMPARISON = 'freq_ratio_continuous'
-GRAPH_NODE_COLOR_TYPE_INDIVIDUAL = 'variation_type'
-GRAPH_NODE_COMPARISON_COLORS = ['#ff0000', '#0000ff']
-GRAPH_NODE_COMPARISON_COLOR_TYPE = 'continuous'
+GRAPH_NODE_COLOR_TYPE_COMPARISON = 'ratio_cont'
+GRAPH_NODE_COLOR_TYPE_INDIVIDUAL = 'var_type'
+GRAPH_NODE_RATIO_COLORS = ['#ff0000', '#0000ff']
+GRAPH_NODE_RATIO_COLOR_TYPE = 'cont'
 GRAPH_NODE_FREQ_RATIO_RANGE = [2/3, 3/2]
 GRAPH_NODE_REFERENCE_OUTLINE_COLOR = '#32cd32'
 GRAPH_NODE_REFERENCE_OUTLINE_WIDTH = 2
@@ -192,9 +183,9 @@ GRAPH_AXES_SHOW = False
 GRAPH_LEGEND_CUSTOM_SHOW = True
 GRAPH_LEGEND_CUSTOM_LIST = None
 GRAPH_LEGENDS = [
-  'variation_type',
-  'freq_ratio_continuous',
-  'freq_ratio_discrete',
+  'var_type',
+  'ratio_cont',
+  'ratio_disc',
   'size',
   'outline',
   'edge',
@@ -236,6 +227,7 @@ GRAPH_UNIVERSAL_X_SCALE_INSERTION = 10
 GRAPH_UNIVERSAL_Y_SCALE_INSERTION = 3
 GRAPH_UNIVERSAL_X_SCALE_DELETION = 2
 GRAPH_UNIVERSAL_Y_SCALE_DELETION = 1
+GRAPH_UNIVERSAL_AXIS_LINE_WIDTH_PX = 0.5
 
 ### Constants plot graph ###
 COMPARISON_SEP = '::' # Separator for comparison directories in plot_graph.py arguments

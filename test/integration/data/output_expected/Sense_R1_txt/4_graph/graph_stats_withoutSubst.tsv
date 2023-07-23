@@ -1,2 +1,0 @@
-"num_nodes"	"num_edges"	"num_edges_indel"	"num_edges_substitution"	"avg_degree"	"avg_dist_ref"	"max_dist_ref"	"avg_pairwise_dist"	"max_pairwise_dist"	"num_seq_substitution"	"num_seq_insertion"	"num_seq_deletion"	"ref_freq_mean"	"non_ref_freq_mean"	"insertion_freq_mean"	"deletion_freq_mean"
-44	94	63	31	4.2727272727272725	4.6976744186046515	12	5.288583509513742	15	0	11	32	0.1323896752706078	0.8326394671107387	0.6411323896752702	0.19150707743546902

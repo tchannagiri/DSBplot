@@ -12,5 +12,5 @@ def entry_point():
 
 if __name__ == '__main__':
   # Test code:
-  # sys.argv = 'histogram.py --input data_output/db_R1 --output plot/histogram_test.png --color #bfbfbf --freq_range 1e-5 1e-2 --freq_scale linear --variation_type substitution --label_type relative'.split(' ')
+  # sys.argv = 'histogram.py --input data_output/db_R1 --output plot/histogram_test.png --color #bfbfbf --freq_range 1e-5 1e-2 --freq_scale linear --var_type substitution --label_type relative'.split(' ')
   main(**parse_args())

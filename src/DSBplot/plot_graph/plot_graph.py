@@ -98,7 +98,16 @@ def parse_args():
     ),
     formatter_class = argparse.ArgumentDefaultsHelpFormatter,
   )
-  parser.add_argument(
+  io_group = parser.add_argument_group('Input/Output')
+  framing_group = parser.add_argument_group('Framing')
+  layout_group = parser.add_argument_group('Layouts')
+  node_group = parser.add_argument_group('Node Properties')
+  node_comparison_group = parser.add_argument_group('Node Comparison Properties')
+  edge_group = parser.add_argument_group('Edge Properties')
+  legend_group = parser.add_argument_group('Legends')
+  universal_group = parser.add_argument_group('Universal Layout')
+  misc_group = parser.add_argument_group('Miscellaneous')
+  io_group.add_argument(
     '--input',
     type = str,
     nargs = '+',
@@ -107,91 +116,66 @@ def parse_args():
       ' All libraries specified here must have the same windowed reference sequence' +
       ' (i.e., the 20bp section of the reference around the DSB site should be the same' +
       ' in all libraries). All the libraries will be laid out using combined x/y-coordinate' +
-      ' assignments to the vertices. To plot plot a comparion graph between two libraries,' +
+      ' assignments to the vertices. To plot a comparion graph between two libraries,' +
       f' specify both directories as a single argument separated by "{constants.COMPARISON_SEP}".'
     ),
     required = True,
   )
-  parser.add_argument(
+  io_group.add_argument(
     '--output',
     type = common_utils.check_file_output,
     nargs = '+',
     help = (
-      'Output file(s). If not given no output will be written' +
+      'Output files. If omitted, no output will be written' +
       ' (useful only when using "--interactive").' +
       ' The file extension should be either ".html" for interactive HTML output' +
       ' or any image file format supported by the Plotly package.' +
-      ' If not omitted, number of arguments should match' +
+      ' If present, number of arguments should match' +
       ' the number of input directories.'
     ),
   )
-  parser.add_argument(
+  io_group.add_argument(
     '--debug',
     type = common_utils.check_dir_output,
-    help = 'If present, write debug files to the given directory.',
-  )
-  parser.add_argument(
-    '--title',
-    type = str,
-    nargs = '+',
     help = (
-    'If present, adds a title to the plot with this value.' +
-    ' Number of arguments should match the number of input' +
-    ' files.'
+      'If present, write debug files to the given directory.' +
+      ' The debug files contain information about the nodes and edges' +
+      ' of the graph.'
+    )
+  )
+  io_group.add_argument(
+    '--interactive',
+    action = 'store_true',
+    help = (
+      'If present, opens the interactive version in a browser.'
+      ' Uses the Ploty library "figure.show()" function to do so.'
     ),
   )
-  parser.add_argument(
+  layout_group.add_argument(
     '--layout',
     choices = list(LAYOUT_PROPERTIES),
     default = 'universal',
     help = 'The algorithm to use for laying out the graph.',
   )
-  parser.add_argument(
-    '--universal_y_axis_x_pos',
+  layout_group.add_argument(
+    '--sep',
+    action = 'store_true',
+    help = 'If present, separate the connected components of the graph.',
+  )
+  universal_group.add_argument(
+    '--ul_yax_x',
     type = float,
     help = (
       'If present, shows a y-axis at the given x position' +
       ' showing the distances to the reference.' +
       ' Universal layout only.'
       ' To determine appropriate values to set please see the console log, which' +
-      ' shows the range of x-values of the nodes.'
+      ' shows the range of x-values of the nodes.' +
+      ' Set to 0 to automatically determine the position.'
     ),
   )
-  parser.add_argument(
-    '--universal_x_axis_deletion_y_pos',
-    type = float,
-    help = (
-      'If present, shows an x-axis for deletions at the given y position' +
-      ' showing the approximate position of the deleted ranges.' +
-      ' Universal layout only.'
-      ' To determine appropriate values to set please see the console log, which' +
-      ' shows the range of y-values of the nodes.'
-    ),
-  )
-  parser.add_argument(
-    '--universal_x_axis_deletion_label_type',
-    type = str,
-    choices = ['relative', 'absolute'],
-    default = 'relative',
-    help = (
-      'The type of labeling to use for the universal layout deletion x-axis (if present).' +
-      ' "relative" labels have 0 in the middle with negative/positive values on the left/right.' +
-      ' "absolute" labels have 1 on the left and the length of the reference sequence on the right.'
-    ),
-  )
-  parser.add_argument(
-    '--universal_x_axis_insertion_y_pos',
-    type = float,
-    help = (
-      'If present, shows a x-axis for insertions at the given y position' +
-      ' showing the first nucleotide of inserted sequences.' +
-      ' Universal layout only.' +
-      ' To determine appropriate values to set please see the console log,' +
-      ' which shows the range of y-values of the nodes.'
-    ),
-  )
-  parser.add_argument(
-    '--universal_y_axis_y_range',
+  universal_group.add_argument(
+    '--ul_yax_y',
     nargs = 2,
     type = float,
     default = [float('nan'), float('nan')],
@@ -199,13 +183,37 @@ def parse_args():
       'If showing an y-axis for the universal layout,' +
       ' the min and max y-position of the line.' +
       ' Note either or both of these values may be omitted or set to "nan", ' +
-      ' and the "universal_y_axis_*_max_tick" parameters may be used instead.' +
+      ' and the "ul_yax_*_max_tick" parameters may be used instead.' +
       ' To determine appropriate values to set please see the console log, which' +
       ' shows the range of y-values of the nodes.'
     ),
   )
-  parser.add_argument(
-    '--universal_x_axis_x_range',
+  universal_group.add_argument(
+    '--ul_xax_del_y',
+    type = float,
+    help = (
+      'If present, shows an x-axis for deletions at the given y position' +
+      ' showing the approximate position of the deleted ranges.' +
+      ' Universal layout only.'
+      ' To determine appropriate values to set please see the console log, which' +
+      ' shows the range of y-values of the nodes.' +
+      ' Set to 0 to automatically determine the position.'
+    ),
+  )
+  universal_group.add_argument(
+    '--ul_xax_ins_y',
+    type = float,
+    help = (
+      'If present, shows a x-axis for insertions at the given y position' +
+      ' showing the first nucleotide of inserted sequences.' +
+      ' Universal layout only.' +
+      ' To determine appropriate values to set please see the console log,' +
+      ' which shows the range of y-values of the nodes.' +
+      ' Set to 0 to automatically determine the position.'
+    ),
+  )
+  universal_group.add_argument(
+    '--ul_xax_x',
     nargs = 2,
     type = float,
     default = [float('nan'), float('nan')],
@@ -216,8 +224,19 @@ def parse_args():
       ' shows the range of x-values of the nodes.'
     ),
   )
-  parser.add_argument(
-    '--universal_y_axis_deletion_max_tick',
+  universal_group.add_argument(
+    '--ul_xax_del_label_type',
+    type = str,
+    choices = ['rel', 'abs'],
+    default = 'rel',
+    help = (
+      'The type of labeling to use for the universal layout deletion x-axis (if present).' +
+      ' "rel" = "relative" labels have 0 in the middle with negative/positive values on the left/right.' +
+      ' "abs" = "absolute" labels have 1 on the left and the length of the reference sequence on the right.'
+    ),
+  )
+  universal_group.add_argument(
+    '--ul_yax_del_max_tick',
     type = int,
     help = (
       'If showing an y-axis for the universal layout,' +
@@ -226,8 +245,8 @@ def parse_args():
       ' in the data.'
     ),
   )
-  parser.add_argument(
-    '--universal_y_axis_insertion_max_tick',
+  universal_group.add_argument(
+    '--ul_yax_ins_max_tick',
     type = int,
     help = (
       'If showing an y-axis for the universal layout,' +
@@ -236,8 +255,8 @@ def parse_args():
       ' in the data.'
     ),
   )
-  parser.add_argument(
-    '--universal_x_scale_insertion',
+  universal_group.add_argument(
+    '--ul_x_scale_ins',
     type = float,
     default = constants.GRAPH_UNIVERSAL_X_SCALE_INSERTION,
     help = (
@@ -245,8 +264,8 @@ def parse_args():
       ' Insertion vertex x-coordinates will be multiplied by this value.'
     ),
   )
-  parser.add_argument(
-    '--universal_y_scale_insertion',
+  universal_group.add_argument(
+    '--ul_y_scale_ins',
     type = float,
     default = constants.GRAPH_UNIVERSAL_Y_SCALE_INSERTION,
     help = (
@@ -254,8 +273,8 @@ def parse_args():
       ' Insertion vertex y-coordinates will be multiplied by this value.'
     ),
   )
-  parser.add_argument(
-    '--universal_x_scale_deletion',
+  universal_group.add_argument(
+    '--ul_x_scale_del',
     type = float,
     default = constants.GRAPH_UNIVERSAL_X_SCALE_DELETION,
     help = (
@@ -263,8 +282,8 @@ def parse_args():
       ' Deletion vertex x-coordinates will be multiplied by this value.'
     ),
   )
-  parser.add_argument(
-    '--universal_y_scale_deletion',
+  universal_group.add_argument(
+    '--ul_y_scale_del',
     type = float,
     default = constants.GRAPH_UNIVERSAL_Y_SCALE_DELETION,
     help = (
@@ -272,24 +291,15 @@ def parse_args():
       ' Deletion vertex y-coordinates will be multiplied by this value.'
     ),
   )
-  parser.add_argument(
-    '--subst_type',
-    choices = constants.SUBST_TYPES,
-    help = 'Whether to plot data with or without substitutions.',
-    default = 'withoutSubst',
+  node_group.add_argument(
+    '--sub',
+    type = int,
+    choices = [0, 1],
+    help = 'Whether to plot data without (0) or with (1) substitutions.',
+    default = 0,
   )
-  parser.add_argument(
-    '--node_freq_range',
-    nargs = 2,
-    type = float,
-    default = constants.GRAPH_NODE_SIZE_FREQ_RANGE,
-    help = (
-      'Min and max frequency to determine node size.' +
-      ' Higher frequencies are clipped to this value.'
-    ),
-  )
-  parser.add_argument(
-    '--node_px_range',
+  node_group.add_argument(
+    '--size',
     nargs = 2,
     type = float,
     default = constants.GRAPH_NODE_SIZE_PX_RANGE,
@@ -298,33 +308,54 @@ def parse_args():
       ' For no size scaling, set both values to the same number.'
     )
   )
-  parser.add_argument(
+  node_group.add_argument(
+    '--size_freq',
+    nargs = 2,
+    type = float,
+    default = constants.GRAPH_NODE_SIZE_FREQ_RANGE,
+    help = (
+      'Min and max frequency to determine node size.' +
+      ' Higher frequencies are clipped to this value.'
+    ),
+  )
+  node_group.add_argument(
     '--filter_freq',
     nargs = 2,
     type = float,
     default = constants.GRAPH_NODE_FILTER_FREQ_RANGE,
     help = 'Min and max frequency to filter nodes by.'
   )
-  parser.add_argument(
+  node_group.add_argument(
     '--filter_dist',
     nargs = 2,
     type = float,
     default = constants.GRAPH_NODE_FILTER_DIST_RANGE,
     help = 'Min and max distance to filter nodes by.'
   )
-  parser.add_argument(
-    '--node_outline_scale',
+  node_group.add_argument(
+    '--outline_scale',
     type = float,
     default = constants.GRAPH_NODE_OUTLINE_WIDTH_SCALE,
     help = (
       'How much to scale the node outline width (thickness).' +
-      ' Values > 1 increase the width; values < 1 decrease the width.'
+      ' Larger values increase the width and smaller values decrease the width.'
     ),
   )
-  parser.add_argument(
-    '--node_comparison_colors',
+  node_comparison_group.add_argument(
+    '--ratio',
+    type = float,
+    default = constants.GRAPH_NODE_FREQ_RATIO_RANGE,
+    nargs = 2,
+    help = (
+      ' The two frequency ratio used to determine node colors for comparison graphs.' +
+      ' Also controls the range of ratios displayed on the frequency-ratio colorbar legend.' +
+      ' Typically, the min value should be < 1 and the max value should be > 1.'
+    ),
+  )
+  node_comparison_group.add_argument(
+    '--ratio_colors',
     type = str,
-    default = constants.GRAPH_NODE_COMPARISON_COLORS,
+    default = constants.GRAPH_NODE_RATIO_COLORS,
     nargs = 2,
     help = (
       'The colors to use in the gradient when the node colors' +
@@ -333,33 +364,22 @@ def parse_args():
       ' recognized keywords such as "red", "blue", "green".'
     ),
   )
-  parser.add_argument(
-    '--node_comparison_color_type',
+  node_comparison_group.add_argument(
+    '--ratio_color_type',
     type = str,
-    default = constants.GRAPH_NODE_COMPARISON_COLOR_TYPE,
-    choices = ['continuous', 'discrete'],
+    default = constants.GRAPH_NODE_RATIO_COLOR_TYPE,
+    choices = ['cont', 'disc'],
     help = (
       'The type of color scheme to use for coloring nodes in a comparison graph.' +
-      ' The "continuous" scheme uses a gradient of colors from the min to max ratio.' +
-      ' The "discrete" schemes uses three colors to indicate that the ratio is <' +
+      ' The "cont" scheme uses a continuous gradient of colors from the min to max ratio.' +
+      ' The "disc" schemes uses three colors to indicate that the ratio is <' +
       ' the min ratio, between the min and max ratio, or > the max ratio.' +
       ' The min and max ratios are determined by NODE_FREQ_RATIO_RANGE' +
-      ' and the corresponding colors are determined by NODE_COMPARISON_COLORS.'
+      ' and the corresponding colors are determined by COMPARISON_COLORS.'
     ),
   )
-  parser.add_argument(
-    '--node_freq_ratio_range',
-    type = float,
-    default = constants.GRAPH_NODE_FREQ_RATIO_RANGE,
-    nargs = 2,
-    help = (
-      ' The two frequencies used to determine node colors for comparison graphs.' +
-      ' Also controls the range of ratios displayed on the frequency-ratio colorbar legend.' +
-      ' Typically, the min value should be < 1 and the max value should be > 1.'
-    ),
-  )
-  parser.add_argument(
-    '--node_reference_outline_color',
+  node_group.add_argument(
+    '--ref_outline_color',
     type = str,
     default = constants.GRAPH_NODE_REFERENCE_OUTLINE_COLOR,
     help = (
@@ -368,8 +388,8 @@ def parse_args():
       ' recognized keywords such as "red", "blue", "green".'
     )
   )
-  parser.add_argument(
-    '--node_outline_color',
+  node_group.add_argument(
+    '--outline_color',
     type = str,
     default = constants.GRAPH_NODE_OUTLINE_COLOR,
     help = (
@@ -378,8 +398,8 @@ def parse_args():
       ' recognized keywords such as "red", "blue", "green".'
     )
   )
-  parser.add_argument(
-    '--node_fill_color',
+  node_group.add_argument(
+    '--fill_color',
     type = str,
     default = constants.GRAPH_NODE_FILL_COLOR,
     help = (
@@ -388,161 +408,141 @@ def parse_args():
       ' recognized keywords such as "red", "blue", "green".'
     )
   )
-  parser.add_argument(
-    '--variation_types',
+  node_group.add_argument(
+    '--var_types',
     nargs = '+',
     default = constants.GRAPH_NODE_FILTER_VARIATION_TYPES,
-    choices = list(constants.VARIATION_TYPES),
+    choices = constants.VARIATION_TYPES,
     help = (
       'The variation types that should be included in the graph.' +
-      ' This should be a list of the types:' +
-      ' "insertion", "deletion", "substitution", "mixed", "none".' +
-      ' Default value: "insertion", "deletion", "none".' +
-      ' "mixed" means nodes that have multiples variation types (e.g. insertions and substitutions).' +
-      ' "none" means the reference node (no variations).' +
-      ' May be specified in hex (e.g., "#ff0000" for red) or with' +
-      ' recognized keywords such as "red", "blue", "green".'
+      ' "ins" means nodes that have only insertions.' +
+      ' "del" means nodes that have only deletions.' +
+      ' "sub" means nodes that have only substitutions.' +
+      ' "mix" means nodes that have multiples variation types (e.g., insertions and substitutions).' +
+      ' "none" means the reference node (no variations).'
     ),
   )
-  parser.add_argument(
-    '--variation_type_colors',
+  node_group.add_argument(
+    '--var_type_colors',
     type = str,
-    nargs = 5,
+    nargs = len(constants.GRAPH_NODE_VARIATION_TYPE_COLORS),
     default = constants.GRAPH_NODE_VARIATION_TYPE_COLORS,
     help = (
       'The colors for the different variations types.' +
       ' They must be specified in the order: ' +
-      ' '.join([x.upper() for x in constants.VARIATION_TYPES]) + '.' +
-      ' MIXED is the color for nodes with multiple types of' +
-      ' variations (e.g. insertions and substitutions); NONE is the color for' +
-      ' the reference node (no variations).' +
+      ', '.join([x.upper() for x in constants.GRAPH_NODE_VARIATION_TYPE_COLORS]) + '.' +
+      ' See the documentation for the "--var_types" argument for more information.' +
       ' May be specified in hex (e.g., "#ff0000" for red) or with' +
       ' recognized keywords such as "red", "blue", "green".'
     ),
   )
-  parser.add_argument(
-    '--edge_show',
-    type = bool,
-    choices = [True, False],
-    default = constants.GRAPH_EDGE_SHOW,
-    help = 'Whether to show edges between nodes.',
+  edge_group.add_argument(
+    '--edge',
+    type = int,
+    choices = [0, 1],
+    default = 1 if constants.GRAPH_EDGE_SHOW else 0,
+    help = 'Whether to show edges between nodes. "0" = "no", "1" = "yes".',
   )
-  parser.add_argument(
+  edge_group.add_argument(
     '--edge_types',
     type = str,
     nargs = '+',
-    choices = ['indel', 'substitution'],
+    choices = ['indel', 'sub'],
     default = constants.GRAPH_EDGE_SHOW_TYPES,
     help = 'The edge types to show.',
   )
-  parser.add_argument(
+  edge_group.add_argument(
     '--edge_scale',
     type = float,
     default = constants.GRAPH_EDGE_WIDTH_SCALE,
     help = (
       'How much to scale the edges width (thickness).' +
-      ' Values > 1 increase the width; values < 1 decrease the width.'
+      ' Larger values increase the width ans smaller values decrease the width.'
     ),
   )
-  parser.add_argument(
-    '--width_px',
+  framing_group.add_argument(
+    '--width',
     type = int,
     default = constants.GRAPH_WIDTH_PX,
     help = 'The width of the plot in pixels.',
   )
-  parser.add_argument(
-    '--height_px',
+  framing_group.add_argument(
+    '--height',
     type = int,
     default = constants.GRAPH_HEIGHT_PX,
     help = 'The height of the plot in pixels.',
   )
-  parser.add_argument(
-    '--margin_top_px',
+  framing_group.add_argument(
+    '--mar_t',
     type = int,
     default = constants.GRAPH_MARGIN_TOP_MIN_PX,
     help = 'The size of the top margin in pixels.',
   )
-  parser.add_argument(
-    '--margin_bottom_px',
+  framing_group.add_argument(
+    '--mar_b',
     type = int,
     default = constants.GRAPH_MARGIN_BOTTOM_MIN_PX,
     help = 'The size of the bottom margin in pixels.',
   )
-  parser.add_argument(
-    '--margin_left_px',
+  framing_group.add_argument(
+    '--mar_l',
     type = int,
     default = constants.GRAPH_MARGIN_LEFT_MIN_PX,
     help = 'The size of the left margin in pixels.',
   )
-  parser.add_argument(
-    '--margin_right_px',
+  framing_group.add_argument(
+    '--mar_r',
     type = int,
     default = constants.GRAPH_MARGIN_RIGHT_MIN_PX,
     help = 'The size of the right margin in pixels.',
   )
-  parser.add_argument(
-    '--line_width_scale',
-    type = float,
-    default = constants.GRAPH_LINE_WIDTH_SCALE,
-    help = (
-      'How much to scale the line widths (aka thickness).' +
-      ' Values > 1 increase the width; values < 1 decrease the width.'
-    ),
-  )
-  parser.add_argument(
-    '--font_size_scale',
-    type = float,
-    default = constants.GRAPH_FONT_SIZE_SCALE,
-    help = (
-      'How much to scale the font size.' +
-      ' Values > 1 increase the font size; values < 1 decrease it.'
-    ),
-  )
-  parser.add_argument(
+  framing_group.add_argument(
     '--crop_x',
     nargs = 2,
     type = float,
     default = constants.GRAPH_CROP_X,
     help = (
       'Range of the horizontal dimension to crop.' +
-      ' Specified with normalized coords in range [0, 1].'
+      ' Specified with normalized coords in range [0, 1].' +
+      ' May only be used with pixel image output formats (e.g., PNG).'
     ),
   )
-  parser.add_argument(
+  framing_group.add_argument(
     '--crop_y',
     nargs = 2,
     type = float,
     default = constants.GRAPH_CROP_Y,
     help = (
       'Range of the vertical dimension to crop.' +
-      ' Specified in normalized coords in range [0, 1].'
+      ' Specified in normalized coords in range [0, 1].' +
+      ' May only be used with pixel image output formats (e.g., PNG).'
     ),
   )
-  parser.add_argument(
+  framing_group.add_argument(
     '--range_x',
     type = float,
     nargs = 2,
     default = constants.GRAPH_PLOT_RANGE_X,
     help = (
       'Range of x-axis for plotting.' +
-      ' If not specified, chosen automatically to either show all nodes or a preset value for the layout.' +
+      ' If omitted, chosen automatically to either show all nodes or a preset value for the layout.' +
       ' To determine appropriate values to set please see the console log,' +
       ' which shows the range of x-values of the nodes.'
     ),
   )
-  parser.add_argument(
+  framing_group.add_argument(
     '--range_y',
     type = float,
     nargs = 2,
     default = constants.GRAPH_PLOT_RANGE_Y,
     help = (
       'Range of y-axis for plotting.' +
-      ' If not specified, chosen automatically to either show all nodes or a preset value for the layout.' +
+      ' If omitted, chosen automatically to either show all nodes or a preset value for the layout.' +
       ' To determine appropriate values to set please see the console log,' +
       ' which shows the range of y-values of the nodes.'
     ),
   )
-  parser.add_argument(
+  legend_group.add_argument(
     '--legends',
     choices = constants.GRAPH_LEGENDS,
     nargs = '+',
@@ -551,46 +551,62 @@ def parse_args():
       ' They are drawn from top to bottom on the right margin in the order specified.'
     ),
   )
-  parser.add_argument(
-    '--legend_x_shift_px',
+  legend_group.add_argument(
+    '--legend_x',
     type = float,
     default = constants.GRAPH_LEGEND_X_SHIFT_PX,
     help = 'How much to shift the legends in the x direction (in pixels).',
   )
-  parser.add_argument(
-    '--legend_y_shift_px',
+  legend_group.add_argument(
+    '--legend_y',
     type = float,
     default = constants.GRAPH_LEGEND_Y_SHIFT_PX,
     help = 'How much to shift the legends in the y direction (in pixels).',
   )
-  parser.add_argument(
-    '--legend_colorbar_scale',
+  legend_group.add_argument(
+    '--colorbar_scale',
     type = float,
     default = constants.GRAPH_LEGEND_COLORBAR_SCALE,
     help = 'How much to scale the colorbar legend (for frequency-ratio coloring).',
   )
-  parser.add_argument(
-    '--legend_spacing_px',
+  legend_group.add_argument(
+    '--legend_spacing',
     type = int,
     default = constants.GRAPH_LEGEND_VERTICAL_SPACE_PX,
     help = 'Amount of vertical space in pixels between different legends.',
   )
-  parser.add_argument(
-    '--separate_components',
-    action = 'store_true',
-    help = 'If present, separate the connected components of the graph.',
-  )
-  parser.add_argument(
-    '--interactive',
-    action = 'store_true',
+  misc_group.add_argument(
+    '--title',
+    type = str,
+    nargs = '+',
     help = (
-      'If present opens the interactive version in a browser.'
-      ' Uses the Ploty library figure.show() function to do so.'
+    'If present, adds a title to the plot with this value.' +
+    ' Number of arguments should match the number of input' +
+    ' files.'
     ),
   )
-  parser.add_argument(
-    '--reverse_complement',
-    choices = ['0', '1'],
+  misc_group.add_argument(
+    '--line_scale',
+    type = float,
+    default = constants.GRAPH_LINE_WIDTH_SCALE,
+    help = (
+      'How much to scale the line widths (aka thickness).' +
+      ' Larger values increase the width and smaller values decrease the width.'
+    ),
+  )
+  misc_group.add_argument(
+    '--font_scale',
+    type = float,
+    default = constants.GRAPH_FONT_SIZE_SCALE,
+    help = (
+      'How much to scale the font size.' +
+      ' Larger values increase the font size and smaller values decrease it.'
+    ),
+  )
+  misc_group.add_argument(
+    '--rc',
+    choices = [0, 1],
+    type = int,
     nargs = '+',
     help = (
       'Whether to reverse complement the sequences in the data sets.' +
@@ -603,7 +619,7 @@ def parse_args():
       ' This affects the universal layout and fractal layout.'
     ),
   )
-  parser.add_argument(
+  misc_group.add_argument(
     '--quiet',
     action = 'store_true',
     help = 'If present, do not print extra log messages.',
@@ -618,7 +634,7 @@ def parse_args():
   if len(args['output']) != len(args['input']):
     raise Exception(
       'Incorrect number of output args.' +
-      f' Got {len(args["output"])}. Expected {len(args["input"])}.'
+      ' Got {}. Expected {}.'.format(len(args['output']), len(args['input']))
     )
 
   if args['title'] is None:
@@ -626,29 +642,33 @@ def parse_args():
   if len(args['title']) != len(args['input']):
     raise Exception(
       'Incorrect number of title args.' +
-      f' Got {len(args["title"])}. Expected {len(args["input"])}.'
+      ' Got {}. Expected {}.'.format(len(args['title']), len(args['input']))
     )
 
-  if args['reverse_complement'] is None:
-    args['reverse_complement'] = ['0'] * len(args['input'])
-  if len(args['reverse_complement']) != len(args['input']):
+  if args['rc'] is None:
+    args['rc'] = [0] * len(args['input'])
+  if len(args['rc']) != len(args['input']):
     raise Exception(
       'Incorrect number of reverse complement flags.'
-      f'Got {len(args["reverse_complement"])}. Expected {len(args["input"])}.'
+      'Got {}. Expected {}.'.format(len(args['rc']), len(args['input']))
     )
-  args['reverse_complement'] = [x == '1' for x in args['reverse_complement']]
+  args['rc'] = [bool(x) for x in args['rc']]
 
-  args['variation_type_colors'] = dict(zip(
-    ['insertion', 'deletion', 'substitution', 'mixed', 'none'],
-    args['variation_type_colors'],
+  args['var_type_colors'] = dict(zip(
+    constants.VARIATION_TYPES,
+    args['var_type_colors'],
   ))
 
-  if args['node_comparison_color_type'] == 'continuous':
-    args['node_comparison_color_type'] = 'freq_ratio_continuous'
-  elif args['node_comparison_color_type'] == 'discrete':
-    args['node_comparison_color_type'] = 'freq_ratio_discrete'
+  if args['ratio_color_type'] == 'cont':
+    args['ratio_color_type'] = 'ratio_cont'
+  elif args['ratio_color_type'] == 'disc':
+    args['ratio_color_type'] = 'ratio_disc'
   else:
     raise Exception('Impossible.')
+
+  args['edge'] = bool(args['edge'])
+
+  args['sub'] = ['withoutSubst', 'withSubst'][args['sub']]
 
   return args
 
@@ -659,10 +679,7 @@ def group_graph_nodes_by(graph, data_name):
 def make_radial_layout(graph):
   node_list = graph.nodes(data=True)
 
-  bucket_dict = {
-    'insertion': {},
-    'deletion': {},
-  }
+  bucket_dict = {'ins': {}, 'del': {}}
 
   ref_nodes = []
 
@@ -671,7 +688,7 @@ def make_radial_layout(graph):
       ref_nodes.append(data)
     else:
       dist_ref = data['dist_ref']
-      var_type = data['variation_type']
+      var_type = data['var_type']
       bucket_dict[var_type].setdefault(dist_ref, [])
       bucket_dict[var_type][dist_ref].append(data)
 
@@ -686,11 +703,11 @@ def make_radial_layout(graph):
     # collinear. The insertions are placed above and deletion are place below.
     # A bit of offset is added to the y-coord so that the insertions and deletions
     # do not overlap as much.
-    if var_type == 'insertion':
+    if var_type == 'ins':
       y_sign = 1
       dist_scale = 2
       zig_zag_angle = 15
-    elif var_type == 'deletion':
+    elif var_type == 'del':
       y_sign = -1
       dist_scale = 1
       zig_zag_angle = 30
@@ -736,10 +753,7 @@ def get_kmer_fractal_x_y(kmer):
 def make_fractal_layout(graph):
   node_list = graph.nodes(data=True)
 
-  bucket_dict = {
-    'insertion': {},
-    'deletion': {},
-  }
+  bucket_dict = {'ins': {}, 'del': {}}
 
   ref_nodes = []
 
@@ -748,7 +762,7 @@ def make_fractal_layout(graph):
       ref_nodes.append(data)
     else:
       dist_ref = data['dist_ref']
-      var_type = data['variation_type']
+      var_type = data['var_type']
       bucket_dict[var_type].setdefault(dist_ref, [])
       bucket_dict[var_type][dist_ref].append(data)
 
@@ -767,14 +781,14 @@ def make_fractal_layout(graph):
         ref_align = data['ref_align']
         read_align = data['read_align']
 
-        if var_type == 'insertion':
+        if var_type == 'ins':
           xy_dict[data['id']] = get_kmer_fractal_x_y(
             alignment_utils.get_insertion_str(
               ref_align,
               read_align,
             )
           )
-        elif var_type == 'deletion':
+        elif var_type == 'del':
           # We don't plot the deletion nodes in this layout.
           # We place them all at (0, 0) so they will hopefully be covered by the reference node.
           xy_dict[data['id']] = (0, 0)
@@ -805,7 +819,7 @@ def get_pos_universal(
   x_scale_deletion = constants.GRAPH_UNIVERSAL_X_SCALE_DELETION,
   y_scale_deletion = constants.GRAPH_UNIVERSAL_Y_SCALE_DELETION,
 ):
-  if var_type == 'insertion':
+  if var_type == 'ins':
     # Place the x-coordinate alphabetically so that A is left-most
     # and T is right-most. This is intended to place the insertions
     # in a tree based on the common prefix of the insertion nucleotides.
@@ -835,7 +849,7 @@ def get_pos_universal(
       2 * x * x_scale_insertion,
       0.5 * y * y_scale_insertion,
     )
-  elif var_type == 'deletion':
+  elif var_type == 'del':
     # Place the x coordinate so that the most upstream deletion
     # is the left most, and most downstream deletion is right most.
     # A deletion with equal number of deletions on either side of the
@@ -860,10 +874,7 @@ def make_universal_layout(
 ):
   node_list = graph.nodes(data=True)
 
-  bucket_dict = {
-    'insertion': {},
-    'deletion': {},
-  }
+  bucket_dict = {'ins': {}, 'del': {}}
 
   ref_nodes = []
 
@@ -872,7 +883,7 @@ def make_universal_layout(
       ref_nodes.append(data)
     else:
       dist_ref = data['dist_ref']
-      var_type = data['variation_type']
+      var_type = data['var_type']
       if var_type not in bucket_dict:
         raise Exception('Unhandled variation type for universal layout: ' + str(var_type))
       bucket_dict[var_type].setdefault(dist_ref, [])
@@ -917,7 +928,8 @@ def make_universal_y_axis(
   title_font_size = constants.GRAPH_AXES_TITLE_FONT_SIZE,
   tick_font_size = constants.GRAPH_AXES_TICK_FONT_SIZE,
   font_size_scale = constants.GRAPH_FONT_SIZE_SCALE,
-  line_width_px = 4,
+  line_width_px = constants.GRAPH_UNIVERSAL_AXIS_LINE_WIDTH_PX,
+  line_width_scale = constants.GRAPH_LINE_WIDTH_SCALE,
   x_scale_insertion = constants.GRAPH_UNIVERSAL_X_SCALE_INSERTION,
   y_scale_insertion = constants.GRAPH_UNIVERSAL_Y_SCALE_INSERTION,
   x_scale_deletion = constants.GRAPH_UNIVERSAL_X_SCALE_DELETION,
@@ -929,7 +941,7 @@ def make_universal_y_axis(
   finish_deletion = False
   while (not finish_insertion) or (not finish_deletion):
     dist_ref += 1
-    for var_type in ['insertion', 'deletion']:
+    for var_type in ['ins', 'del']:
       # Make a pair of ref_align and read_align that simulates
       # the correct number of insertions or deletions.
       ref_align = (
@@ -938,14 +950,14 @@ def make_universal_y_axis(
         ('A' * (ref_length - cut_pos_ref))
       )
       read_align = 'A' * (ref_length + dist_ref)
-      if var_type == 'deletion':
+      if var_type == 'del':
         ref_align, read_align = read_align, ref_align
 
-      if var_type == 'insertion':
+      if var_type == 'ins':
         if (max_tick_insertion is not None) and (dist_ref > max_tick_insertion):
           finish_insertion = True
           continue
-      elif var_type == 'deletion':
+      elif var_type == 'del':
         if (max_tick_deletion is not None) and (dist_ref > max_tick_deletion):
           finish_deletion = True
           continue
@@ -962,11 +974,11 @@ def make_universal_y_axis(
         y_scale_deletion = y_scale_deletion,
       )[1]
 
-      if var_type == 'insertion':
+      if var_type == 'ins':
         if (not np.isnan(y_range[1])) and (y_pos > y_range[1]):
           finish_insertion = True
           continue
-      elif var_type == 'deletion':
+      elif var_type == 'del':
         if (not np.isnan(y_range[0])) and (y_pos < y_range[0]):
           finish_deletion = True
           continue
@@ -986,7 +998,7 @@ def make_universal_y_axis(
       x1 = x_pos + tick_length,
       y0 = tick['y_pos'],
       y1 = tick['y_pos'],
-      line_width = line_width_px,
+      line_width = line_width_px * line_width_scale,
       line_color = 'black',
     )
 
@@ -1016,7 +1028,7 @@ def make_universal_y_axis(
     x1 = x_pos,
     y0 = y_range[0],
     y1 = y_range[1],
-    line_width = line_width_px,
+    line_width = line_width_px * line_width_scale,
     line_color = 'black',
   )
   # axis title
@@ -1034,7 +1046,6 @@ def make_universal_y_axis(
     textangle = -90,
   )
 
-# FIXME: should allow line_width_scale parameter
 def make_universal_x_axis(
   figure,
   var_type,
@@ -1043,13 +1054,14 @@ def make_universal_x_axis(
   cut_pos_ref, # should be 1 based!
   x_range = [float('nan'), float('nan')],
   insertion_axis_type = 'bracket', # tick or bracket
-  deletion_label_type = 'relative', # relative or absolute
+  deletion_label_type = 'rel', # rel[ative] or abs[olute]
   deletion_tick_type = 'start', # start or midpoint
   base_tick_length = 0.25,
   title_font_size = constants.GRAPH_AXES_TITLE_FONT_SIZE,
   tick_font_size = constants.GRAPH_AXES_TICK_FONT_SIZE,
   font_size_scale = constants.GRAPH_FONT_SIZE_SCALE,
-  line_width_px = 4,
+  line_width_px = constants.GRAPH_UNIVERSAL_AXIS_LINE_WIDTH_PX,
+  line_width_scale = constants.GRAPH_LINE_WIDTH_SCALE,
   x_scale_insertion = constants.GRAPH_UNIVERSAL_X_SCALE_INSERTION,
   y_scale_insertion = constants.GRAPH_UNIVERSAL_Y_SCALE_INSERTION,
   x_scale_deletion = constants.GRAPH_UNIVERSAL_X_SCALE_DELETION,
@@ -1057,12 +1069,12 @@ def make_universal_x_axis(
 ):
   if insertion_axis_type not in ['tick', 'bracket']:
     raise Exception('Invalid insertion axis type: ' + str(insertion_axis_type))
-  if deletion_label_type not in ['absolute', 'relative']:
+  if deletion_label_type not in ['abs', 'rel']:
     raise Exception('Invalid deletion label type: ' + str(deletion_label_type))
-  if var_type == 'insertion':
+  if var_type == 'ins':
     tick_font_size = 2 * tick_font_size
   tick_list = []
-  if var_type == 'insertion':
+  if var_type == 'ins':
     for insertion_letter in 'ACGT':
       fake_ref_align = (
         ('A' * cut_pos_ref) +
@@ -1078,7 +1090,7 @@ def make_universal_x_axis(
         ref_align = fake_ref_align,
         read_align = fake_read_align,
         dist_ref = 1,
-        var_type = 'insertion',
+        var_type = 'ins',
         cut_pos_ref = cut_pos_ref,
         x_scale_insertion = x_scale_insertion,
         y_scale_insertion = y_scale_insertion,
@@ -1103,7 +1115,7 @@ def make_universal_x_axis(
           'x_pos': bracket_x_start + tick_space * i,
           'tick_length': 4 * base_tick_length,
         })
-  elif var_type == 'deletion':
+  elif var_type == 'del':
     tick_list_negative = []
     pos_labels = constants.get_position_labels(deletion_label_type, ref_length)
     for deletion_start in range(1, (ref_length // 2) + 1):
@@ -1122,7 +1134,7 @@ def make_universal_x_axis(
         fake_ref_align,
         fake_read_align,
         dist_ref,
-        'deletion',
+        'del',
         cut_pos_ref,
       )[0]
 
@@ -1166,7 +1178,7 @@ def make_universal_x_axis(
         x1 = tick['x_pos'],
         y0 = y_pos,
         y1 = y_pos - tick_length,
-        line_width = line_width_px,
+        line_width = line_width_px * line_width_scale,
         line_color = 'black',
       )
 
@@ -1198,7 +1210,7 @@ def make_universal_x_axis(
     x1 = x_range[1],
     y0 = y_pos,
     y1 = y_pos,
-    line_width = line_width_px,
+    line_width = line_width_px * line_width_scale,
     line_color = 'black',
   )
   # axis title
@@ -1206,7 +1218,7 @@ def make_universal_x_axis(
     x = x_range[0],
     # set bottom anchor exactly at axis
     y = y_pos,
-    text = 'Deletion position' if var_type == 'deletion' else 'Insertion first letter',
+    text = 'Deletion position' if var_type == 'del' else 'Insertion first letter',
     showarrow = False,
     font_size = title_font_size * font_size_scale,
     xanchor = 'left',
@@ -1556,8 +1568,8 @@ def make_edge_legend(
 
 def make_variation_color_legend(
   figure,
-  variation_types,
-  variation_type_colors,
+  var_types,
+  var_type_colors,
   node_size_px,
   x_anchor,
   y_anchor,
@@ -1568,12 +1580,12 @@ def make_variation_color_legend(
   line_width_scale = 1,
 ):
   legend_items = []
-  for var_type in variation_types:
+  for var_type in var_types:
     legend_items.append({
       'type': 'circle',
       'size': node_size_px,
       'text': constants.VARIATION_TYPES[var_type]['label'],
-      'color': variation_type_colors[var_type],
+      'color': var_type_colors[var_type],
     })
   return make_legend(
     figure = figure,
@@ -1811,8 +1823,8 @@ def make_custom_legends(
   node_outline_color,
   node_fill_color,
   node_comparison_colors,
-  node_variation_type_colors,
-  node_filter_variation_types,
+  node_var_type_colors,
+  node_filter_var_types,
   node_size_freq_range,
   node_size_px_range,
   node_freq_ratio_range,
@@ -1848,13 +1860,13 @@ def make_custom_legends(
       y_shift_curr_px -= legend_vertical_space_px
 
     if (
-      (legend == 'variation_type') and
+      (legend == 'var_type') and
       (data_info['format'] == constants.DATA_INDIVIDUAL)
     ):
       y_shift_curr_px = make_variation_color_legend(
         figure = figure,
-        variation_types = node_filter_variation_types,
-        variation_type_colors = node_variation_type_colors,
+        var_types = node_filter_var_types,
+        var_type_colors = node_var_type_colors,
         node_size_px = node_size_px_range[1],
         x_anchor = x_anchor_frac,
         y_anchor = y_anchor_frac,
@@ -1867,7 +1879,7 @@ def make_custom_legends(
       y_shift_curr_px -= legend_vertical_space_px
 
     if (
-      (legend == 'freq_ratio_discrete') and
+      (legend == 'ratio_disc') and
       (data_info['format'] == constants.DATA_COMPARISON)
     ):
       y_shift_curr_px = make_freq_group_legend(
@@ -1890,7 +1902,7 @@ def make_custom_legends(
       y_shift_curr_px -= legend_vertical_space_px
     
     if (
-      (legend == 'freq_ratio_continuous') and
+      (legend == 'ratio_cont') and
       (data_info['format'] == constants.DATA_COMPARISON)
     ):
       y_shift_curr_px = add_plotly_colorbar(
@@ -1945,7 +1957,7 @@ def make_custom_legends(
 def get_data(
   data_dir_list,
   node_subst_type,
-  node_filter_variation_types,
+  node_filter_var_types,
   node_filter_freq_range,
   node_filter_dist_range,
   reverse_complement_list,
@@ -1978,7 +1990,7 @@ def get_data(
       node_data = graph_utils.get_node_data(data)
 
     node_data = node_data.loc[
-      node_data['variation_type'].isin(node_filter_variation_types)
+      node_data['var_type'].isin(node_filter_var_types)
     ]
     node_data = node_data.loc[
       node_data['freq_mean'].between(
@@ -2131,12 +2143,12 @@ def make_graph_figure_helper(
   node_label_columns = constants.GRAPH_NODE_LABEL_COLUMNS,
   node_label_position = constants.GRAPH_NODE_LABEL_POSITION,
   node_color_type_list = None, # Should be specified
-  node_comparison_colors = constants.GRAPH_NODE_COMPARISON_COLORS,
+  node_comparison_colors = constants.GRAPH_NODE_RATIO_COLORS,
   node_freq_ratio_range = constants.GRAPH_NODE_FREQ_RATIO_RANGE,
   node_reference_outline_color = constants.GRAPH_NODE_REFERENCE_OUTLINE_COLOR,
   node_outline_color = constants.GRAPH_NODE_OUTLINE_COLOR,
   node_fill_color = constants.GRAPH_NODE_FILL_COLOR,
-  node_variation_type_colors = constants.GRAPH_NODE_VARIATION_TYPE_COLORS,
+  node_var_type_colors = constants.GRAPH_NODE_VARIATION_TYPE_COLORS,
   node_size_type = constants.GRAPH_NODE_SIZE_TYPE,
   node_size_px_range = constants.GRAPH_NODE_SIZE_PX_RANGE,
   node_size_freq_range = constants.GRAPH_NODE_SIZE_FREQ_RANGE,
@@ -2175,7 +2187,7 @@ def make_graph_figure_helper(
       node_reference_outline_color = node_reference_outline_color,
       node_outline_color = node_outline_color,
       node_fill_color = node_fill_color,
-      node_variation_type_colors = node_variation_type_colors,
+      node_var_type_colors = node_var_type_colors,
       node_size_type = node_size_type,
       node_size_px_range = node_size_px_range,
       node_size_freq_range = node_size_freq_range,
@@ -2199,7 +2211,7 @@ def make_graph_figure_helper(
     figure_list[i].update_traces(showlegend=legend_plotly_show)
 
     # Format for freq ratio colors
-    if node_color_type_list[i] == 'freq_ratio_continuous':
+    if node_color_type_list[i] == 'ratio_cont':
       figure_list[i].update_traces(
         marker = {
           'colorscale': constants.get_freq_ratio_color_scale(
@@ -2234,17 +2246,17 @@ def make_graph_figure(
   graph_list,
   graph_layout_list,
   graph_layout_type = constants.GRAPH_LAYOUT_TYPE,
-  node_filter_variation_types = constants.GRAPH_NODE_FILTER_VARIATION_TYPES,
+  node_filter_var_types = constants.GRAPH_NODE_FILTER_VARIATION_TYPES,
   node_label_show = constants.GRAPH_NODE_LABEL_SHOW,
   node_label_columns = constants.GRAPH_NODE_LABEL_COLUMNS,
   node_label_position = constants.GRAPH_NODE_LABEL_POSITION,
   node_color_type_list = None, # Should be specified
-  node_comparison_colors = constants.GRAPH_NODE_COMPARISON_COLORS,
+  node_comparison_colors = constants.GRAPH_NODE_RATIO_COLORS,
   node_freq_ratio_range = constants.GRAPH_NODE_FREQ_RATIO_RANGE,
   node_reference_outline_color = constants.GRAPH_NODE_REFERENCE_OUTLINE_COLOR,
   node_outline_color = constants.GRAPH_NODE_OUTLINE_COLOR,
   node_fill_color = constants.GRAPH_NODE_FILL_COLOR,
-  node_variation_type_colors = constants.GRAPH_NODE_VARIATION_TYPE_COLORS,
+  node_var_type_colors = constants.GRAPH_NODE_VARIATION_TYPE_COLORS,
   node_size_type = constants.GRAPH_NODE_SIZE_TYPE,
   node_size_px_range = constants.GRAPH_NODE_SIZE_PX_RANGE,
   node_size_freq_range = constants.GRAPH_NODE_SIZE_FREQ_RANGE,
@@ -2296,7 +2308,7 @@ def make_graph_figure(
     node_reference_outline_color = node_reference_outline_color,
     node_outline_color = node_outline_color,
     node_fill_color = node_fill_color,
-    node_variation_type_colors = node_variation_type_colors,
+    node_var_type_colors = node_var_type_colors,
     node_size_type = node_size_type,
     node_size_px_range = node_size_px_range,
     node_size_freq_range = node_size_freq_range,
@@ -2372,8 +2384,8 @@ def make_graph_figure(
         node_outline_color = node_outline_color,
         node_fill_color = node_fill_color,
         node_comparison_colors = node_comparison_colors,
-        node_variation_type_colors = node_variation_type_colors,
-        node_filter_variation_types = node_filter_variation_types,
+        node_var_type_colors = node_var_type_colors,
+        node_filter_var_types = node_filter_var_types,
         node_size_freq_range = node_size_freq_range,
         node_size_px_range = node_size_px_range,
         node_freq_ratio_range = node_freq_ratio_range,
@@ -2395,52 +2407,52 @@ def main(
   debug,
   layout,
   title,
-  reverse_complement,
-  subst_type,
-  node_freq_range,
-  node_px_range,
-  node_comparison_colors,
-  node_comparison_color_type,
-  node_freq_ratio_range,
-  node_reference_outline_color,
-  node_outline_color,
-  node_fill_color,
-  variation_type_colors,
-  variation_types,
+  rc,
+  sub,
+  size,
+  size_freq,
+  ratio_colors,
+  ratio_color_type,
+  ratio,
+  ref_outline_color,
+  outline_color,
+  fill_color,
+  var_type_colors,
+  var_types,
   filter_freq,
   filter_dist,
-  node_outline_scale,
-  edge_show,
+  outline_scale,
+  edge,
   edge_types,
   edge_scale,
-  width_px,
-  height_px,
-  margin_top_px,
-  margin_bottom_px,
-  margin_left_px,
-  margin_right_px,
-  separate_components,
-  line_width_scale,
-  font_size_scale,
+  width,
+  height,
+  mar_t,
+  mar_b,
+  mar_l,
+  mar_r,
+  sep,
+  line_scale,
+  font_scale,
   legends,
-  legend_x_shift_px,
-  legend_y_shift_px,
-  legend_colorbar_scale,
-  legend_spacing_px,
+  legend_x,
+  legend_y,
+  colorbar_scale,
+  legend_spacing,
   range_x,
   range_y,
-  universal_y_axis_insertion_max_tick,
-  universal_y_axis_deletion_max_tick,
-  universal_y_axis_x_pos,
-  universal_y_axis_y_range,
-  universal_x_axis_deletion_y_pos,
-  universal_x_axis_deletion_label_type,
-  universal_x_axis_x_range,
-  universal_x_axis_insertion_y_pos,
-  universal_x_scale_insertion,
-  universal_y_scale_insertion,
-  universal_x_scale_deletion,
-  universal_y_scale_deletion,
+  ul_yax_x,
+  ul_yax_y,
+  ul_xax_del_y,
+  ul_xax_ins_y,
+  ul_xax_x,
+  ul_yax_ins_max_tick,
+  ul_yax_del_max_tick,
+  ul_xax_del_label_type,
+  ul_x_scale_ins,
+  ul_y_scale_ins,
+  ul_x_scale_del,
+  ul_y_scale_del,
   crop_x,
   crop_y,
   interactive,
@@ -2454,11 +2466,11 @@ def main(
     graph_combined,
   ) = get_data(
     data_dir_list = input,
-    node_subst_type = subst_type,
-    node_filter_variation_types = variation_types,
+    node_subst_type = sub,
+    node_filter_var_types = var_types,
     node_filter_freq_range = filter_freq,
     node_filter_dist_range = filter_dist,
-    reverse_complement_list = reverse_complement,
+    reverse_complement_list = rc,
     debug_dir = debug,
   )
 
@@ -2477,11 +2489,11 @@ def main(
     graph_list = graph_list,
     graph_combined = graph_combined,
     graph_layout_type = layout,
-    graph_layout_separate_components = separate_components,
-    universal_x_scale_insertion = universal_x_scale_insertion,
-    universal_x_scale_deletion = universal_x_scale_deletion,
-    universal_y_scale_insertion = universal_y_scale_insertion,
-    universal_y_scale_deletion = universal_y_scale_deletion,
+    graph_layout_separate_components = sep,
+    universal_x_scale_insertion = ul_x_scale_ins,
+    universal_x_scale_deletion = ul_x_scale_del,
+    universal_y_scale_insertion = ul_y_scale_ins,
+    universal_y_scale_deletion = ul_y_scale_del,
     debug_dir = debug,
   )
 
@@ -2516,19 +2528,19 @@ def main(
     if data_info_list[i]['format'] == 'individual':
       node_color_type_list.append(constants.GRAPH_NODE_COLOR_TYPE_INDIVIDUAL)
     elif data_info_list[i]['format'] == 'comparison':
-      node_color_type_list.append(node_comparison_color_type)
+      node_color_type_list.append(ratio_color_type)
     else:
       # Impossible
       raise Exception('Unknown data format: ' + str(data_info_list[i]['format']))
   
   # Set some default values
-  if subst_type == 'withoutSubst':
-    variation_types = [
-      x for x in variation_types
-      if x not in ['substitution', 'mixed']
+  if sub == 'withoutSubst':
+    var_types = [
+      x for x in var_types
+      if x not in ['sub', 'mix']
     ]
 
-  edge_show = edge_show and LAYOUT_PROPERTIES[layout]['has_edges']
+  edge = edge and LAYOUT_PROPERTIES[layout]['has_edges']
 
   if title is None:
     title = [constants.GRAPH_TITLE] * len(input)
@@ -2540,36 +2552,36 @@ def main(
     graph_list = graph_list,
     graph_layout_list = graph_layout_list,
     title_list = title,
-    node_size_px_range = node_px_range,
-    node_size_freq_range = node_freq_range,
-    node_filter_variation_types = variation_types,
-    node_outline_width_scale = node_outline_scale,
+    node_size_px_range = size,
+    node_size_freq_range = size_freq,
+    node_filter_var_types = var_types,
+    node_outline_width_scale = outline_scale,
     node_color_type_list = node_color_type_list,
-    node_comparison_colors = node_comparison_colors,
-    node_freq_ratio_range = node_freq_ratio_range,
-    node_reference_outline_color = node_reference_outline_color,
-    node_outline_color = node_outline_color,
-    node_fill_color = node_fill_color,
-    node_variation_type_colors = variation_type_colors,
-    graph_width_px = width_px,
-    graph_height_px = height_px,
+    node_comparison_colors = ratio_colors,
+    node_freq_ratio_range = ratio,
+    node_reference_outline_color = ref_outline_color,
+    node_outline_color = outline_color,
+    node_fill_color = fill_color,
+    node_var_type_colors = var_type_colors,
+    graph_width_px = width,
+    graph_height_px = height,
     graph_layout_type = layout,
-    margin_top_px = margin_top_px,
-    margin_bottom_px = margin_bottom_px,
-    margin_left_px = margin_left_px,
-    margin_right_px = margin_right_px,
-    edge_show = edge_show,
+    margin_top_px = mar_t,
+    margin_bottom_px = mar_b,
+    margin_left_px = mar_l,
+    margin_right_px = mar_r,
+    edge_show = edge,
     edge_show_types = edge_types,
     edge_width_scale = edge_scale,
     legend_custom_show = legends is not None,
     legend_custom_list = legends,
     legend_plotly_show = False,
-    legend_x_shift_px = legend_x_shift_px,
-    legend_y_shift_px = legend_y_shift_px,
-    legend_colorbar_scale = legend_colorbar_scale,
-    legend_vertical_space_px = legend_spacing_px,
-    line_width_scale = line_width_scale,
-    font_size_scale = font_size_scale,
+    legend_x_shift_px = legend_x,
+    legend_y_shift_px = legend_y,
+    legend_colorbar_scale = colorbar_scale,
+    legend_vertical_space_px = legend_spacing,
+    line_width_scale = line_scale,
+    font_size_scale = font_scale,
     plot_range_x = range_x,
     plot_range_y = range_y,
   )
@@ -2602,63 +2614,69 @@ def main(
   # Make the axes for the universal layout
   if layout == 'universal':
     for i in range(len(input)):
-      if universal_y_axis_insertion_max_tick is None:
-        max_tick_insertion = node_data_combined['insertion'].max()
+      if ul_yax_ins_max_tick is None:
+        max_tick_insertion = node_data_combined['ins'].max()
       else:
-        max_tick_insertion = universal_y_axis_insertion_max_tick
-      if universal_y_axis_deletion_max_tick is None:
-        max_tick_deletion = node_data_combined['deletion'].max()
+        max_tick_insertion = ul_yax_ins_max_tick
+      if ul_yax_del_max_tick is None:
+        max_tick_deletion = node_data_combined['del'].max()
       else:
-        max_tick_deletion = universal_y_axis_deletion_max_tick
-      if universal_y_axis_x_pos is not None:
-        if universal_y_axis_x_pos == 0:
-          universal_y_axis_x_pos = x_max + (x_max - x_min) * 0.05
+        max_tick_deletion = ul_yax_del_max_tick
+      if ul_yax_x is not None:
+        if ul_yax_x == 0:
+          ul_yax_x = x_max + (x_max - x_min) * 0.05
         make_universal_y_axis(
           figure = figure_list[i],
-          x_pos = universal_y_axis_x_pos,
+          x_pos = ul_yax_x,
           ref_length = len(data_info_list[i]['ref_seq_window']),
           cut_pos_ref = len(data_info_list[i]['ref_seq_window']) // 2,
-          y_range = universal_y_axis_y_range,
+          y_range = ul_yax_y,
           max_tick_deletion = max_tick_deletion,
           max_tick_insertion = max_tick_insertion,
-          x_scale_insertion = universal_x_scale_insertion,
-          y_scale_insertion = universal_y_scale_insertion,
-          x_scale_deletion = universal_x_scale_deletion,
-          y_scale_deletion = universal_y_scale_deletion,
-          font_size_scale = font_size_scale,
+          x_scale_insertion = ul_x_scale_ins,
+          y_scale_insertion = ul_y_scale_ins,
+          x_scale_deletion = ul_x_scale_del,
+          y_scale_deletion = ul_y_scale_del,
+          font_size_scale = font_scale,
+          line_width_px = constants.GRAPH_UNIVERSAL_AXIS_LINE_WIDTH_PX,
+          line_width_scale = line_scale,
         )
-      if universal_x_axis_deletion_y_pos is not None:
-        if universal_x_axis_deletion_y_pos == 0:
-          universal_x_axis_deletion_y_pos = y_min - (y_max - y_min) * 0.05
+      if ul_xax_del_y is not None:
+        if ul_xax_del_y == 0:
+          ul_xax_del_y = y_min - (y_max - y_min) * 0.05
         make_universal_x_axis(
           figure = figure_list[i],
-          var_type = 'deletion',
-          y_pos = universal_x_axis_deletion_y_pos,
+          var_type = 'del',
+          y_pos = ul_xax_del_y,
           ref_length = len(data_info_list[i]['ref_seq_window']),
           cut_pos_ref = len(data_info_list[i]['ref_seq_window']) // 2,
-          x_range = universal_x_axis_x_range,
-          deletion_label_type = universal_x_axis_deletion_label_type,
-          x_scale_insertion = universal_x_scale_insertion,
-          y_scale_insertion = universal_y_scale_insertion,
-          x_scale_deletion = universal_x_scale_deletion,
-          y_scale_deletion = universal_y_scale_deletion,
-          font_size_scale = font_size_scale,
+          x_range = ul_xax_x,
+          deletion_label_type = ul_xax_del_label_type,
+          x_scale_insertion = ul_x_scale_ins,
+          y_scale_insertion = ul_y_scale_ins,
+          x_scale_deletion = ul_x_scale_del,
+          y_scale_deletion = ul_y_scale_del,
+          font_size_scale = font_scale,
+          line_width_px = constants.GRAPH_UNIVERSAL_AXIS_LINE_WIDTH_PX,
+          line_width_scale = line_scale,
         )
-      if universal_x_axis_insertion_y_pos is not None:
-        if universal_x_axis_insertion_y_pos == 0:
-          universal_x_axis_insertion_y_pos = y_max + (y_max - y_min) * 0.05
+      if ul_xax_ins_y is not None:
+        if ul_xax_ins_y == 0:
+          ul_xax_ins_y = y_max + (y_max - y_min) * 0.05
         make_universal_x_axis(
           figure = figure_list[i],
-          var_type = 'insertion',
-          y_pos = universal_x_axis_insertion_y_pos,
+          var_type = 'ins',
+          y_pos = ul_xax_ins_y,
           ref_length = len(data_info_list[i]['ref_seq_window']),
           cut_pos_ref = len(data_info_list[i]['ref_seq_window']) // 2,
-          x_range = universal_x_axis_x_range,
-          x_scale_insertion = universal_x_scale_insertion,
-          y_scale_insertion = universal_y_scale_insertion,
-          x_scale_deletion = universal_x_scale_deletion,
-          y_scale_deletion = universal_y_scale_deletion,
-          font_size_scale = font_size_scale,
+          x_range = ul_xax_x,
+          x_scale_insertion = ul_x_scale_ins,
+          y_scale_insertion = ul_y_scale_ins,
+          x_scale_deletion = ul_x_scale_del,
+          y_scale_deletion = ul_y_scale_del,
+          font_size_scale = font_scale,
+          line_width_px = constants.GRAPH_UNIVERSAL_AXIS_LINE_WIDTH_PX,
+          line_width_scale = line_scale,
         )
 
   # Do the final output
@@ -2683,12 +2701,12 @@ def main(
           .format(*crop_x, *crop_y)
         )
         image = PIL.Image.open(output[i])
-        width_px, height_px = image.size
+        width, height = image.size
 
-        left = crop_x[0] * width_px
-        right = crop_x[1] * width_px
-        top = crop_y[0] * height_px
-        bottom = crop_y[1] * height_px
+        left = crop_x[0] * width
+        right = crop_x[1] * width
+        top = crop_y[0] * height
+        bottom = crop_y[1] * height
 
         image.crop((left, top, right, bottom)).save(output[i])
   log_utils.blank_line()

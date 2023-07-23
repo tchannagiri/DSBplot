@@ -40,11 +40,11 @@ def format_hover_html(data_info, the_dict, format_type, reverse_complement=False
     column_names = [
       'id',
       *freq_columns,
-      'variation_type',
+      'var_type',
       'dist_ref',
-      'substitution',
-      'insertion',
-      'deletion',
+      'sub',
+      'ins',
+      'del',
       'alignments',
     ]
     title = 'Sequence'
@@ -52,8 +52,8 @@ def format_hover_html(data_info, the_dict, format_type, reverse_complement=False
     column_names = [
       'id_a',
       'id_b',
-      'variation_type_a',
-      'variation_type_b',
+      'var_type_a',
+      'var_type_b',
       'edge_type',
     ]
     title = 'Edge'
@@ -71,8 +71,8 @@ def format_hover_html(data_info, the_dict, format_type, reverse_complement=False
           the_dict['read_align'],
         )
         align_html = (
-          format_name_value('Ref align ', ref_align) + '<br>' +
-          format_name_value('Read align', read_align) + '<br>'
+          format_name_value('ref_align ', ref_align) + '<br>' +
+          format_name_value('read_align', read_align) + '<br>'
         )
         format.append(align_html)
       elif format_type == 'edge':
@@ -82,8 +82,8 @@ def format_hover_html(data_info, the_dict, format_type, reverse_complement=False
             the_dict['read_align_' + suffix],
           )
           align_html = (
-            format_name_value('Ref align ' + suffix + ' ', ref_align) + '<br>' +
-            format_name_value('Read align ' + suffix, read_align) + '<br><br>'
+            format_name_value('ref_align ' + suffix + ' ', ref_align) + '<br>' +
+            format_name_value('read_align ' + suffix, read_align) + '<br><br>'
           )
           format.append(align_html)
     elif name in the_dict:
@@ -123,7 +123,7 @@ def get_node_label_text(
     node_label_row = []
     for label_type in node_label_columns:
       if label_type in row_data:
-        if label_type == 'variation_type':
+        if label_type == 'var_type':
           label = constants.VARIATION_TYPES[row_data[label_type]]['short_label']
         elif constants.is_freq_column(label_type):
           label = f'{row_data[label_type]: .2e}'
@@ -216,9 +216,9 @@ def get_node_color(
   node_comparison_colors,
   node_freq_ratio_range,
   node_fill_color,
-  node_variation_type_colors,
+  node_var_type_colors,
 ):
-  if node_color_type == 'freq_ratio_discrete':
+  if node_color_type == 'ratio_disc':
     if data_info['format'] != 'comparison':
       raise Exception('Need a comparison data set: ' + data_info['label'])
     node_freq_group = get_node_freq_group(node_data, node_freq_ratio_range)
@@ -241,7 +241,7 @@ def get_node_color(
       ),
       index = node_data.index,
     )
-  elif node_color_type == 'freq_ratio_continuous':
+  elif node_color_type == 'ratio_cont':
     if data_info['format'] != 'comparison':
       raise Exception('Need a comparison data set: ' + data_info['label'])
     return pd.Series(
@@ -253,18 +253,18 @@ def get_node_color(
       ),
       index = node_data.index,
     )
-  elif node_color_type == 'variation_type':
-    return node_data['variation_type'].apply(lambda x: node_variation_type_colors[x])
+  elif node_color_type == 'var_type':
+    return node_data['var_type'].apply(lambda x: node_var_type_colors[x])
   else:
     return pd.Series(node_fill_color, index=node_data.index)
 
 def get_node_trace_group(node_data, node_group_type, node_freq_ratio_range):
   group_key_lists = []
   group_key_lists.append(node_data['is_ref'])
-  if node_group_type == 'freq_ratio_discrete':
+  if node_group_type == 'ratio_disc':
     group_key_lists.append(get_node_freq_group(node_data, node_freq_ratio_range))
-  elif node_group_type == 'variation_type':
-    group_key_lists.append(node_data['variation_type'])
+  elif node_group_type == 'var_type':
+    group_key_lists.append(node_data['var_type'])
   group_keys = list(zip(*group_key_lists))
   return pd.Series(group_keys, index=node_data.index)
 
@@ -294,10 +294,10 @@ def make_node_traces(
       line_width = constants.GRAPH_NODE_REFERENCE_OUTLINE_WIDTH
       trace_name = constants.LABEL_REFERENCE
     else:
-      if node_group_type == 'variation_type':
-        variation_type = group_key[1]
-        trace_name = constants.VARIATION_TYPES[variation_type]['label']
-      elif node_group_type == 'freq_ratio_discrete':
+      if node_group_type == 'var_type':
+        var_type = group_key[1]
+        trace_name = constants.VARIATION_TYPES[var_type]['label']
+      elif node_group_type == 'ratio_disc':
         freq_group = group_key[1]
         trace_name = constants.get_freq_ratio_label(
           freq_group,
@@ -348,7 +348,7 @@ def make_point_traces(
   node_reference_outline_color,
   node_outline_color,
   node_fill_color,
-  node_variation_type_colors,
+  node_var_type_colors,
   node_size_type,
   node_size_px_range,
   node_size_freq_range,
@@ -386,7 +386,7 @@ def make_point_traces(
     node_comparison_colors = node_comparison_colors,
     node_freq_ratio_range = node_freq_ratio_range,
     node_fill_color = node_fill_color,
-    node_variation_type_colors = node_variation_type_colors,
+    node_var_type_colors = node_var_type_colors,
   )
 
   node_group = get_node_trace_group(
