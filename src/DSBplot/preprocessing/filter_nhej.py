@@ -138,19 +138,7 @@ def check_deletion_special_case(
 
 def parse_args():
   parser = argparse.ArgumentParser(
-    description = 'Filter sequences having mutations near DSB site.'
-  )
-  parser.add_argument(
-    '--ref_seq_file',
-    type = common_utils.check_file,
-    help = (
-      'Reference sequence file.' +
-      ' Should contain a single nucleotide sequence.' +
-      ' Must be the same sequence as used for alignment.' +
-      f' Must be in FASTA format ({", ".join(constants.FASTA_EXT)}) or' +
-      ' text format (all other extensions).'
-    ),
-    required = True,
+    description = 'Filter sequences based on the type and location of their variations.'
   )
   parser.add_argument(
     '--input',
@@ -166,6 +154,35 @@ def parse_args():
     required = True,
   )
   parser.add_argument(
+    '--output',
+    nargs = 2,
+    type = common_utils.check_file_output,
+    required = True,
+    help = 'Output CSV file name for the accepted and rejected reads, respectively.'
+  )
+  parser.add_argument(
+    '--ref',
+    type = common_utils.check_file,
+    help = (
+      'Reference sequence file.' +
+      ' Should contain a single nucleotide sequence.' +
+      ' Must be the same sequence as used for alignment.' +
+      f' Must be in FASTA format ({", ".join(constants.FASTA_EXT)}) or' +
+      ' text format (all other extensions).'
+    ),
+    required = True,
+  )
+  parser.add_argument(
+    '--debug',
+    type = common_utils.check_file_output,
+    help = (
+      'File to output debugging categories.' +
+      ' If omitted, the messages are printed to the console (unless --quiet is used).' +
+      ' If the extension is ".csv", the output is formatted as a CSV table, otherwise' +
+      ' it is formatted as a text file.'
+    ),
+  )
+  parser.add_argument(
     '--names',
     nargs = '+',
     help = (
@@ -175,45 +192,44 @@ def parse_args():
     ),
   )
   parser.add_argument(
-    '--total_reads',
+    '--reads',
     type = int,
+    nargs = '+',
     help = (
       'Total reads for each file.' +
       ' Must be the same number of arguments as the number of ' +
       ' INPUT files. If not provided, the total reads are' +
-      ' are calculated by taking the sum of the "Count" columns in each INPUT.'
+      ' are calculated by taking the sum of the "count" columns in each INPUT.'
     ),
-    nargs = '+',
   )
   parser.add_argument(
-    '--output',
-    type = common_utils.check_file_output,
-    required = True,
-    help = 'Output TSV file name.'
-  )
-  parser.add_argument(
-    '--output_rejected',
-    type = common_utils.check_file_output,
-    required = True,
-    help = 'Output file for rejected reads.'
-  )
-  parser.add_argument(
-    '--dsb_pos',
+    '--dsb',
     type = int,
     required = True,
     help = (
       'Position on reference sequence immediately upstream of DSB site.' +
-      ' I.e. the DSB is between 1-based positions DSB_POS and DSB_POS + 1.'
+      ' I.e., the DSB is between 1-based positions DSB and DSB + 1.'
     ),
   )
   parser.add_argument(
-    '--min_length',
+    '--min_len',
     type = int,
     default = -1,
     help = (
       'Minimum length of read sequence to be considered.' +
       ' Reads shorter than this are discarded.' +
-      ' Forced to be at least DSB_POS + 1.'
+      ' Forced to be at least DSB + 1.'
+    ),
+  )
+  parser.add_argument(
+    '--rc',
+    action = 'store_true',
+    help = (
+      'Set if the reads are expected to be reverse-complemented compared to the reference sequence.' +
+      ' This is useful if the reads are from the opposite strand as the reference sequence.' +
+      ' If this option is used, the alignments in the SAM file must have been aligned' +
+      ' against the same reference sequence, and only alignments with the reverse-complement flag (16)' +
+      ' will be accepted.'
     ),
   )
   parser.add_argument(
@@ -221,21 +237,11 @@ def parse_args():
     help = 'Do not output log messages.',
     action = 'store_true',
   )
-  parser.add_argument(
-    '--debug_file',
-    type = common_utils.check_file_output,
-    help = (
-      'File to output debugging categories.' +
-      ' If omitted, the messages are printed to the console (unless --quiet is used).' +
-      ' If the extension is ".csv", the output is formatted as a CSV table, otherwise' +
-      ' it is formatted as a text file.'
-    ),
-  )
   args = vars(parser.parse_args())
-  args['min_length'] = max(args['dsb_pos'] + 1, args['min_length'])
+  args['min_len'] = max(args['dsb'] + 1, args['min_len'])
   args = vars(parser.parse_args())
-  if args['total_reads'] is not None:
-    if len(args['total_reads']) != len(args['input']):
+  if args['reads'] is not None:
+    if len(args['reads']) != len(args['input']):
       raise Exception(
         'Number of total reads must match the number of input files.'
       )
@@ -246,7 +252,7 @@ def parse_args():
       )
   return args
 
-def main(
+def do_filter(
   input,
   names,
   total_reads,
@@ -255,6 +261,7 @@ def main(
   output_rejected,
   dsb_pos,
   min_length,
+  reverse_complement = False,
   quiet = True,
   debug_file = None,
 ):
@@ -269,6 +276,7 @@ def main(
   header = [0] * len(input)
   rejected_repeat = [0] * len(input)
   rejected_no_alignment = [0] * len(input)
+  rejected_wrong_rc = [0] * len(input)
   rejected_pos_not_1 = [0] * len(input)
   rejected_not_consecutive = [0] * len(input)
   rejected_not_dsb_touch = [0] * len(input)
@@ -296,6 +304,8 @@ def main(
   read_rank = [None for _ in input]
   total_lines = [0] * len(input)
   total_reads_1 = [0] * len(input)
+
+  expected_rc_flag = 16 if reverse_complement else 0
 
   for i in range(len(input)): # Loop over input files
     total_lines[i] = file_utils.count_lines(input[i])
@@ -336,6 +346,12 @@ def main(
           rejected_no_alignment[i] += 1
           read_count_rejected[i][read_seq] = 1
           continue
+        elif (int(mandatory['FLAG']) & 16) != expected_rc_flag: # wrong RC flag
+          read_rejected.add(read_seq)
+          read_debug[read_seq] = 'wrong_rc'
+          read_aligned[read_seq] = True
+          rejected_wrong_rc[i] += 1
+          read_count_rejected[i][read_seq] = 1
         else:
           read_aligned[read_seq] = True
 
@@ -575,7 +591,8 @@ def main(
     total_accepted[i] = accepted_new[i] + accepted_repeat[i]
 
     rejected_new[i] = (
-      rejected_no_alignment[i] + 
+      rejected_no_alignment[i] +
+      rejected_wrong_rc[i] +
       rejected_pos_not_1[i] +
       rejected_too_short[i] +
       rejected_not_consecutive[i] +
@@ -608,6 +625,7 @@ def main(
     'rejected_new': rejected_new,
     'rejected_repeat': rejected_repeat,
     'rejected_no_alignment': rejected_no_alignment,
+    'rejected_wrong_rc': rejected_wrong_rc,
     'rejected_pos_not_1': rejected_pos_not_1,
     'rejected_too_short': rejected_too_short,
     'rejected_not_consecutive': rejected_not_consecutive,
@@ -632,6 +650,7 @@ def main(
     f'        Repeat: ' + ', '.join([str(x) for x in rejected_repeat]),
     f'        New: ' + ', '.join([str(x) for x in rejected_new]),
     f'            No alignment: ' + ', '.join([str(x) for x in rejected_no_alignment]),
+    f'            Wrong RC flag: ' + ', '.join([str(x) for x in rejected_wrong_rc]),
     f'            POS != 1: ' + ', '.join([str(x) for x in rejected_pos_not_1]),
     f'            Too short: ' + ', '.join([str(x) for x in rejected_too_short]),
     f'            Not consecutive: ' + ', '.join([str(x) for x in rejected_not_consecutive]),
@@ -653,7 +672,35 @@ def main(
     log_utils.log_output(debug_file)
   log_utils.blank_line()
 
+def main(
+  input,
+  output,
+  ref,
+  debug,
+  names,
+  reads,
+  dsb,
+  min_len,
+  rc,
+  quiet,
+):
+  do_filter(
+    input = input,
+    output = output[0],
+    output_rejected = output[1],
+    ref_seq_file = ref,
+    debug_file = debug,
+    names = names,
+    total_reads = reads,
+    dsb_pos = dsb,
+    min_length = len,
+    reverse_complement = rc,
+    quiet = quiet,
+  )
+
 if __name__ == '__main__':
   main(**parse_args())
 
 # TODO: ADD MAX SUBSTITUTIONS TO ACCEPT
+# TODO: ADD CONSECUTIVE IN/DEL TO ACCEPT
+# TODO: ADD TOUCH DSB TO ACCEPT

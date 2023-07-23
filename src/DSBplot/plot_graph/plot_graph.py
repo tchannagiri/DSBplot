@@ -668,7 +668,7 @@ def parse_args():
 
   args['edge'] = bool(args['edge'])
 
-  args['sub'] = ['withoutSubst', 'withSubst'][args['sub']]
+  args['sub'] = constants.SUBST_TYPES[args['sub']]
 
   return args
 

@@ -6,7 +6,7 @@ def get_alignment_window(
   dsb_pos,
   window_size,
   anchor_size,
-  anchor_mismatch_limit,
+  anchor_sub,
 ):
   """
     Get the part of the alignment in a window around the DSB.
@@ -18,8 +18,8 @@ def get_alignment_window(
     dsb_pos: the 1-based DSB position on the reference.
     window_size: size of the window to extract.
     anchor_size: the size of the anchors that must match on the left and right of the DSB.
-    anchor_mismatch_limit: the maximum number of mismatches allowed on the left and right anchors.
-      The mismatch limit is checked separately on the left or right anchors.
+    anchor_sub: the maximum number of substitutions allowed on the left and right anchors.
+      The substitution limit is checked separately on the left or right anchors.
     
     Returns
     -------
@@ -46,19 +46,19 @@ def get_alignment_window(
   right_anchor_mismatches = 0
   for i in range(min(len(ref_align), len(read_align))):
     if ref_i in range(left_anchor_start, left_anchor_end + 1):
-      # Check the mismatches/in/dels on the left anchor
+      # Check the sub/in/dels on the left anchor
       if (ref_align[i] == '-') or (read_align[i] == '-'):
         left_anchor_mismatches = np.inf
       elif ref_align[i] != read_align[i]:
         left_anchor_mismatches += 1
     elif ref_i in range(right_anchor_start, right_anchor_end + 1):
-      # Check the anchor/in/dels on the right anchor
+      # Check the sub/in/dels on the right anchor
       if (ref_align[i] == '-') or (read_align[i] == '-'):
         right_anchor_mismatches = np.inf
       elif ref_align[i] != read_align[i]:
         right_anchor_mismatches += 1
     elif ref_i in range(window_start, window_end + 1):
-      # extract the window around the DSB
+      # obtain the window around the DSB
       ref_align_window += ref_align[i]
       read_align_window += read_align[i]
 
@@ -74,8 +74,8 @@ def get_alignment_window(
     return None, None
 
   if (
-    (left_anchor_mismatches > anchor_mismatch_limit) or
-    (right_anchor_mismatches > anchor_mismatch_limit)
+    (left_anchor_mismatches > anchor_sub) or
+    (right_anchor_mismatches > anchor_sub)
   ):
     return None, None
 

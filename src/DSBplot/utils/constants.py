@@ -3,7 +3,7 @@ import numpy as np
 FASTA_EXT = ['fasta', 'fa', 'fna']
 FASTQ_EXT = ['fastq', 'fq']
 
-SUBST_TYPES = ['withSubst', 'withoutSubst']
+SUBST_TYPES = ['withoutSubst', 'withSubst'] # Must keep in this order!
 
 def check_subst_type(subst_type):
   if subst_type not in SUBST_TYPES:

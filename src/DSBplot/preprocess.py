@@ -20,34 +20,21 @@ def parse_args():
   parser = argparse.ArgumentParser(
     description = (
       'Perform alignment and preprocessing for raw FASTQ data.' +
-      ' This is script is broken in separate stages so that each stage' +
+      ' This is script is broken into separate stages so that each stage' +
       ' can be run separately. However, the stages must be run in the correct order indicated' +
       ' by their prefix numbers. If running the stages separately, the value of OUTPUT' +
       ' must the same value on each separate invocation. Two experiments should not' +
       ' be given the same OUTPUT directory. See parameter --stages and the README for more information' +
-      ' on the individual stages.'
+      ' on the individual stages. Important: please make sure that the input files for each' +
+      ' repeat of the experiment are passed in alphabetical order.'
     ),
     formatter_class = argparse.ArgumentDefaultsHelpFormatter,
   )
-  parser.add_argument(
-    '--input',
-    nargs = '+',
-    type = common_utils.check_file,
-    help = (
-      'Input files of raw reads.' +
-      ' The following file entensions are allowed: ' +
-      ' FASTQ: ".fastq", ".fq."; FASTA: "fasta", ".fa", "fna";' +
-      ' text: all others. FASTQ files are processed the ' +
-      ' Bowtie 2 flag "-q", FASTA files are processed with the Bowtie 2 flag "-f",' +
-      ' and text files are processed with the Bowtie 2 flag "-r".' +
-      ' Please see the Bowtie 2 manual at http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml.' +
-      ' Each file is considered a repeat of the same experiment.' +
-      ' Required for stage 0_align. ' +
-      ' If 0_align is omitted and a custom alignnment approach is used, ' +
-      ' then the aligned SAM files must be placed in OUTPUT directory.'
-    ),
-  )
-  parser.add_argument(
+  group_common = parser.add_argument_group('Common arguments')
+  group_align = parser.add_argument_group('Stage 0_align')
+  group_filter = parser.add_argument_group('Stage 1_filter')
+  group_window = parser.add_argument_group('Stage 2_window')
+  group_common.add_argument(
     '--names',
     nargs = '+',
     type = str,
@@ -55,10 +42,11 @@ def parse_args():
       'Identifiers to use for the input libraries.' +
       ' Must be given in the same order as the input files.' +
       ' If omitted, the names will be the input file names without the extension.' +
-      ' Required for stages 0_align and 1_filter (but can be omitted because of the default).'
+      ' Required for stages "0_align" and "1_filter" (but can be omitted because of the default).' +
+      ' Important: please make sure that the input names are in alphabetical order.'
     ),
   )
-  parser.add_argument(
+  group_common.add_argument(
     '--output',
     type = common_utils.check_dir_output,
     help = (
@@ -69,7 +57,7 @@ def parse_args():
     ),
     required = True,
   )
-  parser.add_argument(
+  group_common.add_argument(
     '--stages',
     type = str,
     nargs = '+',
@@ -82,12 +70,13 @@ def parse_args():
       ' 0_align: Align reads to reference sequence using Bowtie 2 ' +
       ' (may be omitted if a custom alignment approach is used and the resulting SAM files are put in the OUTPUT directory).' +
       ' 1_filter: Filter reads that represent NHEJ repair (all in/dels touch the DSB site and are consecutive).' +
+      ' Will use all SAM files placed in OUTPUT.' +
       ' 2_window: Extract the nucleotide sequences and alignment from around the DSB site.' +
       ' 3_variation: Split alignment windows into individual variations (used for plotting variation-position histograms).'
     )
   )
-  parser.add_argument(
-    '--ref_seq_file',
+  group_common.add_argument(
+    '--ref',
     type = common_utils.check_file,
     help = (
       'Reference sequence file.' +
@@ -95,62 +84,79 @@ def parse_args():
       ' Must be the same sequence as used for alignment.' +
       f' Must be in FASTA format ({", ".join(constants.FASTA_EXT)}) or' +
       ' text format (all other extensions).' +
-      ' Required for stages 0_align, 1_filter, and 2_window.'
+      ' Required for stages "0_align", "1_filter", and "2_window".'
     ),
   )
-  parser.add_argument(
-    '--dsb_pos',
+  group_common.add_argument(
+    '--dsb',
     type = int,
     help = (
-      'Position on reference sequence immediately left (5'') of DSB site.' +
-      ' I.e., the DSB is between position DSB_POS and DSB_POS + 1.' +
-      ' Required for stage 1_filter and 2_window.'
+      'Position on reference sequence immediately left (5\') of DSB site.' +
+      ' I.e., the DSB is between 1-based positions DSB_POS and DSB_POS + 1.' +
+      ' Required for stage "1_filter" and "2_window".'
     ),
   )
-  parser.add_argument(
-    '--min_length',
+  group_common.add_argument(
+    '--quiet',
+    action = 'store_true',
+    help = 'If present, do no output verbose log message.',
+  )
+  group_common.add_argument(
+    '--no_align',
+    action = 'store_true',
+    help = 'Shorthand for omitting the "0_align" stage (see --stages).',
+  )
+  group_align.add_argument(
+    '--input',
+    nargs = '+',
+    type = common_utils.check_file,
+    help = (
+      'Input files of raw reads.' +
+      ' The following file entensions are allowed: ' +
+      ' FASTQ: ".fastq", ".fq."; FASTA: "fasta", ".fa", "fna";' +
+      ' text: all others. FASTQ files are processed the ' +
+      ' Bowtie 2 flag "-q", FASTA files are processed with the Bowtie 2 flag "-f",' +
+      ' and text files are processed with the Bowtie 2 flag "-r".' +
+      ' Please see the Bowtie 2 manual at http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml.' +
+      ' Each file is considered a repeat of the same experiment.' +
+      ' Required for stage "0_align". ' +
+      ' If "0_align" is omitted and a custom alignnment approach is used, ' +
+      ' then the aligned SAM files must be placed in OUTPUT directory.' +
+      ' Important: please make sure that the input files are in alphabetical order.'
+    ),
+  )
+  group_align.add_argument(
+    '--bt2',
+    type = str,
+    default = '',
+    help = (
+      'Additional arguments to pass to Bowtie 2. Must be a single string.' +
+      ' Required for stage "0_align" (but can be omitted because of default).'
+    ),
+  )
+  group_filter.add_argument(
+    '--min_len',
     type = int,
     help = (
       'Minimum length of read sequence to be considered. Reads shorter than this are discarded.' +
       ' Forced to be at least DSB_POS + 1 (also the default).' +
-      ' Required for stage 1_filter (but can be omitted because of default).'
+      ' Required for stage "1_filter" (but can be omitted because of default).'
     ),
   )
-  parser.add_argument(
-    '--window_size',
-    type = int,
-    default = 10,
+  group_filter.add_argument(
+    '--rc',
+    action = 'store_true',
     help = (
-      'Size of window around DSB site to extract.' +
-      ' The nucleotides at the positions' +
-      ' {DSB_POS - WINDOW_SIZE + 1, ..., DSB_POS + WINDOW_SIZE} are extracted.' +
-      ' The actual number of nucleotides extracted from each read may vary depending' +
-      ' on the number of insertions/deletions/substitutions in the alignment.' +
-      ' Required for stage 2_window (but can be omitted because of default).'
+      'Set if the reads are expected to be reverse-complemented compared to the reference sequence.' +
+      ' This is useful if the reads are from the opposite strand as the reference sequence.' +
+      ' If this option is used, the alignments in the SAM file must have been aligned' +
+      ' against the same reference sequence, and only alignments with the reverse-complement flag (16)' +
+      ' will be accepted.' +
+      ' Required for stage "1_filter" (but can be omitted because of default).'
     ),
   )
-  parser.add_argument(
-    '--anchor_size',
-    type = int,
-    default = 20,
-    help = (
-      'Size of the anchor on the left/right of the extracted window to check for mismatches.' +
-      ' Required only for stage 2_window (but can be omitted because of default).'
-    ),
-  )
-  parser.add_argument(
-    '--anchor_mismatches',
-    type = int,
-    default = 1,
-    help = (
-      'Maximum number of mismatches allowed on the left/right anchor sequences.' +
-      ' Reads with more than the allowed number of mismatches on the left/right anchor' +
-      ' will be discarded. This limit is applied to the left/right anchors separately.' +
-      ' Required for stage 2_window (but can be omitted because of default).'
-    ),
-  )
-  parser.add_argument(
-    '--total_reads',
+  group_filter.add_argument(
+    '--reads',
     type = int,
     help = (
       'Total number reads in each experiment.' +
@@ -158,42 +164,61 @@ def parse_args():
       ' files if some reads were discarded during preprocessing.' +
       ' The number of arguments must be the same as the number of ' +
       ' INPUTs. If not provided, the total reads remaining after NHEJ filtering are used.' +
-      ' Required for stage 1_filter (but can be omitted because of default).'
+      ' Required for stage "1_filter" (but can be omitted because of default).'
     ),
     nargs = '+',
   )
-  parser.add_argument(
+  group_window.add_argument(
+    '--window',
+    type = int,
+    default = 10,
+    help = (
+      'Size of window around DSB site to obtain.' +
+      ' The nucleotides at the positions' +
+      ' {DSB_POS - WINDOW_SIZE + 1, ..., DSB_POS + WINDOW_SIZE} are obtained.' +
+      ' The actual number of nucleotides obtained from each read may vary depending' +
+      ' on the number of insertions/deletions/substitutions in the alignment.' +
+      ' Required for stage "2_window" (but can be omitted because of default).'
+    ),
+  )
+  group_window.add_argument(
+    '--anchor',
+    type = int,
+    default = 20,
+    help = (
+      'Size of the anchor on the left/right of the obtained window to check for substitutions.' +
+      ' Required for stage "2_window" (but can be omitted because of default).'
+    ),
+  )
+  group_window.add_argument(
+    '--anchor_sub',
+    type = int,
+    default = 1,
+    help = (
+      'Maximum number of substitutions allowed on the left/right anchor sequences.' +
+      ' Reads with more than the allowed number of substitutions on the left/right anchor' +
+      ' will be discarded. This limit is applied to the left/right anchors separately.' +
+      ' Required for stage "2_window" (but can be omitted because of default).'
+    ),
+  )
+  group_window.add_argument(
     '--label',
     type = str,
     help = (
       'Label of the experiment to be used in plot legends.' +
       ' If not provided, the label is the basename of the OUTPUT directory.' +
-      ' Required for stage 2_window (but can be omitted because of default).'
+      ' Required for stage "2_window" (but can be omitted because of default).'
     ),
-  )
-  parser.add_argument(
-    '--bowtie2_args',
-    type = str,
-    default = '',
-    help = (
-      'Additional arguments to pass to Bowtie2. Must be a single string.' +
-      ' Required for stage 0_align (but can be omitted because of default).'
-    ),
-  )
-  parser.add_argument(
-    '--quiet',
-    action = 'store_true',
-    help = 'If present, do no output verbose log message.',
-  )
-  parser.add_argument(
-    '--no_align',
-    action = 'store_true',
-    help = 'Shorthand for omitting the 0_align stage (see --stages).',
   )
   args = vars(parser.parse_args())
   if args['names'] is not None:
     if len(args['names']) != len(args['input']):
       raise Exception('Number of NAMES must be the same as the number of INPUTs.')
+  file_names = [file_utils.get_file_names(x) for x in args['input']]
+  if not all(x == y for x, y in zip(file_names, sorted(file_names))):
+    raise Exception('INPUT must have file names in aplhabetical order.')
+  if not all(x == y for x, y in zip(args['names'], sorted(args['names']))):
+    raise Exception('NAMES must be in alphabetical order.')
   if args['no_align']:
     args['stages'] = [x for x in args['stages'] if (x != '0_align')]
   del args['no_align']
@@ -203,19 +228,19 @@ def do_0_align(
   input,
   names,
   output,
-  ref_seq_file,
-  bowtie2_args,
+  ref,
+  bt2,
 ):
   if input is None:
-    raise Exception('INPUT must be provided for stage 0_align.')
-  if ref_seq_file is None:
-    raise Exception('REF_SEQ_FILE must be provided for stage 0_align.')
+    raise Exception('INPUT must be provided for stage "0_align".')
+  if ref is None:
+    raise Exception('REF must be provided for stage "0_align".')
   if names is None:
     names = [file_names.get_file_name(x) for x in input]
   bowtie2_build_file = file_names.bowtie2_build(output)
   file_utils.make_parent_dir(bowtie2_build_file)
   log_utils.log_output('Bowtie2 build file: ' + bowtie2_build_file)
-  os.system(f'bowtie2-build-s {ref_seq_file} {bowtie2_build_file} --quiet')
+  os.system(f'bowtie2-build-s {ref} {bowtie2_build_file} --quiet')
 
   for i in range(len(input)):
     sam_file = file_names.sam_file(output, names[i])
@@ -227,67 +252,72 @@ def do_0_align(
       flags = '-f'
     else:
       flags = '-r'
-    bowtie2_command = f'bowtie2-align-s --no-hd {flags} {bowtie2_args} -x {bowtie2_build_file} {input[i]} -S {sam_file} --quiet'
+    bowtie2_command = f'bowtie2-align-s --no-hd {flags} {bt2} -x {bowtie2_build_file} {input[i]} -S {sam_file} --quiet'
     log_utils.log('Bowtie 2 command: ' + bowtie2_command)
     os.system(bowtie2_command)
   log_utils.blank_line()
 
 def do_1_filter_nhej(
   names,
-  total_reads,
   output,
-  ref_seq_file,
-  dsb_pos,
-  min_length,
+  reads,
+  ref,
+  dsb,
+  min_len,
+  rc,
   quiet,
 ):
-  if ref_seq_file is None:
-    raise Exception('REF_SEQ_FILE must be provided for stage 1_filter.')
-  if dsb_pos is None:
-    raise Exception('DSB_POS must be provided for stage 1_filter.')
-  if min_length is None:
-    min_length = dsb_pos + 1
+  if ref is None:
+    raise Exception('REF must be provided for stage "1_filter".')
+  if dsb is None:
+    raise Exception('DSB must be provided for stage "1_filter".')
+  if min_len is None:
+    min_len = dsb + 1
 
   if names is None:
     # Infer names from the SAM files.
     names = sorted([
-      file_names.get_file_name(x) for x in glob.glob(os.path.join(output, '*.sam'))
+      file_names.get_file_name(x)
+      for x in glob.glob(os.path.join(output, '*.sam'))
     ])
   input = [file_names.sam_file(output, x) for x in names]
 
-  min_length = max(dsb_pos + 1, min_length)
+  min_len = max(dsb + 1, min_len)
   filter_nhej.main(
     input = input,
+    output = [
+      file_names.filter_nhej(output, 'accepted'),
+      file_names.filter_nhej(output, 'rejected'),
+    ],
+    debug = file_names.filter_nhej(output, 'debug'),
     names = names,
-    total_reads = total_reads,
-    ref_seq_file = ref_seq_file,
-    output = file_names.filter_nhej(output, 'accepted'),
-    output_rejected = file_names.filter_nhej(output, 'rejected'),
-    dsb_pos = dsb_pos,
-    min_length = min_length,
+    reads = reads,
+    ref = ref,
+    dsb = dsb,
+    len = min_len,
+    rc = rc,
     quiet = quiet,
-    debug_file = file_names.filter_nhej(output, 'debug'),
   )
 
 def do_2_window(
   output,
-  ref_seq_file,
-  dsb_pos,
-  window_size,
-  anchor_size,
-  anchor_mismatches,
+  ref,
+  dsb,
+  window,
+  anchor,
+  anchor_sub,
   label,
 ):
-  if ref_seq_file is None:
-    raise Exception('REF_SEQ_FILE must be provided for stage 2_window.')
-  if dsb_pos is None:
-    raise Exception('DSB_POS must be provided for stage 2_window.')
-  if window_size is None:
-    raise Exception('WINDOW_SIZE must be provided for stage 2_window.')
-  if anchor_size is None:
-    raise Exception('ANCHOR_SIZE must be provided for stage 2_window.')
-  if anchor_mismatches is None:
-    raise Exception('ANCHOR_MISMATCHES must be provided for stage 2_window.')
+  if ref is None:
+    raise Exception('REF must be provided for stage "2_window".')
+  if dsb is None:
+    raise Exception('DSB must be provided for stage "2_window".')
+  if window is None:
+    raise Exception('WINDOW must be provided for stage "2_window".')
+  if anchor is None:
+    raise Exception('ANCHOR must be provided for stage "2_window".')
+  if anchor_sub is None:
+    raise Exception('ANCHOR_SUB must be provided for stage "2_window".')
 
   name = file_names.get_file_name(output)
   if label is None:
@@ -296,14 +326,16 @@ def do_2_window(
   for subst_type in constants.SUBST_TYPES:
     get_window.main(
       input = file_names.filter_nhej(output, 'accepted'),
-      ref_seq_file = ref_seq_file,
-      output = file_names.window(output, subst_type),
-      output_info = file_names.data_info(output),
-      dsb_pos = dsb_pos,
-      window_size = window_size,
-      anchor_size = anchor_size,
-      anchor_mismatches = anchor_mismatches,
-      subst_type = subst_type,
+      ref = ref,
+      output = [
+        file_names.window(output, subst_type),
+        file_names.data_info(output),
+      ],
+      dsb = dsb,
+      window = window,
+      anchor = anchor,
+      anchor_sub = anchor_sub,
+      sub = subst_type,
       name = name,
       label = label,
     )
@@ -319,50 +351,52 @@ def do_stages(
   input,
   names,
   output,
-  ref_seq_file,
-  dsb_pos,
-  min_length,
-  window_size,
-  anchor_size,
-  anchor_mismatches,
-  total_reads,
+  ref,
+  dsb,
+  min_len,
+  rc,
+  window,
+  anchor,
+  anchor_sub,
+  reads,
   label,
-  bowtie2_args,
+  bt2,
   quiet,
   stages = STAGES,
 ):
   # Copy reference sequence file to output directory.
-  if ref_seq_file is not None:
-    shutil.copy(ref_seq_file, file_names.ref_seq_file(output))
+  if ref is not None:
+    shutil.copy(ref, file_names.ref_seq_file(output))
 
   if '0_align' in stages:
     do_0_align(
       input = input,
       names = names,
       output = output,
-      ref_seq_file = ref_seq_file,
-      bowtie2_args = bowtie2_args,
+      ref = ref,
+      bt2 = bt2,
     )
 
   if '1_filter' in stages:
     do_1_filter_nhej(
       names = names,
-      total_reads = total_reads,
       output = output,
-      ref_seq_file = ref_seq_file,
-      dsb_pos = dsb_pos,
-      min_length = min_length,
+      reads = reads,
+      ref = ref,
+      dsb = dsb,
+      min_len = min_len,
+      rc = rc,
       quiet = quiet,
     )
 
   if '2_window' in stages:
     do_2_window(
       output = output,
-      ref_seq_file = ref_seq_file,
-      dsb_pos = dsb_pos,
-      window_size = window_size,
-      anchor_size = anchor_size,
-      anchor_mismatches = anchor_mismatches,
+      ref = ref,
+      dsb = dsb,
+      window = window,
+      anchor = anchor,
+      anchor_sub = anchor_sub,
       label = label,
     )
 
@@ -373,15 +407,16 @@ def main(
   input,
   names,
   output,
-  ref_seq_file,
-  dsb_pos,
-  min_length,
-  window_size,
-  anchor_size,
-  anchor_mismatches,
-  total_reads,
+  ref,
+  dsb,
+  min_len,
+  rc,
+  window,
+  anchor,
+  anchor_sub,
+  reads,
   label,
-  bowtie2_args,
+  bt2,
   quiet,
   stages = STAGES,
 ):
@@ -389,15 +424,16 @@ def main(
     input = input,
     names  = names,
     output = output,
-    ref_seq_file = ref_seq_file,
-    dsb_pos = dsb_pos,
-    min_length = min_length,
-    window_size = window_size,
-    anchor_size = anchor_size,
-    anchor_mismatches = anchor_mismatches,
-    total_reads = total_reads,
+    ref = ref,
+    dsb = dsb,
+    min_len = min_len,
+    rc = rc,
+    window = window,
+    anchor = anchor,
+    anchor_sub = anchor_sub,
+    reads = reads,
     label = label,
-    bowtie2_args = bowtie2_args,
+    bt2 = bt2,
     quiet = quiet,
     stages = stages,
   )
