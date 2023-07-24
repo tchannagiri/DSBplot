@@ -74,7 +74,7 @@ def count_variations(ref_align, read_align):
     raise Exception("Alignment strings must be the same length")
   num_ins = 0
   num_del = 0
-  num_subst = 0
+  num_sub = 0
   for i in range(len(ref_align)):
     if ref_align[i] != read_align[i]:
       if ref_align[i] == '-':
@@ -83,8 +83,8 @@ def count_variations(ref_align, read_align):
         num_del += 1
       else:
         # both ref and read are nucleotides but not equal
-        num_subst += 1
-  return num_ins, num_del, num_subst
+        num_sub += 1
+  return num_ins, num_del, num_sub
       
 
 def get_var_pos(ref_align, read_align):
@@ -94,7 +94,7 @@ def get_var_pos(ref_align, read_align):
   ref_pos = 1
   ins_pos = []
   del_pos = []
-  subst_pos = []
+  sub_pos = []
   for i in range(len(ref_align)):
     if ref_align[i] == '-':
       ins_pos.append(ref_pos - 1) # insertions are mapped to the previous reference positition
@@ -102,11 +102,11 @@ def get_var_pos(ref_align, read_align):
       del_pos.append(ref_pos)
       ref_pos += 1
     elif ref_align[i] != read_align[i]:
-      subst_pos.append(ref_pos)
+      sub_pos.append(ref_pos)
       ref_pos += 1
     else: # match
       ref_pos += 1
-  return ins_pos, del_pos, subst_pos
+  return ins_pos, del_pos, sub_pos
 
 def get_orig_seq(align_str):
   """

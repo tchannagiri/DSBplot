@@ -1,3 +1,6 @@
+FLAG_UNALIGNED = 4 # Unaligned/unmapped flag
+FLAG_RC = 16 # Reverse-complement flag
+
 SAM_MANDATORY_FIELDS = [
   'QNAME',
   'FLAG',

@@ -144,6 +144,18 @@ def parse_args():
     ),
   )
   group_filter.add_argument(
+    '--max_sub',
+    type = int,
+    default = -1,
+    help = (
+      'Maximum number of substitutions allowed in the alignment.' +
+      ' If the alignment has more substitutions, the read is rejected.' +
+      ' A large number of substitutions may indicate that an alignment is invalid.' +
+      ' Set to -1 to disable this check.' +
+      ' Required for stage "1_filter" (but can be omitted because of default).'
+    ),
+  )
+  group_filter.add_argument(
     '--rc',
     action = 'store_true',
     help = (
@@ -153,6 +165,27 @@ def parse_args():
       ' against the same reference sequence, and only alignments with the reverse-complement flag (16)' +
       ' will be accepted.' +
       ' Required for stage "1_filter" (but can be omitted because of default).'
+    ),
+  )
+  group_filter.add_argument(
+    '--consec',
+    type = int,
+    choices = [0, 1],
+    default = 1,
+    help = (
+      'Set to 0 to disable the check that all in/dels must be consecutive.' +
+      ' If this check is disabled, realignment is not performed.'
+    ),
+  )
+  group_filter.add_argument(
+    '--touch',
+    type = int,
+    choices = [0, 1],
+    default = 1,
+    help = (
+      'Set to 0 to disable the check that some in/dels must touch the DSB.' +
+      ' If this check is disabled, the "--dsb" option is ignored' +
+      ' and realignment is not performed.'
     ),
   )
   group_filter.add_argument(
@@ -214,14 +247,16 @@ def parse_args():
   if args['names'] is not None:
     if len(args['names']) != len(args['input']):
       raise Exception('Number of NAMES must be the same as the number of INPUTs.')
-  file_names = [file_utils.get_file_names(x) for x in args['input']]
-  if not all(x == y for x, y in zip(file_names, sorted(file_names))):
-    raise Exception('INPUT must have file names in aplhabetical order.')
-  if not all(x == y for x, y in zip(args['names'], sorted(args['names']))):
-    raise Exception('NAMES must be in alphabetical order.')
+    if not all(x == y for x, y in zip(args['names'], sorted(args['names']))):
+      raise Exception('NAMES must be in alphabetical order.')
+  f_names = [file_names.get_file_name(x) for x in args['input']]
+  if not all(x == y for x, y in zip(f_names, sorted(f_names))):
+    raise Exception('INPUT must have file names in alphabetical order.')
   if args['no_align']:
     args['stages'] = [x for x in args['stages'] if (x != '0_align')]
   del args['no_align']
+  args['consec'] = bool(args['consec'])
+  args['touch'] = bool(args['touch'])
   return args
 
 def do_0_align(
@@ -264,7 +299,10 @@ def do_1_filter_nhej(
   ref,
   dsb,
   min_len,
+  max_sub,
   rc,
+  consec,
+  touch,
   quiet,
 ):
   if ref is None:
@@ -294,8 +332,11 @@ def do_1_filter_nhej(
     reads = reads,
     ref = ref,
     dsb = dsb,
-    len = min_len,
+    min_len = min_len,
+    max_sub = max_sub,
     rc = rc,
+    consec = consec,
+    touch = touch,
     quiet = quiet,
   )
 
@@ -354,7 +395,10 @@ def do_stages(
   ref,
   dsb,
   min_len,
+  max_sub,
   rc,
+  consec,
+  touch,
   window,
   anchor,
   anchor_sub,
@@ -385,7 +429,10 @@ def do_stages(
       ref = ref,
       dsb = dsb,
       min_len = min_len,
+      max_sub = max_sub,
       rc = rc,
+      consec = consec,
+      touch = touch,
       quiet = quiet,
     )
 
@@ -410,7 +457,10 @@ def main(
   ref,
   dsb,
   min_len,
+  max_sub,
   rc,
+  consec,
+  touch,
   window,
   anchor,
   anchor_sub,
@@ -427,7 +477,10 @@ def main(
     ref = ref,
     dsb = dsb,
     min_len = min_len,
+    max_sub = max_sub,
     rc = rc,
+    consec = consec,
+    touch = touch,
     window = window,
     anchor = anchor,
     anchor_sub = anchor_sub,
