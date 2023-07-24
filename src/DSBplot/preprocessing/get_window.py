@@ -65,13 +65,16 @@ def parse_args():
     help = 'Size of anchor on left/right of the window to check for substitutions.',
   )
   parser.add_argument(
-    '--anchor_sub',
+    '--anchor_var',
     type = int,
-    default = 1,
+    nargs = 2,
+    default = [1, 0],
     help = (
-      'Maximum number of substitutions allowed on the left/right anchor sequences.' +
-      ' Reads with more than the allowed number of substitutions on the left/right anchor' +
-      ' will be discarded. This limit is applied to the left/right anchors separately.'
+      'Maximum number of substitutions (arg 1) and indels (arg 2) allowed on the' +
+      ' left/right anchor sequences. Reads with more than the allowed number of' +
+      ' substitutions or indels on the left/right anchor will be discarded.' +
+      ' This limit is applied to the left/right anchors separately.' +
+      ' Set to either/both to -1 to disable the respective limit.'
     ),
   )
   parser.add_argument(
@@ -112,6 +115,7 @@ def write_window(
   window_size,
   anchor_size,
   anchor_sub,
+  anchor_indel,
   subst_type,
 ):
   data = file_utils.read_csv(input)
@@ -135,6 +139,7 @@ def write_window(
       window_size = window_size,
       anchor_size = anchor_size,
       anchor_sub = anchor_sub,
+      anchor_indel = anchor_indel,
     )
     if ref_align is None:
       continue
@@ -183,6 +188,7 @@ def get_ref_seq_window(ref_seq, dsb_pos, window_size):
     window_size = window_size,
     anchor_size = 0,
     anchor_sub = 0,
+    anchor_indel = 0,
   )
   return ref_seq_window
 
@@ -193,7 +199,7 @@ def main(
   dsb,
   window,
   anchor,
-  anchor_sub,
+  anchor_var,
   sub,
   name,
   label,
@@ -208,7 +214,8 @@ def main(
     dsb_pos = dsb,
     window_size = window,
     anchor_size = anchor,
-    anchor_sub = anchor_sub,
+    anchor_sub = anchor_var[0],
+    anchor_indel = anchor_var[1],
     subst_type = sub,
   )
 

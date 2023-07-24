@@ -224,13 +224,15 @@ def parse_args():
     ),
   )
   group_window.add_argument(
-    '--anchor_sub',
+    '--anchor_var',
     type = int,
-    default = 1,
+    nargs = 2,
+    default = [1, 0],
     help = (
-      'Maximum number of substitutions allowed on the left/right anchor sequences.' +
-      ' Reads with more than the allowed number of substitutions on the left/right anchor' +
-      ' will be discarded. This limit is applied to the left/right anchors separately.' +
+      'Maximum number of substitutions (arg 1) and indels (arg 2) allowed on the' +
+      ' left/right anchor sequences. Reads with more than the allowed number of' +
+      ' substitutions or indels on the left/right anchor will be discarded.' +
+      ' This limit is applied to the left/right anchors separately.' +
       ' Required for stage "2_window" (but can be omitted because of default).'
     ),
   )
@@ -346,7 +348,7 @@ def do_2_window(
   dsb,
   window,
   anchor,
-  anchor_sub,
+  anchor_var,
   label,
 ):
   if ref is None:
@@ -357,8 +359,8 @@ def do_2_window(
     raise Exception('WINDOW must be provided for stage "2_window".')
   if anchor is None:
     raise Exception('ANCHOR must be provided for stage "2_window".')
-  if anchor_sub is None:
-    raise Exception('ANCHOR_SUB must be provided for stage "2_window".')
+  if anchor_var is None:
+    raise Exception('ANCHOR_VAR must be provided for stage "2_window".')
 
   name = file_names.get_file_name(output)
   if label is None:
@@ -375,7 +377,7 @@ def do_2_window(
       dsb = dsb,
       window = window,
       anchor = anchor,
-      anchor_sub = anchor_sub,
+      anchor_var = anchor_var,
       sub = subst_type,
       name = name,
       label = label,
@@ -401,7 +403,7 @@ def do_stages(
   touch,
   window,
   anchor,
-  anchor_sub,
+  anchor_var,
   reads,
   label,
   bt2,
@@ -443,7 +445,7 @@ def do_stages(
       dsb = dsb,
       window = window,
       anchor = anchor,
-      anchor_sub = anchor_sub,
+      anchor_var = anchor_var,
       label = label,
     )
 
@@ -463,7 +465,7 @@ def main(
   touch,
   window,
   anchor,
-  anchor_sub,
+  anchor_var,
   reads,
   label,
   bt2,
@@ -483,7 +485,7 @@ def main(
     touch = touch,
     window = window,
     anchor = anchor,
-    anchor_sub = anchor_sub,
+    anchor_var = anchor_var,
     reads = reads,
     label = label,
     bt2 = bt2,
