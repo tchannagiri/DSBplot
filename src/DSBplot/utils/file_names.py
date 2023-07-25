@@ -27,7 +27,7 @@ def bowtie2_build(dir):
   return os.path.join(dir, 'bowtie2_build', 'build')
 
 def filter(dir, suffix):
-  return os.path.join(dir, 'filter' + suffix + '.csv')
+  return os.path.join(dir, 'filter_' + suffix + '.csv')
 
 def get_file_name(full_path):
   return os.path.basename(full_path).split('.')[0]

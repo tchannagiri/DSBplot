@@ -247,13 +247,15 @@ def parse_args():
   )
   args = vars(parser.parse_args())
   if args['names'] is not None:
-    if len(args['names']) != len(args['input']):
-      raise Exception('Number of NAMES must be the same as the number of INPUTs.')
+    if args['input'] is not None:
+      if len(args['names']) != len(args['input']):
+        raise Exception('Number of NAMES must be the same as the number of INPUTs.')
     if not all(x == y for x, y in zip(args['names'], sorted(args['names']))):
       raise Exception('NAMES must be in alphabetical order.')
-  f_names = [file_names.get_file_name(x) for x in args['input']]
-  if not all(x == y for x, y in zip(f_names, sorted(f_names))):
-    raise Exception('INPUT must have file names in alphabetical order.')
+  if args['input'] is not None:
+    f_names = [file_names.get_file_name(x) for x in args['input']]
+    if not all(x == y for x, y in zip(f_names, sorted(f_names))):
+      raise Exception('INPUT must have file names in alphabetical order.')
   if args['no_align']:
     args['stages'] = [x for x in args['stages'] if (x != '0_align')]
   del args['no_align']

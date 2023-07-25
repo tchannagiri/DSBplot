@@ -18,6 +18,7 @@ class TestReadSeq(unittest.TestCase):
         '*'
       )
     ):
+      print('Testing file: ' + file)
       file_name = os.path.basename(file)
       if file_name == 'seq_1.fa':
         self.assertEqual(file_utils.read_seq(file), 'ACTG', msg=file)
