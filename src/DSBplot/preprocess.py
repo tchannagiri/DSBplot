@@ -10,7 +10,7 @@ import DSBplot.utils.file_utils as file_utils
 import DSBplot.utils.log_utils as log_utils
 import DSBplot.utils.constants as constants
 
-import DSBplot.preprocessing.filter_nhej as filter_nhej
+import DSBplot.preprocessing.filter as filter
 import DSBplot.preprocessing.get_window as get_window
 import DSBplot.preprocessing.get_variation as get_variation
 
@@ -294,7 +294,7 @@ def do_0_align(
     os.system(bowtie2_command)
   log_utils.blank_line()
 
-def do_1_filter_nhej(
+def do_1_filter(
   names,
   output,
   reads,
@@ -323,13 +323,13 @@ def do_1_filter_nhej(
   input = [file_names.sam_file(output, x) for x in names]
 
   min_len = max(dsb + 1, min_len)
-  filter_nhej.main(
+  filter.main(
     input = input,
     output = [
-      file_names.filter_nhej(output, 'accepted'),
-      file_names.filter_nhej(output, 'rejected'),
+      file_names.filter(output, 'accepted'),
+      file_names.filter(output, 'rejected'),
     ],
-    debug = file_names.filter_nhej(output, 'debug'),
+    debug = file_names.filter(output, 'debug'),
     names = names,
     reads = reads,
     ref = ref,
@@ -368,7 +368,7 @@ def do_2_window(
 
   for subst_type in constants.SUBST_TYPES:
     get_window.main(
-      input = file_names.filter_nhej(output, 'accepted'),
+      input = file_names.filter(output, 'accepted'),
       ref = ref,
       output = [
         file_names.window(output, subst_type),
@@ -424,7 +424,7 @@ def do_stages(
     )
 
   if '1_filter' in stages:
-    do_1_filter_nhej(
+    do_1_filter(
       names = names,
       output = output,
       reads = reads,

@@ -7,7 +7,6 @@ import DSBplot.utils.log_utils as log_utils
 import DSBplot.utils.alignment_utils as alignment_utils
 import DSBplot.utils.constants as constants
 import DSBplot.preprocessing.alignment_window as alignment_window
-import DSBplot.preprocessing.remove_substitution as remove_substitution
 
 def parse_args():
   parser = argparse.ArgumentParser(
@@ -17,7 +16,7 @@ def parse_args():
   parser.add_argument(
     '--input',
     type = common_utils.check_file,
-    help = 'CSV files output from script "filter_nhej.py".',
+    help = 'CSV files output from script "filter.py".',
     nargs = '+',
     required = True,
   )
@@ -107,6 +106,36 @@ def parse_args():
   args['sub'] = constants.SUBST_TYPES[args['sub']]
   return args
 
+def remove_substitutions(ref_align, read_align):
+  """
+    Remove the substitutions from read_align and replace them with matches.
+
+    Parameters
+    ----------
+    ref_align : the reference sequence alignment string
+    read_align : the read sequence alignment string
+
+    The above strings should be in "alignment matrix" format.
+    That is, string over the alphabet ["A", "C", "G", "T", "-"].
+
+    Returns
+    -------
+    tuple (ref_align, read_align_new)
+      ref_align : identical to the parameter
+      read_align_new : read_align with the substutitions converted to matches
+  """
+  read_align_new = ''
+  for i in range(len(ref_align)):
+    if (
+      (ref_align[i] != read_align[i]) and
+      (ref_align[i] != '-') and
+      (read_align[i] != '-')
+    ):
+      read_align_new += ref_align[i]
+    else:
+      read_align_new += read_align[i]
+  return read_align_new
+
 def write_window(
   input,
   output,
@@ -146,7 +175,7 @@ def write_window(
   
     # Optionally remove substitutions
     if subst_type == 'withoutSubst':
-      read_align = remove_substitution.remove_substitutions(
+      read_align = remove_substitutions(
         ref_align,
         read_align,
       )
