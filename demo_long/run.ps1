@@ -34,7 +34,7 @@ $constructs = @(
 
 ### Preprocessing ###
 foreach ($con in $constructs) {
-  DSBplot-preprocess --input input/fastq/${con}_1.fq input/fastq/${con}_2.fq input/fastq/${con}_3.fq input/fastq/${con}_4.fq --output output/$con --ref_seq_file input/ref_seq/2DSB_${con}.fa --label $labels[$con] --total_reads 3000 3000 3000 3000 --dsb_pos $dsb_pos[$con]
+  DSBplot-preprocess --input input/fastq/${con}_1.fq input/fastq/${con}_2.fq input/fastq/${con}_3.fq input/fastq/${con}_4.fq --output output/$con --ref input/ref_seq/2DSB_${con}.fa --label $labels[$con] --reads 3000 3000 3000 3000 --dsb $dsb_pos[$con]
 }
 
 # Example of running preprocessing stages separately for one experiment

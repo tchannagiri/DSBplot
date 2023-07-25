@@ -62,10 +62,7 @@ class TestPreprocess(unittest.TestCase):
 
     for file in TestPreprocess.get_check_files():
       print('Testing file: ' + file)
-      self.check_equality(
-        os.path.join(output, file),
-        os.path.join(output_expected, file)
-      )
+      self.check_equality(os.path.join(output, file), os.path.join(output_expected, file))
 
   def test_filter(self):
     self.do_test_preprocess()
