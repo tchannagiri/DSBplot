@@ -1,8 +1,8 @@
 ### Directories. Run this first! ###
-$input_dir = "input/fastq"
-$ref_seq_dir = "input/ref_seq"
-$output_dir = "output"
-$debug_dir = "debug"
+input_dir="input/fastq"
+ref_seq_dir="input/ref_seq"
+output_dir="output"
+debug_dir="debug"
 
 ### Preprocessing ###
 DSBplot-preprocess -i $input_dir/Sense_R1_1.fq $input_dir/Sense_R1_2.fq $input_dir/Sense_R1_3.fq $input_dir/Sense_R1_4.fq --ref $ref_seq_dir/2DSB_Sense_R1.fa --dsb 67 -o $output_dir/Sense_R1 --label "Sense (R1)" --reads 3000 3000 3000 3000
