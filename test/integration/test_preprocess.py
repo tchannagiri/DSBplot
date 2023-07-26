@@ -1,7 +1,6 @@
 import os
+import shutil
 import unittest
-
-import DSBplot.preprocess as preprocess
 
 class TestPreprocess(unittest.TestCase):
   def get_check_files():
@@ -10,7 +9,7 @@ class TestPreprocess(unittest.TestCase):
     new and old outputs.
     """
     return [
-      'data_info.csv',
+      'data_info.json',
       'filter_debug.csv',
       'ref_seq.fasta',
       'variation_withoutSubst.csv',
@@ -54,11 +53,15 @@ class TestPreprocess(unittest.TestCase):
     output = os.path.join(os.path.dirname(__file__), 'output', 'Sense_R1')
     output_expected = os.path.join(os.path.dirname(__file__), 'output_expected', 'Sense_R1')
     reads = [3000, 3000, 3000, 3000]
+
+    # Clear output directory (if exists)
+    if os.path.exists(output):
+      shutil.rmtree(output)
     
-    os.system(
-      'DSBplot-preprocess --input {} {} {} {} --ref {} --dsb 67 --output {} --label "Sense (R1)" --reads {} {} {} {}'
-      .format(*input, ref, output, *reads)
-    )
+    assert os.system(
+      'DSBplot-preprocess -o {} -i {} {} {} {} --ref {} --dsb 67 --label "Sense (R1)" --reads {} {} {} {}'
+      .format(output, *input, ref, *reads)
+    ) == 0
 
     for file in TestPreprocess.get_check_files():
       print('Testing file: ' + file)

@@ -309,19 +309,23 @@ def parse_args():
   group_framing = parser.add_argument_group('Framing arguments')
   group_axes = parser.add_argument_group('Axes arguments')
   group_io.add_argument(
-    '--input',
+    '-i',
     type = common_utils.check_dir,
     help = 'Directory with the data files.',
     required = True,
+    metavar = 'INPUT',
+    dest = 'input',
   )
   group_io.add_argument(
-    '--output',
+    '-o',
     type = common_utils.check_file_output,
     help = (
       'Output image file.' +
       ' Must have a file extension supported by the matplotlib package.'
     ),
     required = True,
+    metavar = 'OUTPUT',
+    dest = 'output',
   )
   group_main.add_argument(
     '--var',
@@ -464,7 +468,7 @@ def main(
     title = constants.HISTOGRAM_TITLE,
   ):
   data_dir = input
-  data_info = file_utils.read_csv_dict(file_names.data_info(input))
+  data_info = file_utils.read_json(file_names.data_info(input))
   plot_histogram(
     file_out = output,
     data_dir = data_dir,

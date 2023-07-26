@@ -6,105 +6,84 @@ import DSBplot.utils.file_utils as file_utils
 import DSBplot.utils.log_utils as log_utils
 import DSBplot.utils.alignment_utils as alignment_utils
 import DSBplot.utils.constants as constants
+import DSBplot.preprocessing.filter as filter
 import DSBplot.preprocessing.alignment_window as alignment_window
 
-def parse_args():
-  parser = argparse.ArgumentParser(
-    description = 'Get windows from aligned/filtered reads.',
-    formatter_class = argparse.ArgumentDefaultsHelpFormatter,
-  )
-  parser.add_argument(
-    '--input',
-    type = common_utils.check_file,
-    help = 'CSV files output from script "filter.py".',
-    nargs = '+',
-    required = True,
-  )
-  parser.add_argument(
-    '--ref',
-    type = common_utils.check_file,
-    help = (
-      'Reference sequence FASTA.' +
-      ' Should contain a single nucleotide sequence in FASTA format.'
-    ),
-    required = True,
-  )
-  parser.add_argument(
-    '--output',
-    nargs = 2,
-    type = common_utils.check_file_output,
-    help = 'Output CSV file for window data and metadata, respectively.',
-    required = True,
-  )
-  parser.add_argument(
-    '--dsb',
-    type = int,
-    help = (
-      'Position on reference sequence immediately upstream of DSB site.' +
-      ' I.e., the DSB is between 1-based positions DSB and DSB + 1.'
-    ),
-    required = True,
-  )
-  parser.add_argument(
-    '--window',
-    type = int,
-    default = 10,
-    help = (
-      'Size of window around DSB site to extract.' +
+PARAMS = {
+  '-i': {
+    'type': common_utils.check_file,
+    'help': 'CSV files output from script "filter.py".',
+    'nargs': '+',
+    'required': True,
+    'metavar': 'INPUT',
+    'dest': 'input',
+  },  
+  '--ref': filter.PARAMS['--ref'],
+  '-o': {
+    'type': common_utils.check_file_output,
+    'help': 'Output CSV file for window data.',
+    'required': True,
+    'metavar': 'OUTPUT',
+    'dest': 'output',
+  },
+  '--dsb': filter.PARAMS['--dsb'],
+  '--window': {
+    'type': int,
+    'default': 10,
+    'help': (
+      'Size of window around DSB site to obtain.' +
       ' The nucleotides at the positions' +
-      ' {DSB - WINDOW + 1, ..., DSB + WINDOW} are extracted.' +
-      ' The actual number of nucleotides extracted may vary depending' +
-      ' on how many insertions/deletions in the alignment of each sequence.'
+      '[DSB - WINDOW + 1, ..., DSB + WINDOW] are obtained.' +
+      ' The actual number of nucleotides obtained may vary depending' +
+      ' on the number of indels in the alignment.'
     ),
-  )
-  parser.add_argument(
-    '--anchor',
-    type = int,
-    default = 20,
-    help = 'Size of anchor on left/right of the window to check for substitutions.',
-  )
-  parser.add_argument(
-    '--anchor_var',
-    type = int,
-    nargs = 2,
-    default = [1, 0],
-    help = (
+  },
+  '--anchor': {
+    'type': int,
+    'default': 20,
+    'help': (
+      'Size of anchor on left/right of the window to check for' +
+      ' substitutions and indels. See "--anchor_var".'
+    ),
+  },
+  '--anchor_var': {
+    'type': int,
+    'nargs': 2,
+    'default': [1, 0],
+    'help': (
       'Maximum number of substitutions (arg 1) and indels (arg 2) allowed on the' +
       ' left/right anchor sequences. Reads with more than the allowed number of' +
       ' substitutions or indels on the left/right anchor will be discarded.' +
       ' This limit is applied to the left/right anchors separately.' +
       ' Set to either/both to -1 to disable the respective limit.'
     ),
-  )
-  parser.add_argument(
-    '--sub',
-    type = int,
-    choices = [0, 1],
-    help = (
+  },
+  '--sub': {
+    'type': int,
+    'choices': [0, 1],
+    'help': (
       'Whether to ignore (0) or keep (1) alignment substitutions.' +
       ' If ignoring alignment substitutions, the corresponding nucleotide on the' +
       ' read is replaced with the reference sequence nucleotide.'
     ),
-    required = True,
-  )
-  parser.add_argument(
-    '--name',
-    type = str,
-    help = (
-      'Name identifying the experiment' +
-      ' Should be a legal part of a file name without path separators.'
-    ),
-    required = True,
-  )
-  parser.add_argument(
-    '--label',
-    type = str,
-    help = 'Label of the experiment.',
-    required = True,
-  )
-  args = vars(parser.parse_args())
-  args['sub'] = constants.SUBST_TYPES[args['sub']]
+    'required': True,
+  },
+}
+
+def post_process_args(args):
+  args = args.copy()
+  if args.get('sub') is not None:
+    args['sub'] = constants.SUBST_TYPES[args['sub']]
   return args
+
+def parse_args():
+  parser = argparse.ArgumentParser(
+    description = 'Get windows around DSB from aligned/filtered reads.',
+    formatter_class = argparse.ArgumentDefaultsHelpFormatter,
+  )
+  for param, options in PARAMS.items():
+    parser.add_argument(param, **options)
+  return post_process_args(vars(parser.parse_args()))
 
 def remove_substitutions(ref_align, read_align):
   """
@@ -230,15 +209,13 @@ def main(
   anchor,
   anchor_var,
   sub,
-  name,
-  label,
 ):
   log_utils.log_input(input)
 
   ref_seq = file_utils.read_seq(ref)
   write_window(
     input = input,
-    output = output[0],
+    output = output,
     ref_seq = ref_seq,
     dsb_pos = dsb,
     window_size = window,
@@ -247,21 +224,6 @@ def main(
     anchor_indel = anchor_var[1],
     subst_type = sub,
   )
-
-  data_info = common_utils.make_data_info(
-    format = 'individual',
-    names = [name],
-    labels = [label],
-    ref_seqs = [ref_seq],
-    ref_seq_window = get_ref_seq_window(
-      ref_seq = ref_seq,
-      dsb_pos = dsb,
-      window_size = window,
-    ),
-  )
-  data_info = pd.DataFrame(data_info, index=[0])
-  log_utils.log_output(output[1])
-  file_utils.write_csv(data_info, output[1])
 
   log_utils.blank_line()
 

@@ -3,6 +3,7 @@ import csv
 import os
 import pandas as pd
 import re
+import json
 
 import DSBplot.utils.constants as constants
 
@@ -30,12 +31,9 @@ def read_csv(file):
     na_values = 'NA',
   )
 
-def read_csv_dict(file):
-  """
-    Read a single row CSV as a dict.
-  """
-  data = read_csv(file).T.to_dict(orient='index')
-  return {k: v[0] for k, v in data.items()}
+def read_json(file):
+  with open(file) as input:
+    return json.load(input)
 
 def count_lines(file):
   """Get the number of lines in the file."""
@@ -59,6 +57,12 @@ def write_plotly(figure, file):
     figure.write_html(file)
   else:
     figure.write_image(file, engine='kaleido')
+
+def write_json(data, file):
+  if type(file) == str:
+    make_parent_dir(file)
+  with open(file, 'w') as output:
+    json.dump(data, output, indent=2)
 
 def read_fasta_seq(fasta_file):
   """

@@ -10,7 +10,7 @@ import DSBplot.utils.sam_utils as sam_utils
 import DSBplot.utils.alignment_utils as alignment_utils
 import DSBplot.utils.log_utils as log_utils
 
-BIG_INT = 999999999
+RANK_NA = 999999999 # For indication an NA sequence rank
 
 def check_consecutive_indel(ins_pos, del_pos):
   if (len(ins_pos) == 0) and (len(del_pos) == 0): # no in/dels
@@ -129,154 +129,162 @@ def check_deletion_special_case(
 
   return ref_align, new_read_align # ref_align remains unchanged
 
-def parse_args():
-  parser = argparse.ArgumentParser(
-    description = 'Filter sequences based on the type and location of their variations.'
-  )
-  parser.add_argument(
-    '--input',
-    type = common_utils.check_file,
-    help = (
+PARAMS = {
+  '-i': {
+    'type': common_utils.check_file,
+    'help': (
       'Aligned SAM input file.' +
-      ' Must be created with Bowtie2 (specific flags from Bowtie2 are used).'
-      ' Every read must be aligned with exactly the same reference sequence.'
+      ' Must be created with Bowtie2 (specific flags from Bowtie2 are used).' +
+      ' Every read must be aligned with exactly the same reference sequence.' +
       ' Multiple files may be specified as long as they all use the same reference sequence.' +
       ' The output will contain a separate count columns for each input file.'
     ),
-    nargs = '+',
-    required = True,
-  )
-  parser.add_argument(
-    '--output',
-    nargs = 2,
-    type = common_utils.check_file_output,
-    required = True,
-    help = 'Output CSV file name for the accepted and rejected reads, respectively.'
-  )
-  parser.add_argument(
-    '--ref',
-    type = common_utils.check_file,
-    help = (
+    'nargs': '+',
+    'required': True,
+    'metavar': 'INPUT',
+    'dest': 'input',
+  },
+  '-o': {
+    'nargs': 2,
+    'type': common_utils.check_file_output,
+    'required': True,
+    'help': 'Output CSV file name for the accepted and rejected reads, respectively.',
+    'metavar': 'OUTPUT',
+    'dest': 'output',
+  },
+  '--ref': {
+    'type': common_utils.check_file,
+    'help': (
       'Reference sequence file.' +
       ' Should contain a single nucleotide sequence.' +
       ' Must be the same sequence as used for alignment.' +
-      f' Must be in FASTA format ({", ".join(constants.FASTA_EXT)}) or' +
+      ' Must be in FASTA format ({}) or '.format(
+        ", ".join([f'"x"' for x in constants.FASTA_EXT])
+      ) +
       ' text format (all other extensions).'
     ),
-    required = True,
-  )
-  parser.add_argument(
-    '--debug',
-    type = common_utils.check_file_output,
-    help = (
+    'required': True,
+  },
+  '--debug': {
+    'type': common_utils.check_file_output,
+    'help': (
       'File to output debugging categories.' +
-      ' If omitted, the messages are printed to the console (unless --quiet is used).' +
+      ' If omitted, the messages are printed to the console (unless "--quiet" is used).' +
       ' If the extension is ".csv", the output is formatted as a CSV table, otherwise' +
       ' it is formatted as a text file.'
     ),
-  )
-  parser.add_argument(
-    '--names',
-    nargs = '+',
-    help = (
+  },
+  '--names': {
+    'nargs': '+',
+    'help': (
       'Names to use as suffixes to the value columns of the output.' +
       ' Number of arguments must match the number of INPUT args.' +
       ' If not specified, becomes the names of the INPUT files.'
     ),
-  )
-  parser.add_argument(
-    '--reads',
-    type = int,
-    nargs = '+',
-    help = (
-      'Total reads for each file.' +
-      ' Must be the same number of arguments as the number of ' +
-      ' INPUT files. If not provided, the total reads are' +
-      ' are calculated by taking the sum of the "count" columns in each INPUT.'
+  },
+  '--reads': {
+    'type': int,
+    'nargs': '+',
+    'help': (
+      'Total number reads in each experiment.' +
+      ' This may be strictly greater than the number of reads in the INPUT' +
+      ' files if some reads were discarded during preprocessing.' +
+      ' The number of arguments must be the same as the number of INPUTs.' +
+      ' If not provided, the total reads in the INPUT read files are used.'
     ),
-  )
-  parser.add_argument(
-    '--dsb',
-    type = int,
-    required = True,
-    help = (
+  },
+  '--dsb': {
+    'type': int,
+    'required': True,
+    'help': (
       'Position on reference sequence immediately upstream of DSB site.' +
-      ' I.e., the DSB is between 1-based positions DSB and DSB + 1.'
+      ' That is, the DSB is between 1-based positions DSB and DSB + 1.'
     ),
-  )
-  parser.add_argument(
-    '--min_len',
-    type = int,
-    default = -1,
-    help = (
+  },
+  '--min_len': {
+    'type': int,
+    'default': 1,
+    'help': (
       'Minimum length of read sequence to be considered.' +
       ' Reads shorter than this are discarded.' +
       ' Forced to be at least DSB + 1.'
     ),
-  )
-  parser.add_argument(
-    '--max_sub',
-    type = int,
-    default = -1,
-    help = (
+  },
+  '--max_sub': {
+    'type': int,
+    'default': -1,
+    'help': (
       'Maximum number of substitutions allowed in the alignment.' +
       ' If the alignment has more substitutions, the read is rejected.' +
       ' A large number of substitutions may indicate that an alignment is invalid.' +
       ' Set to -1 to disable this check.'
     ),
-  )
-  parser.add_argument(
-    '--rc',
-    action = 'store_true',
-    help = (
+  },
+  '--rc': {
+    'action': 'store_true',
+    'help': (
       'Set if the reads are expected to be reverse-complemented compared to the reference sequence.' +
       ' This is useful if the reads are from the opposite strand as the reference sequence.' +
       ' If this option is used, the alignments in the SAM file must have been aligned' +
-      ' against the same reference sequence, and only alignments with the reverse-complement flag (16)' +
+      ' against the same reference sequence, and only alignments with the reverse-complement SAM flag (16)' +
       ' will be accepted.'
     ),
-  )
-  parser.add_argument(
-    '--consec',
-    type = int,
-    choices = [0, 1],
-    default = 1,
-    help = (
+  },
+  '--consec': {
+    'type': int,
+    'choices': [0, 1],
+    'default': 1,
+    'help': (
       'Set to 0 to disable the check that all in/dels must be consecutive.' +
       ' If this check is disabled, realignment is not performed.'
     ),
-  )
-  parser.add_argument(
-    '--touch',
-    type = int,
-    choices = [0, 1],
-    default = 1,
-    help = (
+  },
+  '--touch': {
+    'type': int,
+    'choices': [0, 1],
+    'default': 1,
+    'help': (
       'Set to 0 to disable the check that some in/dels must touch the DSB.' +
       ' If this check is disabled, the "--dsb" option is ignored' +
       ' and realignment is not performed.'
     ),
-  )
-  parser.add_argument(
-    '--quiet',
-    help = 'Do not output log messages.',
-    action = 'store_true',
-  )
-  args = vars(parser.parse_args())
-  args['min_len'] = max(args['dsb'] + 1, args['min_len'])
-  if args['reads'] is not None:
-    if len(args['reads']) != len(args['input']):
+  },
+  '--quiet': {
+    'help': 'If present, do not output verbose log messages.',
+    'action': 'store_true',
+  }
+}
+
+def post_process_args(args):
+  args = args.copy()
+  if (args.get('min_len') is not None) and (args.get('dsb') is not None): 
+    args['min_len'] = max(args['dsb'] + 1, args['min_len'])
+  if (args.get('reads') is not None) and (args.get('names') is not None):
+    if len(args['reads']) != len(args['names']):
       raise Exception(
-        'Number of total reads must match the number of input files.'
+        'Number of total reads must match the number of names.'
       )
-  if args['names'] is not None:
+  if (args.get('input') is not None) and (args.get('names') is not None):
     if len(args['input']) != len(args['names']):
       raise Exception(
         'Number of input files must match the number of names.'
       )
-  args['consec'] = bool(args['consec'])
-  args['touch'] = bool(args['touch'])
+  if args.get('max_sub') is not None:
+    if args['max_sub'] < 0:
+      args['max_sub'] = float('inf')
+  if args.get('consec') is not None:
+    args['consec'] = bool(args['consec'])
+  if args.get('touch') is not None:
+    args['touch'] = bool(args['touch'])
   return args
+
+def parse_args():
+  parser = argparse.ArgumentParser(
+    description = 'Filter sequences based on the type and location of their variations.'
+  )
+  for name, options in PARAMS.items():
+    parser.add_argument(name, **options)
+  return post_process_args(vars(parser.parse_args()))
 
 def do_filter(
   input,
@@ -428,8 +436,7 @@ def do_filter(
         if num_sub_sam != num_sub:
           raise Exception('Incorrect count of substitutions')
         
-        # Max sub checked only enabled if max_sub >= 0
-        if (max_sub >= 0) and (num_sub > max_sub):
+        if num_sub > max_sub:
           read_rejected.add(read_seq)
           read_debug[read_seq] = 'max_sub'
           rejected_max_sub[i] += 1
@@ -548,7 +555,7 @@ def do_filter(
     data = data.set_index('seq').reindex(read_accepted)
     data['count_' + names[i]] = data['count_' + names[i]].fillna(0).astype(int)
     data['freq_' + names[i]] = data['freq_' + names[i]].fillna(0)
-    data['rank_' + names[i]] = data['rank_' + names[i]].fillna(BIG_INT).astype(int)
+    data['rank_' + names[i]] = data['rank_' + names[i]].fillna(RANK_NA).astype(int)
     data_list.append(data)
     if not quiet:
       log_utils.log('Accepted reads: {} / {}'.format(len(read_count_accepted[i]), total_reads[i]))
@@ -593,7 +600,7 @@ def do_filter(
     data = data.set_index('seq').reindex(read_rejected)
     data['count_' + names[i]] = data['count_' + names[i]].fillna(0).astype(int)
     data['freq_' + names[i]] = data['freq_' + names[i]].fillna(0)
-    data['rank_' + names[i]] = data['rank_' + names[i]].fillna(BIG_INT).astype(int)
+    data['rank_' + names[i]] = data['rank_' + names[i]].fillna(RANK_NA).astype(int)
     data_list.append(data)
   data_common = pd.DataFrame({
     'seq': read_rejected,

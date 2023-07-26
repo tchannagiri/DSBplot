@@ -21,7 +21,7 @@ def variation(dir, subst_type):
   return make_file_name(dir, 'variation', subst_type, ext='csv')
 
 def data_info(dir):
-  return make_file_name(dir, 'data_info', ext='csv')
+  return make_file_name(dir, 'data_info', ext='json')
 
 def bowtie2_build(dir):
   return os.path.join(dir, 'bowtie2_build', 'build')

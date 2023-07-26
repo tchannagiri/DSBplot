@@ -134,7 +134,7 @@ def main(
     log_utils.blank_line()
 
   ref_seq_window = set(
-    file_utils.read_csv_dict(file_names.data_info(x))['ref_seq_window']
+    file_utils.read_json(file_names.data_info(x))['ref_seq_window']
     for x in input
   )
   if len(ref_seq_window) > 1:
@@ -154,7 +154,7 @@ def main(
     ref_seq_window = ref_seq_window.pop(),
   )
   output_file = file_names.data_info(output)
-  file_utils.write_csv(pd.DataFrame(data_info, index=[0]), output_file)
+  file_utils.write_json(data_info, output_file)
   log_utils.log_output(output_file)
   log_utils.blank_line()
 

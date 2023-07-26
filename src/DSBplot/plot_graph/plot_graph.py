@@ -108,7 +108,7 @@ def parse_args():
   universal_group = parser.add_argument_group('Universal Layout')
   misc_group = parser.add_argument_group('Miscellaneous')
   io_group.add_argument(
-    '--input',
+    '-i',
     type = str,
     nargs = '+',
     help = (
@@ -120,9 +120,11 @@ def parse_args():
       f' specify both directories as a single argument separated by "{constants.COMPARISON_SEP}".'
     ),
     required = True,
+    metavar = 'INPUT',
+    dest = 'input',
   )
   io_group.add_argument(
-    '--output',
+    '-o',
     type = common_utils.check_file_output,
     nargs = '+',
     help = (
@@ -133,6 +135,8 @@ def parse_args():
       ' If present, number of arguments should match' +
       ' the number of input directories.'
     ),
+    metavar = 'OUTPUT',
+    dest = 'output',
   )
   io_group.add_argument(
     '--debug',
@@ -1972,8 +1976,8 @@ def get_data(
       data_dir_1, data_dir_2 = data_dir.split(constants.COMPARISON_SEP)
       log_utils.log_input(data_dir_1)
       log_utils.log_input(data_dir_2)
-      data_info_1 = file_utils.read_csv_dict(file_names.data_info(data_dir_1))
-      data_info_2 = file_utils.read_csv_dict(file_names.data_info(data_dir_2))
+      data_info_1 = file_utils.read_json(file_names.data_info(data_dir_1))
+      data_info_2 = file_utils.read_json(file_names.data_info(data_dir_2))
       data_1 = file_utils.read_csv(file_names.window(data_dir_1, node_subst_type))
       data_2 = file_utils.read_csv(file_names.window(data_dir_2, node_subst_type))
       data_info, data = graph_utils.get_comparison_data(
@@ -1985,7 +1989,7 @@ def get_data(
       node_data = graph_utils.get_node_data(data)
     else:
       log_utils.log_input(data_dir)
-      data_info = file_utils.read_csv_dict(file_names.data_info(data_dir))
+      data_info = file_utils.read_json(file_names.data_info(data_dir))
       data = file_utils.read_csv(file_names.window(data_dir, node_subst_type))
       node_data = graph_utils.get_node_data(data)
 
