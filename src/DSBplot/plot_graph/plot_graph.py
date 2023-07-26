@@ -121,7 +121,7 @@ def parse_args():
     ),
     required = True,
     metavar = 'INPUT',
-    dest = 'input',
+    dest = 'input_list',
   )
   io_group.add_argument(
     '-o',
@@ -145,7 +145,8 @@ def parse_args():
       'If present, write debug files to the given directory.' +
       ' The debug files contain information about the nodes and edges' +
       ' of the graph.'
-    )
+    ),
+    dest = 'debug_dir',
   )
   io_group.add_argument(
     '--interactive',
@@ -160,11 +161,13 @@ def parse_args():
     choices = list(LAYOUT_PROPERTIES),
     default = 'universal',
     help = 'The algorithm to use for laying out the graph.',
+    dest = 'graph_layout_type',
   )
   layout_group.add_argument(
     '--sep',
     action = 'store_true',
     help = 'If present, separate the connected components of the graph.',
+    dest = 'graph_layout_separate_components',
   )
   universal_group.add_argument(
     '--ul_yax_x',
@@ -177,6 +180,7 @@ def parse_args():
       ' shows the range of x-values of the nodes.' +
       ' Set to 0 to automatically determine the position.'
     ),
+    dest = 'universal_layout_y_axis_x_pos',
   )
   universal_group.add_argument(
     '--ul_yax_y',
@@ -186,11 +190,12 @@ def parse_args():
     help = (
       'If showing an y-axis for the universal layout,' +
       ' the min and max y-position of the line.' +
-      ' Note either or both of these values may be omitted or set to "nan", ' +
-      ' and the "ul_yax_*_max_tick" parameters may be used instead.' +
+      ' Either or both of these values may be omitted or set to "nan", ' +
+      ' and the "--ul_yax_*_max_tick" parameters may be used instead.' +
       ' To determine appropriate values to set please see the console log, which' +
       ' shows the range of y-values of the nodes.'
     ),
+    dest = 'universal_layout_y_axis_y_range',
   )
   universal_group.add_argument(
     '--ul_xax_del_y',
@@ -203,6 +208,7 @@ def parse_args():
       ' shows the range of y-values of the nodes.' +
       ' Set to 0 to automatically determine the position.'
     ),
+    dest = 'universal_layout_x_axis_deletion_y_pos',
   )
   universal_group.add_argument(
     '--ul_xax_ins_y',
@@ -215,6 +221,7 @@ def parse_args():
       ' which shows the range of y-values of the nodes.' +
       ' Set to 0 to automatically determine the position.'
     ),
+    dest = 'universal_layout_x_axis_insertion_y_pos',
   )
   universal_group.add_argument(
     '--ul_xax_x',
@@ -227,6 +234,7 @@ def parse_args():
       ' To determine appropriate values to set please see the console log, which' +
       ' shows the range of x-values of the nodes.'
     ),
+    dest = 'universal_layout_x_axis_x_range',
   )
   universal_group.add_argument(
     '--ul_xax_del_label_type',
@@ -238,6 +246,7 @@ def parse_args():
       ' "rel" = "relative" labels have 0 in the middle with negative/positive values on the left/right.' +
       ' "abs" = "absolute" labels have 1 on the left and the length of the reference sequence on the right.'
     ),
+    dest = 'universal_layout_x_axis_deletion_label_type',
   )
   universal_group.add_argument(
     '--ul_yax_del_max_tick',
@@ -248,6 +257,7 @@ def parse_args():
       ' If omitted, will be caculated as the largest deletion' +
       ' in the data.'
     ),
+    dest = 'universal_layout_y_axis_deletion_max_tick',
   )
   universal_group.add_argument(
     '--ul_yax_ins_max_tick',
@@ -258,6 +268,7 @@ def parse_args():
       ' If omitted, will be caculated as the lart insertion' +
       ' in the data.'
     ),
+    dest = 'universal_layout_y_axis_insertion_max_tick',
   )
   universal_group.add_argument(
     '--ul_x_scale_ins',
@@ -267,6 +278,7 @@ def parse_args():
       'The factor for determining the scale on the universal layout insertion x-axis.' +
       ' Insertion vertex x-coordinates will be multiplied by this value.'
     ),
+    dest = 'universal_layout_x_scale_insertion',
   )
   universal_group.add_argument(
     '--ul_y_scale_ins',
@@ -276,6 +288,7 @@ def parse_args():
       'The factor for determining the scale on the universal layout insertion y-axis.' +
       ' Insertion vertex y-coordinates will be multiplied by this value.'
     ),
+    dest = 'universal_layout_y_scale_insertion',
   )
   universal_group.add_argument(
     '--ul_x_scale_del',
@@ -285,6 +298,7 @@ def parse_args():
       'The factor for determining the scale on the universal layout deletion x-axis.' +
       ' Deletion vertex x-coordinates will be multiplied by this value.'
     ),
+    dest = 'universal_layout_x_scale_deletion',
   )
   universal_group.add_argument(
     '--ul_y_scale_del',
@@ -294,6 +308,7 @@ def parse_args():
       'The factor for determining the scale on the universal layout deletion y-axis.' +
       ' Deletion vertex y-coordinates will be multiplied by this value.'
     ),
+    dest = 'universal_layout_y_scale_deletion',
   )
   node_group.add_argument(
     '--sub',
@@ -301,6 +316,7 @@ def parse_args():
     choices = [0, 1],
     help = 'Whether to plot data without (0) or with (1) substitutions.',
     default = 0,
+    dest = 'node_subst_type',
   )
   node_group.add_argument(
     '--size',
@@ -310,7 +326,8 @@ def parse_args():
     help = (
       'Min and max node size in pixels as determined by the frequency.' +
       ' For no size scaling, set both values to the same number.'
-    )
+    ),
+    dest = 'node_size_px_range',
   )
   node_group.add_argument(
     '--size_freq',
@@ -321,20 +338,23 @@ def parse_args():
       'Min and max frequency to determine node size.' +
       ' Higher frequencies are clipped to this value.'
     ),
+    dest = 'node_size_freq_range',
   )
   node_group.add_argument(
     '--filter_freq',
     nargs = 2,
     type = float,
     default = constants.GRAPH_NODE_FILTER_FREQ_RANGE,
-    help = 'Min and max frequency to filter nodes by.'
+    help = 'Min and max frequency to filter nodes by.',
+    dest = 'node_filter_freq_range',
   )
   node_group.add_argument(
     '--filter_dist',
     nargs = 2,
     type = float,
     default = constants.GRAPH_NODE_FILTER_DIST_RANGE,
-    help = 'Min and max distance to filter nodes by.'
+    help = 'Min and max distance to filter nodes by.',
+    dest = 'node_filter_dist_range',
   )
   node_group.add_argument(
     '--outline_scale',
@@ -344,6 +364,7 @@ def parse_args():
       'How much to scale the node outline width (thickness).' +
       ' Larger values increase the width and smaller values decrease the width.'
     ),
+    dest = 'node_outline_width_scale',
   )
   node_comparison_group.add_argument(
     '--ratio',
@@ -355,11 +376,12 @@ def parse_args():
       ' Also controls the range of ratios displayed on the frequency-ratio colorbar legend.' +
       ' Typically, the min value should be < 1 and the max value should be > 1.'
     ),
+    dest = 'node_freq_ratio_range',
   )
   node_comparison_group.add_argument(
     '--ratio_colors',
     type = str,
-    default = constants.GRAPH_NODE_RATIO_COLORS,
+    default = constants.GRAPH_NODE_FREQ_RATIO_COLORS,
     nargs = 2,
     help = (
       'The colors to use in the gradient when the node colors' +
@@ -367,6 +389,7 @@ def parse_args():
       ' May be specified in hex (e.g., "#ff0000" for red) or with' +
       ' recognized keywords such as "red", "blue", "green".'
     ),
+    dest = 'node_freq_ratio_colors',
   )
   node_comparison_group.add_argument(
     '--ratio_color_type',
@@ -381,16 +404,18 @@ def parse_args():
       ' The min and max ratios are determined by NODE_FREQ_RATIO_RANGE' +
       ' and the corresponding colors are determined by COMPARISON_COLORS.'
     ),
+    dest = 'node_freq_ratio_color_type',
   )
   node_group.add_argument(
     '--ref_outline_color',
     type = str,
-    default = constants.GRAPH_NODE_REFERENCE_OUTLINE_COLOR,
+    default = constants.GRAPH_NODE_REF_OUTLINE_COLOR,
     help = (
       'Color to make the reference node outline.' +
       ' May be specified in hex (e.g., "#ff0000" for red) or with' +
       ' recognized keywords such as "red", "blue", "green".'
-    )
+    ),
+    dest = 'node_ref_outline_color',
   )
   node_group.add_argument(
     '--outline_color',
@@ -400,7 +425,8 @@ def parse_args():
       'Color to make the default node outline.' +
       ' May be specified in hex (e.g., "#ff0000" for red) or with' +
       ' recognized keywords such as "red", "blue", "green".'
-    )
+    ),
+    dest = 'node_outline_color',
   )
   node_group.add_argument(
     '--fill_color',
@@ -410,7 +436,8 @@ def parse_args():
       'Color to make the default node fill.' +
       ' May be specified in hex (e.g., "#ff0000" for red) or with' +
       ' recognized keywords such as "red", "blue", "green".'
-    )
+    ),
+    dest = 'node_fill_color',
   )
   node_group.add_argument(
     '--var_types',
@@ -425,6 +452,7 @@ def parse_args():
       ' "mix" means nodes that have multiples variation types (e.g., insertions and substitutions).' +
       ' "none" means the reference node (no variations).'
     ),
+    dest = 'node_filter_var_types',
   )
   node_group.add_argument(
     '--var_type_colors',
@@ -439,6 +467,7 @@ def parse_args():
       ' May be specified in hex (e.g., "#ff0000" for red) or with' +
       ' recognized keywords such as "red", "blue", "green".'
     ),
+    dest = 'node_var_type_colors',
   )
   edge_group.add_argument(
     '--edge',
@@ -446,6 +475,7 @@ def parse_args():
     choices = [0, 1],
     default = 1 if constants.GRAPH_EDGE_SHOW else 0,
     help = 'Whether to show edges between nodes. "0" = "no", "1" = "yes".',
+    dest = 'edge_show',
   )
   edge_group.add_argument(
     '--edge_types',
@@ -454,6 +484,7 @@ def parse_args():
     choices = ['indel', 'sub'],
     default = constants.GRAPH_EDGE_SHOW_TYPES,
     help = 'The edge types to show.',
+    dest = 'edge_show_types',
   )
   edge_group.add_argument(
     '--edge_scale',
@@ -463,42 +494,49 @@ def parse_args():
       'How much to scale the edges width (thickness).' +
       ' Larger values increase the width ans smaller values decrease the width.'
     ),
+    dest = 'edge_width_scale',
   )
   framing_group.add_argument(
     '--width',
     type = int,
     default = constants.GRAPH_WIDTH_PX,
     help = 'The width of the plot in pixels.',
+    dest = 'graph_width_px',
   )
   framing_group.add_argument(
     '--height',
     type = int,
     default = constants.GRAPH_HEIGHT_PX,
     help = 'The height of the plot in pixels.',
+    dest = 'graph_height_px',
   )
   framing_group.add_argument(
     '--mar_t',
     type = int,
     default = constants.GRAPH_MARGIN_TOP_MIN_PX,
     help = 'The size of the top margin in pixels.',
+    dest = 'margin_top_px',
   )
   framing_group.add_argument(
     '--mar_b',
     type = int,
     default = constants.GRAPH_MARGIN_BOTTOM_MIN_PX,
     help = 'The size of the bottom margin in pixels.',
+    dest = 'margin_bottom_px',
   )
   framing_group.add_argument(
     '--mar_l',
     type = int,
     default = constants.GRAPH_MARGIN_LEFT_MIN_PX,
     help = 'The size of the left margin in pixels.',
+    dest = 'margin_left_px',
   )
   framing_group.add_argument(
     '--mar_r',
     type = int,
     default = constants.GRAPH_MARGIN_RIGHT_MIN_PX,
     help = 'The size of the right margin in pixels.',
+    dest = 'margin_right_px',
   )
   framing_group.add_argument(
     '--crop_x',
@@ -510,6 +548,7 @@ def parse_args():
       ' Specified with normalized coords in range [0, 1].' +
       ' May only be used with pixel image output formats (e.g., PNG).'
     ),
+    dest = 'crop_x',
   )
   framing_group.add_argument(
     '--crop_y',
@@ -521,6 +560,7 @@ def parse_args():
       ' Specified in normalized coords in range [0, 1].' +
       ' May only be used with pixel image output formats (e.g., PNG).'
     ),
+    dest = 'crop_y',
   )
   framing_group.add_argument(
     '--range_x',
@@ -533,6 +573,7 @@ def parse_args():
       ' To determine appropriate values to set please see the console log,' +
       ' which shows the range of x-values of the nodes.'
     ),
+    dest = 'plot_range_x',
   )
   framing_group.add_argument(
     '--range_y',
@@ -545,6 +586,7 @@ def parse_args():
       ' To determine appropriate values to set please see the console log,' +
       ' which shows the range of y-values of the nodes.'
     ),
+    dest = 'plot_range_y',
   )
   legend_group.add_argument(
     '--legends',
@@ -554,30 +596,35 @@ def parse_args():
       'The types of legends to show.' +
       ' They are drawn from top to bottom on the right margin in the order specified.'
     ),
+    dest = 'legend_list',
   )
   legend_group.add_argument(
     '--legend_x',
     type = float,
     default = constants.GRAPH_LEGEND_X_SHIFT_PX,
     help = 'How much to shift the legends in the x direction (in pixels).',
+    dest = 'legend_x_shift_px',
   )
   legend_group.add_argument(
     '--legend_y',
     type = float,
     default = constants.GRAPH_LEGEND_Y_SHIFT_PX,
     help = 'How much to shift the legends in the y direction (in pixels).',
+    dest = 'legend_y_shift_px',
   )
   legend_group.add_argument(
     '--colorbar_scale',
     type = float,
     default = constants.GRAPH_LEGEND_COLORBAR_SCALE,
     help = 'How much to scale the colorbar legend (for frequency-ratio coloring).',
+    dest = 'legend_colorbar_scale',
   )
   legend_group.add_argument(
     '--legend_spacing',
     type = int,
     default = constants.GRAPH_LEGEND_VERTICAL_SPACE_PX,
     help = 'Amount of vertical space in pixels between different legends.',
+    dest = 'legend_vertical_space_px',
   )
   misc_group.add_argument(
     '--title',
@@ -588,6 +635,7 @@ def parse_args():
     ' Number of arguments should match the number of input' +
     ' files.'
     ),
+    dest = 'title_list',
   )
   misc_group.add_argument(
     '--line_scale',
@@ -597,6 +645,7 @@ def parse_args():
       'How much to scale the line widths (aka thickness).' +
       ' Larger values increase the width and smaller values decrease the width.'
     ),
+    dest = 'line_width_scale',
   )
   misc_group.add_argument(
     '--font_scale',
@@ -606,6 +655,7 @@ def parse_args():
       'How much to scale the font size.' +
       ' Larger values increase the font size and smaller values decrease it.'
     ),
+    dest = 'font_size_scale',
   )
   misc_group.add_argument(
     '--rc',
@@ -622,57 +672,61 @@ def parse_args():
       ' display labels and hover text.' +
       ' This affects the universal layout and fractal layout.'
     ),
+    dest = 'reverse_complement_list',
   )
   misc_group.add_argument(
     '--quiet',
     action = 'store_true',
     help = 'If present, do not print extra log messages.',
+    dest = 'quiet',
   )
   args = vars(parser.parse_args())
 
-  if len(args['input']) == 0:
+  if len(args['input_list']) == 0:
     raise Exception('No input arguments.')
 
   if args['output'] is None:
-    args['output'] = [None] * len(args['input'])
-  if len(args['output']) != len(args['input']):
+    args['output'] = [None] * len(args['input_list'])
+  if len(args['output']) != len(args['input_list']):
     raise Exception(
       'Incorrect number of output args.' +
-      ' Got {}. Expected {}.'.format(len(args['output']), len(args['input']))
+      ' Got {}. Expected {}.'.format(len(args['output']), len(args['input_list']))
     )
 
-  if args['title'] is None:
-    args['title'] = [None] * len(args['input'])
-  if len(args['title']) != len(args['input']):
+  if args['title_list'] is None:
+    args['title_list'] = [None] * len(args['input_list'])
+  if len(args['title_list']) != len(args['input_list']):
     raise Exception(
       'Incorrect number of title args.' +
-      ' Got {}. Expected {}.'.format(len(args['title']), len(args['input']))
+      ' Got {}. Expected {}.'.format(len(args['title_list']), len(args['input_list']))
     )
 
-  if args['rc'] is None:
-    args['rc'] = [0] * len(args['input'])
-  if len(args['rc']) != len(args['input']):
+  if args['reverse_complement_list'] is None:
+    args['reverse_complement_list'] = [0] * len(args['input_list'])
+  if len(args['reverse_complement_list']) != len(args['input_list']):
     raise Exception(
       'Incorrect number of reverse complement flags.'
-      'Got {}. Expected {}.'.format(len(args['rc']), len(args['input']))
+      'Got {}. Expected {}.'.format(
+        len(args['reverse_complement_list']), len(args['input_list'])
+      )
     )
-  args['rc'] = [bool(x) for x in args['rc']]
+  args['reverse_complement_list'] = [bool(x) for x in args['reverse_complement_list']]
 
-  args['var_type_colors'] = dict(zip(
+  args['node_var_type_colors'] = dict(zip(
     constants.VARIATION_TYPES,
-    args['var_type_colors'],
+    args['node_var_type_colors'],
   ))
 
-  if args['ratio_color_type'] == 'cont':
-    args['ratio_color_type'] = 'ratio_cont'
-  elif args['ratio_color_type'] == 'disc':
-    args['ratio_color_type'] = 'ratio_disc'
+  if args['node_freq_ratio_color_type'] == 'cont':
+    args['node_freq_ratio_color_type'] = 'ratio_cont'
+  elif args['node_freq_ratio_color_type'] == 'disc':
+    args['node_freq_ratio_color_type'] = 'ratio_disc'
   else:
     raise Exception('Impossible.')
 
-  args['edge'] = bool(args['edge'])
+  args['edge_show'] = bool(args['edge_show'])
 
-  args['sub'] = constants.SUBST_TYPES[args['sub']]
+  args['node_subst_type'] = constants.SUBST_TYPES[args['node_subst_type']]
 
   return args
 
@@ -1615,7 +1669,7 @@ def make_outline_legend(
   y_anchor,
   x_shift,
   y_shift,
-  node_reference_outline_color,
+  node_ref_outline_color,
   node_outline_color,
   node_fill_color,
   legend_item_scale = 1,
@@ -1626,15 +1680,15 @@ def make_outline_legend(
   legend_items.append({
     'type': 'circle',
     'size': node_size_px,
-    'text': constants.LABEL_REFERENCE,
+    'text': constants.LABEL_REF,
     'color': node_fill_color,
-    'line_color': node_reference_outline_color,
-    'line_width': constants.GRAPH_NODE_REFERENCE_OUTLINE_WIDTH,
+    'line_color': node_ref_outline_color,
+    'line_width': constants.GRAPH_NODE_REF_OUTLINE_WIDTH,
   })
   legend_items.append({
     'type': 'circle',
     'size': node_size_px,
-    'text': constants.LABEL_NONREFERENCE,
+    'text': constants.LABEL_NONREF,
     'color': node_fill_color,
     'line_color': node_outline_color,
     'line_width': constants.GRAPH_NODE_OUTLINE_WIDTH,
@@ -1823,10 +1877,10 @@ def make_custom_legends(
   legend_list,
   content_height_px,
   data_info,
-  node_reference_outline_color,
+  node_ref_outline_color,
   node_outline_color,
   node_fill_color,
-  node_comparison_colors,
+  node_freq_ratio_colors,
   node_var_type_colors,
   node_filter_var_types,
   node_size_freq_range,
@@ -1854,7 +1908,7 @@ def make_custom_legends(
         y_anchor = y_anchor_frac,
         x_shift = legend_x_shift_px,
         y_shift = y_shift_curr_px,
-        node_reference_outline_color = node_reference_outline_color,
+        node_ref_outline_color = node_ref_outline_color,
         node_outline_color = node_outline_color,
         node_fill_color = node_fill_color,
         legend_item_scale = legend_item_scale,
@@ -1889,8 +1943,8 @@ def make_custom_legends(
       y_shift_curr_px = make_freq_group_legend(
         label_1 = data_info['label_1'],
         label_2 = data_info['label_2'],
-        color_1 = node_comparison_colors[0],
-        color_2 = node_comparison_colors[1],
+        color_1 = node_freq_ratio_colors[0],
+        color_2 = node_freq_ratio_colors[1],
         freq_ratio_1 = node_freq_ratio_range[0],
         freq_ratio_2 = node_freq_ratio_range[1],
         figure = figure,
@@ -1959,7 +2013,7 @@ def make_custom_legends(
 
 # Load all the data needed for making the graphs
 def get_data(
-  data_dir_list,
+  input_list,
   node_subst_type,
   node_filter_var_types,
   node_filter_freq_range,
@@ -1971,15 +2025,15 @@ def get_data(
   node_data_list = []
   graph_list = []
 
-  for data_dir, rc in zip(data_dir_list, reverse_complement_list):
-    if constants.COMPARISON_SEP in data_dir:
-      data_dir_1, data_dir_2 = data_dir.split(constants.COMPARISON_SEP)
-      log_utils.log_input(data_dir_1)
-      log_utils.log_input(data_dir_2)
-      data_info_1 = file_utils.read_json(file_names.data_info(data_dir_1))
-      data_info_2 = file_utils.read_json(file_names.data_info(data_dir_2))
-      data_1 = file_utils.read_csv(file_names.window(data_dir_1, node_subst_type))
-      data_2 = file_utils.read_csv(file_names.window(data_dir_2, node_subst_type))
+  for input, reverse_complement in zip(input_list, reverse_complement_list):
+    if constants.COMPARISON_SEP in input:
+      input_1, input_2 = input.split(constants.COMPARISON_SEP)
+      log_utils.log_input(input_1)
+      log_utils.log_input(input_2)
+      data_info_1 = file_utils.read_json(file_names.data_info(input_1))
+      data_info_2 = file_utils.read_json(file_names.data_info(input_2))
+      data_1 = file_utils.read_csv(file_names.window(input_1, node_subst_type))
+      data_2 = file_utils.read_csv(file_names.window(input_2, node_subst_type))
       data_info, data = graph_utils.get_comparison_data(
         data_info_1 = data_info_1,
         data_info_2 = data_info_2,
@@ -1988,9 +2042,9 @@ def get_data(
       )
       node_data = graph_utils.get_node_data(data)
     else:
-      log_utils.log_input(data_dir)
-      data_info = file_utils.read_json(file_names.data_info(data_dir))
-      data = file_utils.read_csv(file_names.window(data_dir, node_subst_type))
+      log_utils.log_input(input)
+      data_info = file_utils.read_json(file_names.data_info(input))
+      data = file_utils.read_csv(file_names.window(input, node_subst_type))
       node_data = graph_utils.get_node_data(data)
 
     node_data = node_data.loc[
@@ -2010,7 +2064,7 @@ def get_data(
         inclusive = 'both',
       )
     ]
-    if rc:
+    if reverse_complement:
       node_data['ref_align'] = node_data['ref_align'].apply(kmer_utils.reverse_complement)
       node_data['read_align'] = node_data['read_align'].apply(kmer_utils.reverse_complement)
       for x in data_info.keys():
@@ -2058,7 +2112,7 @@ def get_data(
   edge_data_combined = graph_utils.get_edge_data(node_data_combined)
   graph_combined = graph_utils.get_graph(node_data_combined, edge_data_combined)
 
-  if (debug_dir is not None) and (len(data_dir_list) > 1):
+  if (debug_dir is not None) and (len(input_list) > 1):
     file_utils.write_csv(
       node_data_combined,
       os.path.join(debug_dir, 'combined_node_data.csv'),
@@ -2147,9 +2201,9 @@ def make_graph_figure_helper(
   node_label_columns = constants.GRAPH_NODE_LABEL_COLUMNS,
   node_label_position = constants.GRAPH_NODE_LABEL_POSITION,
   node_color_type_list = None, # Should be specified
-  node_comparison_colors = constants.GRAPH_NODE_RATIO_COLORS,
+  node_freq_ratio_colors = constants.GRAPH_NODE_FREQ_RATIO_COLORS,
   node_freq_ratio_range = constants.GRAPH_NODE_FREQ_RATIO_RANGE,
-  node_reference_outline_color = constants.GRAPH_NODE_REFERENCE_OUTLINE_COLOR,
+  node_ref_outline_color = constants.GRAPH_NODE_REF_OUTLINE_COLOR,
   node_outline_color = constants.GRAPH_NODE_OUTLINE_COLOR,
   node_fill_color = constants.GRAPH_NODE_FILL_COLOR,
   node_var_type_colors = constants.GRAPH_NODE_VARIATION_TYPE_COLORS,
@@ -2186,9 +2240,9 @@ def make_graph_figure_helper(
       node_label_position = node_label_position,
       node_label_font_size = constants.GRAPH_LABEL_FONT_SIZE * font_size_scale,
       node_color_type = node_color_type_list[i],
-      node_comparison_colors = node_comparison_colors,
+      node_freq_ratio_colors = node_freq_ratio_colors,
       node_freq_ratio_range = node_freq_ratio_range,
-      node_reference_outline_color = node_reference_outline_color,
+      node_ref_outline_color = node_ref_outline_color,
       node_outline_color = node_outline_color,
       node_fill_color = node_fill_color,
       node_var_type_colors = node_var_type_colors,
@@ -2219,8 +2273,8 @@ def make_graph_figure_helper(
       figure_list[i].update_traces(
         marker = {
           'colorscale': constants.get_freq_ratio_color_scale(
-            node_comparison_colors[0],
-            node_comparison_colors[1],
+            node_freq_ratio_colors[0],
+            node_freq_ratio_colors[1],
           ),
           'cmin': np.log(node_freq_ratio_range[0]),
           'cmax': np.log(node_freq_ratio_range[1]),
@@ -2255,9 +2309,9 @@ def make_graph_figure(
   node_label_columns = constants.GRAPH_NODE_LABEL_COLUMNS,
   node_label_position = constants.GRAPH_NODE_LABEL_POSITION,
   node_color_type_list = None, # Should be specified
-  node_comparison_colors = constants.GRAPH_NODE_RATIO_COLORS,
+  node_freq_ratio_colors = constants.GRAPH_NODE_FREQ_RATIO_COLORS,
   node_freq_ratio_range = constants.GRAPH_NODE_FREQ_RATIO_RANGE,
-  node_reference_outline_color = constants.GRAPH_NODE_REFERENCE_OUTLINE_COLOR,
+  node_ref_outline_color = constants.GRAPH_NODE_REF_OUTLINE_COLOR,
   node_outline_color = constants.GRAPH_NODE_OUTLINE_COLOR,
   node_fill_color = constants.GRAPH_NODE_FILL_COLOR,
   node_var_type_colors = constants.GRAPH_NODE_VARIATION_TYPE_COLORS,
@@ -2307,9 +2361,9 @@ def make_graph_figure(
     node_label_columns = node_label_columns,
     node_label_position = node_label_position,
     node_color_type_list = node_color_type_list,
-    node_comparison_colors = node_comparison_colors,
+    node_freq_ratio_colors = node_freq_ratio_colors,
     node_freq_ratio_range = node_freq_ratio_range,
-    node_reference_outline_color = node_reference_outline_color,
+    node_ref_outline_color = node_ref_outline_color,
     node_outline_color = node_outline_color,
     node_fill_color = node_fill_color,
     node_var_type_colors = node_var_type_colors,
@@ -2384,10 +2438,10 @@ def make_graph_figure(
         legend_list = legend_custom_list,
         content_height_px = figure_size_args['content_height_px'],
         data_info = data_info_list[i],
-        node_reference_outline_color = node_reference_outline_color,
+        node_ref_outline_color = node_ref_outline_color,
         node_outline_color = node_outline_color,
         node_fill_color = node_fill_color,
-        node_comparison_colors = node_comparison_colors,
+        node_freq_ratio_colors = node_freq_ratio_colors,
         node_var_type_colors = node_var_type_colors,
         node_filter_var_types = node_filter_var_types,
         node_size_freq_range = node_size_freq_range,
@@ -2406,59 +2460,59 @@ def make_graph_figure(
   return figure_list
 
 def main(
-  input,
+  input_list,
   output,
-  debug,
-  layout,
-  title,
-  rc,
-  sub,
-  size,
-  size_freq,
-  ratio_colors,
-  ratio_color_type,
-  ratio,
-  ref_outline_color,
-  outline_color,
-  fill_color,
-  var_type_colors,
-  var_types,
-  filter_freq,
-  filter_dist,
-  outline_scale,
-  edge,
-  edge_types,
-  edge_scale,
-  width,
-  height,
-  mar_t,
-  mar_b,
-  mar_l,
-  mar_r,
-  sep,
-  line_scale,
-  font_scale,
-  legends,
-  legend_x,
-  legend_y,
-  colorbar_scale,
-  legend_spacing,
-  range_x,
-  range_y,
-  ul_yax_x,
-  ul_yax_y,
-  ul_xax_del_y,
-  ul_xax_ins_y,
-  ul_xax_x,
-  ul_yax_ins_max_tick,
-  ul_yax_del_max_tick,
-  ul_xax_del_label_type,
-  ul_x_scale_ins,
-  ul_y_scale_ins,
-  ul_x_scale_del,
-  ul_y_scale_del,
+  debug_dir,
+  graph_layout_type,
+  graph_layout_separate_components,
+  title_list,
+  reverse_complement_list,
+  node_subst_type,
+  node_size_px_range,
+  node_size_freq_range,
+  node_freq_ratio_colors,
+  node_freq_ratio_color_type,
+  node_freq_ratio_range,
+  node_ref_outline_color,
+  node_outline_color,
+  node_fill_color,
+  node_var_type_colors,
+  node_filter_var_types,
+  node_filter_freq_range,
+  node_filter_dist_range,
+  node_outline_width_scale,
+  edge_show,
+  edge_show_types,
+  edge_width_scale,
+  graph_width_px,
+  graph_height_px,
+  margin_top_px,
+  margin_bottom_px,
+  margin_left_px,
+  margin_right_px,
+  legend_list,
+  legend_x_shift_px,
+  legend_y_shift_px,
+  legend_colorbar_scale,
+  legend_vertical_space_px,
+  plot_range_x,
+  plot_range_y,
+  universal_layout_y_axis_x_pos,
+  universal_layout_y_axis_y_range,
+  universal_layout_x_axis_deletion_y_pos,
+  universal_layout_x_axis_insertion_y_pos,
+  universal_layout_x_axis_x_range,
+  universal_layout_y_axis_insertion_max_tick,
+  universal_layout_y_axis_deletion_max_tick,
+  universal_layout_x_axis_deletion_label_type,
+  universal_layout_x_scale_insertion,
+  universal_layout_y_scale_insertion,
+  universal_layout_x_scale_deletion,
+  universal_layout_y_scale_deletion,
   crop_x,
   crop_y,
+  line_width_scale,
+  font_size_scale,
   interactive,
   quiet,
 ):
@@ -2469,13 +2523,13 @@ def main(
     node_data_combined,
     graph_combined,
   ) = get_data(
-    data_dir_list = input,
-    node_subst_type = sub,
-    node_filter_var_types = var_types,
-    node_filter_freq_range = filter_freq,
-    node_filter_dist_range = filter_dist,
-    reverse_complement_list = rc,
-    debug_dir = debug,
+    input_list = input_list,
+    node_subst_type = node_subst_type,
+    node_filter_var_types = node_filter_var_types,
+    node_filter_freq_range = node_filter_freq_range,
+    node_filter_dist_range = node_filter_dist_range,
+    reverse_complement_list = reverse_complement_list,
+    debug_dir = debug_dir,
   )
 
   # Check that all the windowed reference sequences are identical
@@ -2492,62 +2546,62 @@ def main(
     node_data_combined = node_data_combined,
     graph_list = graph_list,
     graph_combined = graph_combined,
-    graph_layout_type = layout,
-    graph_layout_separate_components = sep,
-    universal_x_scale_insertion = ul_x_scale_ins,
-    universal_x_scale_deletion = ul_x_scale_del,
-    universal_y_scale_insertion = ul_y_scale_ins,
-    universal_y_scale_deletion = ul_y_scale_del,
-    debug_dir = debug,
+    graph_layout_type = graph_layout_type,
+    graph_layout_separate_components = graph_layout_separate_components,
+    universal_x_scale_insertion = universal_layout_x_scale_insertion,
+    universal_x_scale_deletion = universal_layout_x_scale_deletion,
+    universal_y_scale_insertion = universal_layout_y_scale_insertion,
+    universal_y_scale_deletion = universal_layout_y_scale_deletion,
+    debug_dir = debug_dir,
   )
 
   # Determine the x/y plot ranges
-  if LAYOUT_PROPERTIES.get(layout, {}).get('plot_range_x', None) is not None:
-    range_x_default = LAYOUT_PROPERTIES[layout]['plot_range_x']
-    range_y_default = LAYOUT_PROPERTIES[layout]['plot_range_y']
-    if np.isnan(range_x[0]):
-      range_x = range_x_default
-    if np.isnan(range_y[0]):
-      range_y = range_y_default
-  if layout == 'universal':
+  if LAYOUT_PROPERTIES.get(graph_layout_type, {}).get('plot_range_x', None) is not None:
+    range_x_default = LAYOUT_PROPERTIES[graph_layout_type]['plot_range_x']
+    range_y_default = LAYOUT_PROPERTIES[graph_layout_type]['plot_range_y']
+    if np.isnan(plot_range_x[0]):
+      plot_range_x = range_x_default
+    if np.isnan(plot_range_y[0]):
+      plot_range_y = range_y_default
+  if graph_layout_type == 'universal':
     padding = 0.1 # Extra padding for of universal axes
   else:
     padding = 0.05
-  if np.isnan(range_x[0]):
-    range_x = graph_layout_combined['x'].agg(['min', 'max']).to_numpy()
-    range_x = (
-      range_x +
-      (np.array([-padding, padding]) * (range_x[1] - range_x[0]))
+  if np.isnan(plot_range_x[0]):
+    plot_range_x = graph_layout_combined['x'].agg(['min', 'max']).to_numpy()
+    plot_range_x = (
+      plot_range_x +
+      (np.array([-padding, padding]) * (plot_range_x[1] - plot_range_x[0]))
      ) # Add padding
-  if np.isnan(range_y[0]):
-    range_y = graph_layout_combined['y'].agg(['min', 'max']).to_numpy()
-    range_y = (
-      range_y +
-      (np.array([-padding, padding]) * (range_y[1] - range_y[0]))
+  if np.isnan(plot_range_y[0]):
+    plot_range_y = graph_layout_combined['y'].agg(['min', 'max']).to_numpy()
+    plot_range_y = (
+      plot_range_y +
+      (np.array([-padding, padding]) * (plot_range_y[1] - plot_range_y[0]))
     ) # Add padding
 
   # Determine the node color type for each figure
   node_color_type_list = []
-  for i in range(len(input)):
+  for i in range(len(input_list)):
     if data_info_list[i]['format'] == 'individual':
       node_color_type_list.append(constants.GRAPH_NODE_COLOR_TYPE_INDIVIDUAL)
     elif data_info_list[i]['format'] == 'comparison':
-      node_color_type_list.append(ratio_color_type)
+      node_color_type_list.append(node_freq_ratio_color_type)
     else:
       # Impossible
       raise Exception('Unknown data format: ' + str(data_info_list[i]['format']))
   
   # Set some default values
-  if sub == 'withoutSubst':
-    var_types = [
-      x for x in var_types
+  if node_subst_type == 'withoutSubst':
+    node_filter_var_types = [
+      x for x in node_filter_var_types
       if x not in ['sub', 'mix']
     ]
 
-  edge = edge and LAYOUT_PROPERTIES[layout]['has_edges']
+  edge_show = edge_show and LAYOUT_PROPERTIES[graph_layout_type]['has_edges']
 
-  if title is None:
-    title = [constants.GRAPH_TITLE] * len(input)
+  if title_list is None:
+    title_list = [constants.GRAPH_TITLE] * len(input_list)
 
   # Make the figures
   figure_list = make_graph_figure(
@@ -2555,39 +2609,39 @@ def main(
     node_data_list = node_data_list,
     graph_list = graph_list,
     graph_layout_list = graph_layout_list,
-    title_list = title,
-    node_size_px_range = size,
-    node_size_freq_range = size_freq,
-    node_filter_var_types = var_types,
-    node_outline_width_scale = outline_scale,
+    title_list = title_list,
+    node_size_px_range = node_size_px_range,
+    node_size_freq_range = node_size_freq_range,
+    node_filter_var_types = node_filter_var_types,
+    node_outline_width_scale = node_outline_width_scale,
     node_color_type_list = node_color_type_list,
-    node_comparison_colors = ratio_colors,
-    node_freq_ratio_range = ratio,
-    node_reference_outline_color = ref_outline_color,
-    node_outline_color = outline_color,
-    node_fill_color = fill_color,
-    node_var_type_colors = var_type_colors,
-    graph_width_px = width,
-    graph_height_px = height,
-    graph_layout_type = layout,
-    margin_top_px = mar_t,
-    margin_bottom_px = mar_b,
-    margin_left_px = mar_l,
-    margin_right_px = mar_r,
-    edge_show = edge,
-    edge_show_types = edge_types,
-    edge_width_scale = edge_scale,
-    legend_custom_show = legends is not None,
-    legend_custom_list = legends,
+    node_freq_ratio_colors = node_freq_ratio_colors,
+    node_freq_ratio_range = node_freq_ratio_range,
+    node_ref_outline_color = node_ref_outline_color,
+    node_outline_color = node_outline_color,
+    node_fill_color = node_fill_color,
+    node_var_type_colors = node_var_type_colors,
+    graph_width_px = graph_width_px,
+    graph_height_px = graph_height_px,
+    graph_layout_type = graph_layout_type,
+    margin_top_px = margin_top_px,
+    margin_bottom_px = margin_bottom_px,
+    margin_left_px = margin_left_px,
+    margin_right_px = margin_right_px,
+    edge_show = edge_show,
+    edge_show_types = edge_show_types,
+    edge_width_scale = edge_width_scale,
+    legend_custom_show = legend_list is not None,
+    legend_custom_list = legend_list,
     legend_plotly_show = False,
-    legend_x_shift_px = legend_x,
-    legend_y_shift_px = legend_y,
-    legend_colorbar_scale = colorbar_scale,
-    legend_vertical_space_px = legend_spacing,
-    line_width_scale = line_scale,
-    font_size_scale = font_scale,
-    plot_range_x = range_x,
-    plot_range_y = range_y,
+    legend_x_shift_px = legend_x_shift_px,
+    legend_y_shift_px = legend_y_shift_px,
+    legend_colorbar_scale = legend_colorbar_scale,
+    legend_vertical_space_px = legend_vertical_space_px,
+    line_width_scale = line_width_scale,
+    font_size_scale = font_size_scale,
+    plot_range_x = plot_range_x,
+    plot_range_y = plot_range_y,
   )
 
   # Log coordinate ranges
@@ -2595,10 +2649,10 @@ def main(
   x_max = graph_layout_combined['x'].max()
   y_min = graph_layout_combined['y'].min()
   y_max = graph_layout_combined['y'].max()
-  if (not quiet) and (len(input) > 1):
+  if (not quiet) and (len(input_list) > 1):
     log_utils.log('Combined x-range: {} to {}'.format(x_min, x_max))
     log_utils.log('Combined y-range: {} to {}'.format(y_min, y_max))
-  for i in range(len(input)):
+  for i in range(len(input_list)):
     if not quiet:
       log_utils.log(
         'Figure[{}] x-range: {} to {}'.format(
@@ -2616,75 +2670,75 @@ def main(
       )
 
   # Make the axes for the universal layout
-  if layout == 'universal':
-    for i in range(len(input)):
-      if ul_yax_ins_max_tick is None:
+  if graph_layout_type == 'universal':
+    for i in range(len(input_list)):
+      if universal_layout_y_axis_insertion_max_tick is None:
         max_tick_insertion = node_data_combined['ins'].max()
       else:
-        max_tick_insertion = ul_yax_ins_max_tick
-      if ul_yax_del_max_tick is None:
+        max_tick_insertion = universal_layout_y_axis_insertion_max_tick
+      if universal_layout_y_axis_deletion_max_tick is None:
         max_tick_deletion = node_data_combined['del'].max()
       else:
-        max_tick_deletion = ul_yax_del_max_tick
-      if ul_yax_x is not None:
-        if ul_yax_x == 0:
-          ul_yax_x = x_max + (x_max - x_min) * 0.05
+        max_tick_deletion = universal_layout_y_axis_deletion_max_tick
+      if universal_layout_y_axis_x_pos is not None:
+        if universal_layout_y_axis_x_pos == 0:
+          universal_layout_y_axis_x_pos = x_max + (x_max - x_min) * 0.05
         make_universal_y_axis(
           figure = figure_list[i],
-          x_pos = ul_yax_x,
+          x_pos = universal_layout_y_axis_x_pos,
           ref_length = len(data_info_list[i]['ref_seq_window']),
           cut_pos_ref = len(data_info_list[i]['ref_seq_window']) // 2,
-          y_range = ul_yax_y,
+          y_range = universal_layout_y_axis_y_range,
           max_tick_deletion = max_tick_deletion,
           max_tick_insertion = max_tick_insertion,
-          x_scale_insertion = ul_x_scale_ins,
-          y_scale_insertion = ul_y_scale_ins,
-          x_scale_deletion = ul_x_scale_del,
-          y_scale_deletion = ul_y_scale_del,
-          font_size_scale = font_scale,
+          x_scale_insertion = universal_layout_x_scale_insertion,
+          y_scale_insertion = universal_layout_y_scale_insertion,
+          x_scale_deletion = universal_layout_x_scale_deletion,
+          y_scale_deletion = universal_layout_y_scale_deletion,
+          font_size_scale = font_size_scale,
           line_width_px = constants.GRAPH_UNIVERSAL_AXIS_LINE_WIDTH_PX,
-          line_width_scale = line_scale,
+          line_width_scale = line_width_scale,
         )
-      if ul_xax_del_y is not None:
-        if ul_xax_del_y == 0:
-          ul_xax_del_y = y_min - (y_max - y_min) * 0.05
+      if universal_layout_x_axis_deletion_y_pos is not None:
+        if universal_layout_x_axis_deletion_y_pos == 0:
+          universal_layout_x_axis_deletion_y_pos = y_min - (y_max - y_min) * 0.05
         make_universal_x_axis(
           figure = figure_list[i],
           var_type = 'del',
-          y_pos = ul_xax_del_y,
+          y_pos = universal_layout_x_axis_deletion_y_pos,
           ref_length = len(data_info_list[i]['ref_seq_window']),
           cut_pos_ref = len(data_info_list[i]['ref_seq_window']) // 2,
-          x_range = ul_xax_x,
-          deletion_label_type = ul_xax_del_label_type,
-          x_scale_insertion = ul_x_scale_ins,
-          y_scale_insertion = ul_y_scale_ins,
-          x_scale_deletion = ul_x_scale_del,
-          y_scale_deletion = ul_y_scale_del,
-          font_size_scale = font_scale,
+          x_range = universal_layout_x_axis_x_range,
+          deletion_label_type = universal_layout_x_axis_deletion_label_type,
+          x_scale_insertion = universal_layout_x_scale_insertion,
+          y_scale_insertion = universal_layout_y_scale_insertion,
+          x_scale_deletion = universal_layout_x_scale_deletion,
+          y_scale_deletion = universal_layout_y_scale_deletion,
+          font_size_scale = font_size_scale,
           line_width_px = constants.GRAPH_UNIVERSAL_AXIS_LINE_WIDTH_PX,
-          line_width_scale = line_scale,
+          line_width_scale = line_width_scale,
         )
-      if ul_xax_ins_y is not None:
-        if ul_xax_ins_y == 0:
-          ul_xax_ins_y = y_max + (y_max - y_min) * 0.05
+      if universal_layout_x_axis_insertion_y_pos is not None:
+        if universal_layout_x_axis_insertion_y_pos == 0:
+          universal_layout_x_axis_insertion_y_pos = y_max + (y_max - y_min) * 0.05
         make_universal_x_axis(
           figure = figure_list[i],
           var_type = 'ins',
-          y_pos = ul_xax_ins_y,
+          y_pos = universal_layout_x_axis_insertion_y_pos,
           ref_length = len(data_info_list[i]['ref_seq_window']),
           cut_pos_ref = len(data_info_list[i]['ref_seq_window']) // 2,
-          x_range = ul_xax_x,
-          x_scale_insertion = ul_x_scale_ins,
-          y_scale_insertion = ul_y_scale_ins,
-          x_scale_deletion = ul_x_scale_del,
-          y_scale_deletion = ul_y_scale_del,
-          font_size_scale = font_scale,
+          x_range = universal_layout_x_axis_x_range,
+          x_scale_insertion = universal_layout_x_scale_insertion,
+          y_scale_insertion = universal_layout_y_scale_insertion,
+          x_scale_deletion = universal_layout_x_scale_deletion,
+          y_scale_deletion = universal_layout_y_scale_deletion,
+          font_size_scale = font_size_scale,
           line_width_px = constants.GRAPH_UNIVERSAL_AXIS_LINE_WIDTH_PX,
-          line_width_scale = line_scale,
+          line_width_scale = line_width_scale,
         )
 
   # Do the final output
-  for i in range(len(input)):
+  for i in range(len(input_list)):
     if interactive:
       log_utils.log('Opening interactive version in browser.')
       figure_list[i].show()
@@ -2705,12 +2759,12 @@ def main(
           .format(*crop_x, *crop_y)
         )
         image = PIL.Image.open(output[i])
-        width, height = image.size
+        graph_width_px, graph_height_px = image.size
 
-        left = crop_x[0] * width
-        right = crop_x[1] * width
-        top = crop_y[0] * height
-        bottom = crop_y[1] * height
+        left = crop_x[0] * graph_width_px
+        right = crop_x[1] * graph_width_px
+        top = crop_y[0] * graph_height_px
+        bottom = crop_y[1] * graph_height_px
 
         image.crop((left, top, right, bottom)).save(output[i])
   log_utils.blank_line()

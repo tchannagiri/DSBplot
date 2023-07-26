@@ -34,21 +34,22 @@ $constructs = @(
 
 ### Preprocessing ###
 foreach ($con in $constructs) {
-  DSBplot-preprocess --input input/fastq/${con}_1.fq input/fastq/${con}_2.fq input/fastq/${con}_3.fq input/fastq/${con}_4.fq --output output/$con --ref input/ref_seq/2DSB_${con}.fa --label $labels[$con] --reads 3000 3000 3000 3000 --dsb $dsb_pos[$con]
+  DSBplot-preprocess -i input/fastq/${con}_1.fq input/fastq/${con}_2.fq input/fastq/${con}_3.fq input/fastq/${con}_4.fq -o output/$con --ref input/ref_seq/2DSB_${con}.fa --label $labels[$con] --reads 3000 3000 3000 3000 --dsb $dsb_pos[$con]
 }
 
 # Example of running preprocessing stages separately for one experiment
-DSBplot-preprocess --input input/fastq/Sense_R1_1.fq input/fastq/Sense_R1_2.fq input/fastq/Sense_R1_3.fq input/fastq/Sense_R1_4.fq --ref_seq_file input/ref_seq/2DSB_Sense_R1.fa --output output/Sense_R1 --stages 0_align
-DSBplot-preprocess --ref_seq_file input/ref_seq/2DSB_Sense_R1.fa --dsb_pos 67 --output output/Sense_R1 --stages 1_filter
-DSBplot-preprocess --ref_seq_file input/ref_seq/2DSB_Sense_R1.fa --dsb_pos 67 --output output/Sense_R1 --label Sense_R1 --total_reads 3000 3000 3000 3000 --stages 2_window
-DSBplot-preprocess --output output/Sense_R1 --stages 3_variation
+DSBplot-preprocess -i input/fastq/Sense_R1_1.fq input/fastq/Sense_R1_2.fq input/fastq/Sense_R1_3.fq input/fastq/Sense_R1_4.fq --ref input/ref_seq/2DSB_Sense_R1.fa -o output/Sense_R1 --stages 0_align
+DSBplot-preprocess --ref input/ref_spconeq/2DSB_Sense_R1.fa --dsb 67 -o output/Sense_R1 --stages 1_filter
+DSBplot-preprocess --ref input/ref_seq/2DSB_Sense_R1.fa --dsb 67 -o output/Sense_R1 --label Sense_R1 --reads 3000 3000 3000 3000 --stages 2_window
+DSBplot-preprocess -o output/Sense_R1 --stages 3_variation
+DSBplot-preprocess -o output/Sense_R1 --ref input/ref_seq/2DSB_Sense_R1.fa --dsb 67 --stages 4_info
 
 # Example of concatenating three experiments.
 # Note, this does not make biological sense, but is used here for demonstration purposes.
 # The three experiments have the same windowed reference sequence and number of repeats,
 # which allows them to be concatenated.
-DSBplot-concat --input output/Sense_R1 output/BranchD_R1 output/pCMVD_R1 --output output/concat_R1 --names 1 2 3 4 --total_reads 3000 3000 3000 3000 3000 3000 3000 3000 3000 3000 3000 3000
-DSBplot-concat --input output/Sense_R2 output/BranchD_R2 output/pCMVD_R2 --output output/concat_R2 --names 1 2 3 4 --total_reads 3000 3000 3000 3000 3000 3000 3000 3000 3000 3000 3000 3000
+DSBplot-concat -i output/Sense_R1 output/BranchD_R1 output/pCMVD_R1 -o output/concat_R1 --names 1 2 3 4 --reads 3000 3000 3000 3000 3000 3000 3000 3000 3000 3000 3000 3000
+DSBplot-concat -i output/Sense_R2 output/BranchD_R2 output/pCMVD_R2 -o output/concat_R2 --names 1 2 3 4 --reads 3000 3000 3000 3000 3000 3000 3000 3000 3000 3000 3000 3000
 
 ### Plot graphs with individual layouts ###
 foreach ($ext in @("png", "pdf", "html")) {
@@ -69,12 +70,12 @@ foreach ($ext in @("png", "pdf", "html")) {
     ) {
       if ($x.Length -eq 1) {
         $con = $x[0]
-        DSBplot-graph --input output/${con} --output plots/graph/$ext/$layout/${con}.${ext} --debug debug/$layout --layout universal --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0 --width 2400 --height 1800 --font_scale 3 --legend_x 100 --legend_y 0 --mar_r 900 --legends size var_type 
+        DSBplot-graph -i output/${con} -o plots/graph/$ext/$layout/${con}.${ext} --debug debug/$layout --layout universal --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0 --width 2400 --height 1800 --font_scale 3 --legend_x 100 --legend_y 0 --mar_r 900 --legends size var_type 
       } elseif ($x.Length -eq 3) {
         $con = $x[0]
         $con1 = $x[1]
         $con2 = $x[2]
-        DSBplot-graph --input output/${con1}::output/${con2} --output plots/graph/$ext/$layout/${con}.${ext} --debug debug/$layout --layout universal --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0 --width 2400 --height 1800 --ratio_colors "#cf191b" "#33a02c" --colorbar_scale 3 --font_scale 3 --legend_x 100 --legend_y -100 --mar_r 900 --legends ratio_cont
+        DSBplot-graph -i output/${con1}::output/${con2} -o plots/graph/$ext/$layout/${con}.${ext} --debug debug/$layout --layout universal --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0 --width 2400 --height 1800 --ratio_colors "#cf191b" "#33a02c" --colorbar_scale 3 --font_scale 3 --legend_x 100 --legend_y -100 --mar_r 900 --legends ratio_cont
       }
     }
   }
@@ -85,9 +86,9 @@ foreach ($layout in @("universal", "kamada", "radial")) {
   foreach ($ext in @("png", "pdf", "html")) {
     $output_dir = "plots/graph/$ext/${layout}_combined"
     DSBplot-graph `
-    --input output/BranchD_R1 output/BranchD_R2 output/Sense_R1 output/Sense_R2 output/pCMVD_R1 output/pCMVD_R2 output/Sense_R1::output/BranchD_R1 output/Sense_R2::output/BranchD_R2 output/Sense_R1::output/pCMVD_R1 output/Sense_R2::output/pCMVD_R2 `
+    -i output/BranchD_R1 output/BranchD_R2 output/Sense_R1 output/Sense_R2 output/pCMVD_R1 output/pCMVD_R2 output/Sense_R1::output/BranchD_R1 output/Sense_R2::output/BranchD_R2 output/Sense_R1::output/pCMVD_R1 output/Sense_R2::output/pCMVD_R2 `
     --title "BranchΔ (R1)" "BranchΔ (R2)" "Sense (R1)" "Sense (R2)" "pCMVΔ (R1)" "pCMVΔ (R2)" "Sense / BranchΔ (R1)" "Sense / BranchΔ (R2)" "Sense / pCMVΔ (R1)" "Sense / pCMVΔ (R2)" `
-    --output $output_dir/BranchD_R1.${ext} $output_dir/BranchD_R2.${ext} $output_dir/Sense_R1.${ext} $output_dir/Sense_R2.${ext} $output_dir/pCMVD_R1.${ext} $output_dir/pCMVD_R2.${ext} $output_dir/Sense_BranchD_R1.${ext} $output_dir/Sense_BranchD_R2.${ext} $output_dir/Sense_pCMVD_R1.${ext} $output_dir/Sense_pCMVD_R2.${ext} `
+    -o $output_dir/BranchD_R1.${ext} $output_dir/BranchD_R2.${ext} $output_dir/Sense_R1.${ext} $output_dir/Sense_R2.${ext} $output_dir/pCMVD_R1.${ext} $output_dir/pCMVD_R2.${ext} $output_dir/Sense_BranchD_R1.${ext} $output_dir/Sense_BranchD_R2.${ext} $output_dir/Sense_pCMVD_R1.${ext} $output_dir/Sense_pCMVD_R2.${ext} `
     --debug debug/${layout}_combined `
     --legends ratio_cont var_type `
     --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0 `
@@ -102,7 +103,7 @@ foreach ($layout in @("universal", "kamada", "radial")) {
 foreach ($ext in @("png", "pdf")) {
   foreach ($var in @("sub", "ins", "del")) {
     foreach ($con in $constructs) {
-      DSBplot-histogram --input output/${con} --output plots/histogram/$ext/${con}_${var}.${ext} --color $variation_color[$var] --var $var --xax rel
+      DSBplot-histogram -i output/${con} -o plots/histogram/$ext/${con}_${var}.${ext} --color $variation_color[$var] --var $var --xax rel
     }
   }
 }

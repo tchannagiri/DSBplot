@@ -37,6 +37,7 @@ PARAMS = {
       ' The actual number of nucleotides obtained may vary depending' +
       ' on the number of indels in the alignment.'
     ),
+    'dest': 'window_size',
   },
   '--anchor': {
     'type': int,
@@ -45,8 +46,9 @@ PARAMS = {
       'Size of anchor on left/right of the window to check for' +
       ' substitutions and indels. See "--anchor_var".'
     ),
+    'dest': 'anchor_size',
   },
-  '--anchor_var': {
+  '--anchor_vars': {
     'type': int,
     'nargs': 2,
     'default': [1, 0],
@@ -57,6 +59,7 @@ PARAMS = {
       ' This limit is applied to the left/right anchors separately.' +
       ' Set to either/both to -1 to disable the respective limit.'
     ),
+    'dest': 'anchor_vars',
   },
   '--sub': {
     'type': int,
@@ -67,13 +70,14 @@ PARAMS = {
       ' read is replaced with the reference sequence nucleotide.'
     ),
     'required': True,
+    'dest': 'subst_type',
   },
 }
 
 def post_process_args(args):
   args = args.copy()
-  if args.get('sub') is not None:
-    args['sub'] = constants.SUBST_TYPES[args['sub']]
+  if args.get('subst_type') is not None:
+    args['subst_type'] = constants.SUBST_TYPES[args['subst_type']]
   return args
 
 def parse_args():
@@ -203,26 +207,25 @@ def get_ref_seq_window(ref_seq, dsb_pos, window_size):
 def main(
   input,
   output,
-  ref,
-  dsb,
-  window,
-  anchor,
-  anchor_var,
-  sub,
+  ref_seq_file,
+  dsb_pos,
+  window_size,
+  anchor_size,
+  anchor_vars,
+  subst_type,
 ):
   log_utils.log_input(input)
 
-  ref_seq = file_utils.read_seq(ref)
   write_window(
     input = input,
     output = output,
-    ref_seq = ref_seq,
-    dsb_pos = dsb,
-    window_size = window,
-    anchor_size = anchor,
-    anchor_sub = anchor_var[0],
-    anchor_indel = anchor_var[1],
-    subst_type = sub,
+    ref_seq = file_utils.read_seq(ref_seq_file),
+    dsb_pos = dsb_pos,
+    window_size = window_size,
+    anchor_size = anchor_size,
+    anchor_sub = anchor_vars[0],
+    anchor_indel = anchor_vars[1],
+    subst_type = subst_type,
   )
 
   log_utils.blank_line()

@@ -21,18 +21,20 @@ def parse_args():
     formatter_class = argparse.ArgumentDefaultsHelpFormatter,
   )
   parser.add_argument(
-    '--input',
+    '-i',
     type = common_utils.check_dir,
     help = (
       ' Input directory, which is the output of "preprocess.py".' +
       ' There must be the same number of columns in all input data sets.' +
-      ' The count columns must be in the same order they should be merged in.'
+      ' The count columns must be in the same order they should be concatentated in.'
     ),
     nargs = '+',
     required = True,
+    metavar = 'INPUT',
+    dest = 'input_list',
   )
   parser.add_argument(
-    '--output',
+    '-o',
     type = common_utils.check_dir_output,
     help = (
       'Output directory.' +
@@ -40,14 +42,17 @@ def parse_args():
       ' for the experiment so it should not conflict with other experiments.'
     ),
     required = True,
+    metavar = 'OUTPUT',
+    dest = 'output',
   )
   parser.add_argument(
     '--label',
     type = str,
     help = (
       'Label of the output.' +
-      ' By defualt use the basename of the input directory.'
+      ' By default use the basename of the input directory.'
     ),
+    dest = 'label',
   )
   parser.add_argument(
     '--names',
@@ -58,9 +63,10 @@ def parse_args():
     ),
     nargs = '+',
     required = True,
+    dest = 'library_names',
   )
   parser.add_argument(
-    '--total_reads',
+    '--reads',
     type = int,
     nargs = '+',
     help = (
@@ -70,28 +76,29 @@ def parse_args():
       ' and the columns in each input file.' +
       ' If not provided, the total number of reads is calculated from the input files.'
     ),
+    dest = 'total_reads',
   )
   return vars(parser.parse_args())
 
 def main(
-  input,
+  input_list,
   output,
   label,
-  names,
+  library_names,
   total_reads,
 ):
-  count_cols = ['count_' + x for x in names]
-  freq_cols = ['freq_' + x for x in names]
+  count_cols = ['count_' + x for x in library_names]
+  freq_cols = ['freq_' + x for x in library_names]
 
   for subst_type in constants.SUBST_TYPES:
     data_list = []
-    for i in range(len(input)):
-      in_file = file_names.window(input[i], subst_type)
+    for i in range(len(input_list)):
+      in_file = file_names.window(input_list[i], subst_type)
       data = file_utils.read_csv(in_file)
       log_utils.log_input(in_file)
       count_cols_old = [x for x in data.columns if x.startswith('count_')]
-      if len(count_cols_old) != len(names):
-        raise Exception('Different number of count and freq columns in ' + input[i])
+      if len(count_cols_old) != len(library_names):
+        raise Exception('Different number of count and freq columns in ' + input_list[i])
       data = data.rename(
         dict(zip(count_cols_old, count_cols)),
         axis = 'columns',
@@ -99,28 +106,28 @@ def main(
       data_list.append(data[['ref_align', 'read_align'] + count_cols])
 
     if total_reads is None:
-      total_reads_1 = (
+      reads_1 = (
         np.concatenate([x[count_cols].sum() for x in data_list])
         .tolist()
       )
     else:
-      total_reads_1 = total_reads
-    if len(total_reads_1) != (len(input) * len(names)):
+      reads_1 = total_reads
+    if len(reads_1) != (len(input_list) * len(library_names)):
       raise Exception(
         'Incorrect number of total reads. Expected {}.'
-        .format(len(input) * len(names))
+        .format(len(input_list) * len(library_names))
       )
     
-    total_reads_1 = (
-      np.array(total_reads_1).reshape(len(input), len(names))
+    reads_1 = (
+      np.array(reads_1).reshape(len(input_list), len(library_names))
       .sum(axis=0).tolist()
     )
 
     data = pd.concat(data_list, axis='index', ignore_index=True)
     data = data.groupby(['ref_align', 'read_align']).sum().reset_index()
 
-    data[freq_cols] = data[count_cols].divide(total_reads_1, axis='columns')
-    data['freq_mean'] = data[['freq_' + x for x in names]].mean(axis='columns')
+    data[freq_cols] = data[count_cols].divide(reads_1, axis='columns')
+    data['freq_mean'] = data[['freq_' + x for x in library_names]].mean(axis='columns')
     data = data.sort_values('freq_mean', ascending=False)
     data = data[
       ['ref_align', 'read_align', 'freq_mean'] +
@@ -135,7 +142,7 @@ def main(
 
   ref_seq_window = set(
     file_utils.read_json(file_names.data_info(x))['ref_seq_window']
-    for x in input
+    for x in input_list
   )
   if len(ref_seq_window) > 1:
     raise Exception(

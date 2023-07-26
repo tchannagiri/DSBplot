@@ -213,7 +213,7 @@ def get_node_color(
   node_data,
   node_color_type,
   node_color_freq_range,
-  node_comparison_colors,
+  node_freq_ratio_colors,
   node_freq_ratio_range,
   node_fill_color,
   node_var_type_colors,
@@ -223,8 +223,8 @@ def get_node_color(
       raise Exception('Need a comparison data set: ' + data_info['label'])
     node_freq_group = get_node_freq_group(node_data, node_freq_ratio_range)
     node_color = pd.Series(constants.SIMILAR_FREQ_COLOR, index=node_data.index)
-    node_color.loc[node_freq_group == 'A'] = node_comparison_colors[0]
-    node_color.loc[node_freq_group == 'C'] = node_comparison_colors[1]
+    node_color.loc[node_freq_group == 'A'] = node_freq_ratio_colors[0]
+    node_color.loc[node_freq_group == 'C'] = node_freq_ratio_colors[1]
     return node_color
   elif node_color_type == 'freq':
      scaled_freq = log_transform_scale(
@@ -277,7 +277,7 @@ def make_node_traces(
   node_hover_text,
   node_size,
   node_color,
-  node_reference_outline_color,
+  node_ref_outline_color,
   node_outline_color,
   node_group,
   node_group_type,
@@ -290,9 +290,9 @@ def make_node_traces(
   for group_key, node_data_group in node_data.groupby(node_group):
     is_ref = group_key[0]
     if is_ref:
-      line_color = node_reference_outline_color
-      line_width = constants.GRAPH_NODE_REFERENCE_OUTLINE_WIDTH
-      trace_name = constants.LABEL_REFERENCE
+      line_color = node_ref_outline_color
+      line_width = constants.GRAPH_NODE_REF_OUTLINE_WIDTH
+      trace_name = constants.LABEL_REF
     else:
       if node_group_type == 'var_type':
         var_type = group_key[1]
@@ -307,7 +307,7 @@ def make_node_traces(
           node_freq_ratio_range[1],
         )
       else:
-        trace_name = constants.LABEL_NONREFERENCE
+        trace_name = constants.LABEL_NONREF
       line_color = node_outline_color
       line_width = constants.GRAPH_NODE_OUTLINE_WIDTH
       
@@ -343,9 +343,9 @@ def make_point_traces(
   node_label_position,
   node_label_font_size,
   node_color_type,
-  node_comparison_colors,
+  node_freq_ratio_colors,
   node_freq_ratio_range,
-  node_reference_outline_color,
+  node_ref_outline_color,
   node_outline_color,
   node_fill_color,
   node_var_type_colors,
@@ -383,7 +383,7 @@ def make_point_traces(
     node_data = node_data,
     node_color_type = node_color_type,
     node_color_freq_range = node_size_freq_range,
-    node_comparison_colors = node_comparison_colors,
+    node_freq_ratio_colors = node_freq_ratio_colors,
     node_freq_ratio_range = node_freq_ratio_range,
     node_fill_color = node_fill_color,
     node_var_type_colors = node_var_type_colors,
@@ -404,7 +404,7 @@ def make_point_traces(
     node_hover_text = hover_text,
     node_size = node_size,
     node_color = node_color,
-    node_reference_outline_color = node_reference_outline_color,
+    node_ref_outline_color = node_ref_outline_color,
     node_outline_color = node_outline_color,
     node_label_position = node_label_position,
     node_group = node_group,

@@ -142,7 +142,7 @@ PARAMS = {
     'nargs': '+',
     'required': True,
     'metavar': 'INPUT',
-    'dest': 'input',
+    'dest': 'input_list',
   },
   '-o': {
     'nargs': 2,
@@ -158,12 +158,12 @@ PARAMS = {
       'Reference sequence file.' +
       ' Should contain a single nucleotide sequence.' +
       ' Must be the same sequence as used for alignment.' +
-      ' Must be in FASTA format ({}) or '.format(
+      ' Must be in FASTA format ({}) '.format(
         ", ".join([f'"x"' for x in constants.FASTA_EXT])
-      ) +
-      ' text format (all other extensions).'
+      ) + ' or text format (all other extensions).'
     ),
     'required': True,
+    'dest': 'ref_seq_file',
   },
   '--debug': {
     'type': common_utils.check_file_output,
@@ -173,6 +173,7 @@ PARAMS = {
       ' If the extension is ".csv", the output is formatted as a CSV table, otherwise' +
       ' it is formatted as a text file.'
     ),
+    'dest': 'debug_file',
   },
   '--names': {
     'nargs': '+',
@@ -181,6 +182,7 @@ PARAMS = {
       ' Number of arguments must match the number of INPUT args.' +
       ' If not specified, becomes the names of the INPUT files.'
     ),
+    'dest': 'library_names'
   },
   '--reads': {
     'type': int,
@@ -192,6 +194,7 @@ PARAMS = {
       ' The number of arguments must be the same as the number of INPUTs.' +
       ' If not provided, the total reads in the INPUT read files are used.'
     ),
+    'dest': 'total_reads',
   },
   '--dsb': {
     'type': int,
@@ -200,6 +203,7 @@ PARAMS = {
       'Position on reference sequence immediately upstream of DSB site.' +
       ' That is, the DSB is between 1-based positions DSB and DSB + 1.'
     ),
+    'dest': 'dsb_pos',
   },
   '--min_len': {
     'type': int,
@@ -209,6 +213,7 @@ PARAMS = {
       ' Reads shorter than this are discarded.' +
       ' Forced to be at least DSB + 1.'
     ),
+    'dest': 'min_length',
   },
   '--max_sub': {
     'type': int,
@@ -219,6 +224,7 @@ PARAMS = {
       ' A large number of substitutions may indicate that an alignment is invalid.' +
       ' Set to -1 to disable this check.'
     ),
+    'dest': 'max_subst',
   },
   '--rc': {
     'action': 'store_true',
@@ -229,6 +235,7 @@ PARAMS = {
       ' against the same reference sequence, and only alignments with the reverse-complement SAM flag (16)' +
       ' will be accepted.'
     ),
+    'dest': 'reverse_complement',
   },
   '--consec': {
     'type': int,
@@ -238,6 +245,7 @@ PARAMS = {
       'Set to 0 to disable the check that all in/dels must be consecutive.' +
       ' If this check is disabled, realignment is not performed.'
     ),
+    'dest': 'consecutive',
   },
   '--touch': {
     'type': int,
@@ -248,6 +256,7 @@ PARAMS = {
       ' If this check is disabled, the "--dsb" option is ignored' +
       ' and realignment is not performed.'
     ),
+    'dest': 'dsb_touch',
   },
   '--quiet': {
     'help': 'If present, do not output verbose log messages.',
@@ -257,25 +266,23 @@ PARAMS = {
 
 def post_process_args(args):
   args = args.copy()
-  if (args.get('min_len') is not None) and (args.get('dsb') is not None): 
-    args['min_len'] = max(args['dsb'] + 1, args['min_len'])
-  if (args.get('reads') is not None) and (args.get('names') is not None):
-    if len(args['reads']) != len(args['names']):
-      raise Exception(
-        'Number of total reads must match the number of names.'
-      )
-  if (args.get('input') is not None) and (args.get('names') is not None):
-    if len(args['input']) != len(args['names']):
+  if (args.get('min_length') is not None) and (args.get('dsb_pos') is not None): 
+    args['min_length'] = max(args['dsb_pos'] + 1, args['min_length'])
+  if (args.get('total_reads') is not None) and (args.get('library_names') is not None):
+    if len(args['total_reads']) != len(args['library_names']):
+      raise Exception('Number of total reads must match the number of names.')
+  if (args.get('input_list') is not None) and (args.get('library_names') is not None):
+    if len(args['input_list']) != len(args['library_names']):
       raise Exception(
         'Number of input files must match the number of names.'
       )
-  if args.get('max_sub') is not None:
-    if args['max_sub'] < 0:
-      args['max_sub'] = float('inf')
-  if args.get('consec') is not None:
-    args['consec'] = bool(args['consec'])
-  if args.get('touch') is not None:
-    args['touch'] = bool(args['touch'])
+  if args.get('max_subst') is not None:
+    if args['max_subst'] < 0:
+      args['max_subst'] = float('inf')
+  if args.get('consecutive') is not None:
+    args['consecutive'] = bool(args['consecutive'])
+  if args.get('dsb_touch') is not None:
+    args['dsb_touch'] = bool(args['dsb_touch'])
   return args
 
 def parse_args():
@@ -287,46 +294,46 @@ def parse_args():
   return post_process_args(vars(parser.parse_args()))
 
 def do_filter(
-  input,
-  names,
-  total_reads,
-  ref_seq_file,
+  input_list,
   output,
   output_rejected,
+  debug_file,
+  library_names,
+  total_reads,
+  ref_seq_file,
   dsb_pos,
   min_length,
-  max_sub,
-  reverse_complement = False,
-  consecutive = True,
-  dsb_touch = True,
-  quiet = True,
-  debug_file = None,
+  max_subst,
+  reverse_complement,
+  consecutive,
+  dsb_touch,
+  quiet,
 ):
   # read reference sequence from fasta file
   ref_seq = file_utils.read_seq(ref_seq_file)
   log_utils.log_input(ref_seq_file)
 
-  if names is None:
-    names = [file_names.get_file_name(x) for x in input]
+  if library_names is None:
+    library_names = [file_names.get_file_name(x) for x in input_list]
   
   # For logging
-  header = [0] * len(input)
-  rejected_repeat = [0] * len(input)
-  rejected_wrong_flag = [0] * len(input)
-  rejected_unaligned = [0] * len(input)
-  rejected_wrong_rc = [0] * len(input)
-  rejected_pos_not_1 = [0] * len(input)
-  rejected_max_sub = [0] * len(input)
-  rejected_not_consec = [0] * len(input)
-  rejected_not_touch = [0] * len(input)
-  rejected_not_consec_and_not_touch = [0] * len(input)
-  rejected_min_len = [0] * len(input)
-  accepted_repeat = [0] * len(input)
-  accepted_del_special = [0] * len(input)
-  accepted_ins_special = [0] * len(input)
-  accepted_ins_and_del_special = [0] * len(input)
-  accepted_indel_other = [0] * len(input)
-  accepted_no_indel = [0] * len(input)
+  header = [0] * len(input_list)
+  rejected_repeat = [0] * len(input_list)
+  rejected_wrong_flag = [0] * len(input_list)
+  rejected_unaligned = [0] * len(input_list)
+  rejected_wrong_rc = [0] * len(input_list)
+  rejected_pos_not_1 = [0] * len(input_list)
+  rejected_max_sub = [0] * len(input_list)
+  rejected_not_consec = [0] * len(input_list)
+  rejected_not_touch = [0] * len(input_list)
+  rejected_not_consec_and_not_touch = [0] * len(input_list)
+  rejected_min_len = [0] * len(input_list)
+  accepted_repeat = [0] * len(input_list)
+  accepted_del_special = [0] * len(input_list)
+  accepted_ins_special = [0] * len(input_list)
+  accepted_ins_and_del_special = [0] * len(input_list)
+  accepted_indel_other = [0] * len(input_list)
+  accepted_no_indel = [0] * len(input_list)
 
   # Common variables
   read_accepted = set()
@@ -339,20 +346,20 @@ def do_filter(
   read_debug = {}
 
   # Variables for each input file
-  read_count_accepted = [defaultdict(lambda: 0) for _ in input]
-  read_count_rejected = [defaultdict(lambda: 0) for _ in input]
-  read_rank = [None for _ in input]
-  total_lines = [0] * len(input)
-  total_reads_1 = [0] * len(input)
+  read_count_accepted = [defaultdict(lambda: 0) for _ in input_list]
+  read_count_rejected = [defaultdict(lambda: 0) for _ in input_list]
+  read_rank = [None for _ in input_list]
+  total_lines = [0] * len(input_list)
+  total_reads_1 = [0] * len(input_list)
 
   flag_mask = sam_utils.FLAG_UNALIGNED | sam_utils.FLAG_RC # mask for expected flags
   expected_rc_flag = sam_utils.FLAG_RC if reverse_complement else 0
 
-  for i in range(len(input)): # Loop over input files
-    total_lines[i] = file_utils.count_lines(input[i])
+  for i in range(len(input_list)): # Loop over input files
+    total_lines[i] = file_utils.count_lines(input_list[i])
 
-    with open(input[i], 'r') as in_h:
-      log_utils.log_input(input[i])
+    with open(input_list[i], 'r') as in_h:
+      log_utils.log_input(input_list[i])
       for line_num, line in enumerate(in_h, 1): # Filter reads
         if (line_num % 100000) == 1:
           if not quiet:
@@ -436,7 +443,7 @@ def do_filter(
         if num_sub_sam != num_sub:
           raise Exception('Incorrect count of substitutions')
         
-        if num_sub > max_sub:
+        if num_sub > max_subst:
           read_rejected.add(read_seq)
           read_debug[read_seq] = 'max_sub'
           rejected_max_sub[i] += 1
@@ -546,16 +553,16 @@ def do_filter(
 
   # Make the accepted read dataframe
   data_list = []
-  for i in range(len(input)):
+  for i in range(len(input_list)):
     read_seq_list = list(read_count_accepted[i].keys())
     data = pd.DataFrame({'seq': read_seq_list})
-    data['count_' + names[i]] = [read_count_accepted[i][read_seq] for read_seq in read_seq_list]
-    data['freq_' + names[i]] = data['count_' + names[i]] / total_reads[i]
-    data['rank_' + names[i]] = [read_rank[i][read_seq] for read_seq in read_seq_list]
+    data['count_' + library_names[i]] = [read_count_accepted[i][read_seq] for read_seq in read_seq_list]
+    data['freq_' + library_names[i]] = data['count_' + library_names[i]] / total_reads[i]
+    data['rank_' + library_names[i]] = [read_rank[i][read_seq] for read_seq in read_seq_list]
     data = data.set_index('seq').reindex(read_accepted)
-    data['count_' + names[i]] = data['count_' + names[i]].fillna(0).astype(int)
-    data['freq_' + names[i]] = data['freq_' + names[i]].fillna(0)
-    data['rank_' + names[i]] = data['rank_' + names[i]].fillna(RANK_NA).astype(int)
+    data['count_' + library_names[i]] = data['count_' + library_names[i]].fillna(0).astype(int)
+    data['freq_' + library_names[i]] = data['freq_' + library_names[i]].fillna(0)
+    data['rank_' + library_names[i]] = data['rank_' + library_names[i]].fillna(RANK_NA).astype(int)
     data_list.append(data)
     if not quiet:
       log_utils.log('Accepted reads: {} / {}'.format(len(read_count_accepted[i]), total_reads[i]))
@@ -576,31 +583,31 @@ def do_filter(
       data_accepted[col] = data_accepted[col].astype(int)
   data_accepted['sub'] = data_accepted['sub'].astype(int)
   data_accepted['freq_mean'] = (
-    data_accepted[['freq_' + x for x in names]]
+    data_accepted[['freq_' + x for x in library_names]]
     .mean(axis='columns')
   )
   data_accepted = data_accepted[
     ['debug', 'sub', 'cigar', 'cigar_old'] +
     ['freq_mean'] +
-    ['freq_' + x for x in names] +
-    ['count_' + x for x in names] +
-    ['rank_' + x for x in names] +
+    ['freq_' + x for x in library_names] +
+    ['count_' + x for x in library_names] +
+    ['rank_' + x for x in library_names] +
     ['seq']
   ]
   data_accepted = data_accepted.sort_values('freq_mean', ascending=False)
 
   # Make the rejected read data
   data_list = []
-  for i in range(len(input)):
+  for i in range(len(input_list)):
     read_seq_list = list(read_count_rejected[i].keys())
     data = pd.DataFrame({'seq': read_seq_list})
-    data['count_' + names[i]] = [read_count_accepted[i][read_seq] for read_seq in read_seq_list]
-    data['freq_' + names[i]] = data['count_' + names[i]] / total_reads[i]
-    data['rank_' + names[i]] = [read_rank[i][read_seq] for read_seq in read_seq_list]
+    data['count_' + library_names[i]] = [read_count_accepted[i][read_seq] for read_seq in read_seq_list]
+    data['freq_' + library_names[i]] = data['count_' + library_names[i]] / total_reads[i]
+    data['rank_' + library_names[i]] = [read_rank[i][read_seq] for read_seq in read_seq_list]
     data = data.set_index('seq').reindex(read_rejected)
-    data['count_' + names[i]] = data['count_' + names[i]].fillna(0).astype(int)
-    data['freq_' + names[i]] = data['freq_' + names[i]].fillna(0)
-    data['rank_' + names[i]] = data['rank_' + names[i]].fillna(RANK_NA).astype(int)
+    data['count_' + library_names[i]] = data['count_' + library_names[i]].fillna(0).astype(int)
+    data['freq_' + library_names[i]] = data['freq_' + library_names[i]].fillna(0)
+    data['rank_' + library_names[i]] = data['rank_' + library_names[i]].fillna(RANK_NA).astype(int)
     data_list.append(data)
   data_common = pd.DataFrame({
     'seq': read_rejected,
@@ -611,7 +618,7 @@ def do_filter(
   data_rejected = (
     pd.concat([data_common] + data_list, join='outer', axis='columns')
     .fillna(0)
-    .sort_values(by='rank_' + names[0])
+    .sort_values(by='rank_' + library_names[0])
     .reset_index()
   )
   for col in data_rejected.columns:
@@ -619,15 +626,15 @@ def do_filter(
       data_rejected[col] = data_rejected[col].astype(int)
   data_rejected['unaligned'] = data_rejected['unaligned'].astype(int)
   data_rejected['freq_mean'] = (
-    data_rejected[['freq_' + x for x in names]]
+    data_rejected[['freq_' + x for x in library_names]]
     .mean(axis='columns')
   )
   data_rejected = data_rejected[
     ['debug', 'cigar_old', 'unaligned'] +
     ['freq_mean'] +
-    ['freq_' + x for x in names] +
-    ['count_' + x for x in names] +
-    ['rank_' + x for x in names] +
+    ['freq_' + x for x in library_names] +
+    ['count_' + x for x in library_names] +
+    ['rank_' + x for x in library_names] +
     ['seq']
   ]
   data_rejected = data_rejected.sort_values('freq_mean', ascending=False)
@@ -637,12 +644,12 @@ def do_filter(
   log_utils.log_output(output)
   log_utils.log_output(output_rejected)
 
-  accepted_new = [0] * len(input)
-  rejected_new = [0] * len(input)
-  total_accepted = [0] * len(input)
-  total_rejected = [0] * len(input)
+  accepted_new = [0] * len(input_list)
+  rejected_new = [0] * len(input_list)
+  total_accepted = [0] * len(input_list)
+  total_rejected = [0] * len(input_list)
 
-  for i in range(len(input)):
+  for i in range(len(input_list)):
     accepted_new[i] = (
       accepted_del_special[i] +
       accepted_ins_special[i] +
@@ -698,8 +705,8 @@ def do_filter(
     'rejected_not_touch': rejected_not_touch,
     'rejected_not_consec_and_not_touch': rejected_not_consec_and_not_touch,
   }).T.rename_axis('debug')
-  debug_data.columns = ['count_' + x for x in names]
-  debug_data[['freq_' + x for x in names]] = debug_data[['count_' + x for x in names]].divide(total_reads_1, axis='columns')
+  debug_data.columns = ['count_' + x for x in library_names]
+  debug_data[['freq_' + x for x in library_names]] = debug_data[['count_' + x for x in library_names]].divide(total_reads_1, axis='columns')
   debug_data = debug_data.reset_index()
   debug_lines = [
     f'Header lines: ' + ', '.join([str(x) for x in header]),
@@ -741,34 +748,34 @@ def do_filter(
   log_utils.blank_line()
 
 def main(
-  input,
+  input_list,
   output,
-  ref,
-  debug,
-  names,
-  reads,
-  dsb,
-  min_len,
-  max_sub,
-  rc,
-  consec,
-  touch,
+  debug_file,
+  ref_seq_file,
+  library_names,
+  total_reads,
+  dsb_pos,
+  min_length,
+  max_subst,
+  reverse_complement,
+  consecutive,
+  dsb_touch,
   quiet,
 ):
   do_filter(
-    input = input,
+    input_list = input_list,
     output = output[0],
     output_rejected = output[1],
-    ref_seq_file = ref,
-    debug_file = debug,
-    names = names,
-    total_reads = reads,
-    dsb_pos = dsb,
-    min_length = min_len,
-    max_sub = max_sub,
-    reverse_complement = rc,
-    consecutive = consec,
-    dsb_touch = touch,
+    debug_file = debug_file,
+    ref_seq_file = ref_seq_file,
+    library_names = library_names,
+    total_reads = total_reads,
+    dsb_pos = dsb_pos,
+    min_length = min_length,
+    max_subst = max_subst,
+    reverse_complement = reverse_complement,
+    consecutive = consecutive,
+    dsb_touch = dsb_touch,
     quiet = quiet,
   )
 

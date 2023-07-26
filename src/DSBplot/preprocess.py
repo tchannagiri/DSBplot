@@ -33,6 +33,10 @@ PARAMS = {
       ' 4_info: Make a data info (metadata) file describing the experiment.'
     ),
   },
+  '--no_align': {
+    'action': 'store_true',
+    'help': 'Shorthand for omitting the "0_align" stage (see "--stages").',
+  },
   '-o': {
     'type': common_utils.check_dir_output,
     'help': (
@@ -45,22 +49,6 @@ PARAMS = {
     'metavar': 'OUTPUT',
     'dest': 'output',
   },
-  '--names': {
-    'nargs': '+',
-    'type': str,
-    'help': (
-      'Identifiers to use for the input libraries.' +
-      ' Must be given in the same order as the input files.' +
-      ' If omitted, the names will be the input file names without the extension.' +
-      ' The names must be in alphabetical order and should be legal parts of file names.'
-    ),
-  },
-  '--no_align': {
-    'action': 'store_true',
-    'help': 'Shorthand for omitting the "0_align" stage (see "--stages").',
-  },
-  '--ref': filter.PARAMS['--ref'].copy(),
-  '--dsb': filter.PARAMS['--dsb'].copy(),
   '-i': {
     'nargs': '+',
     'type': common_utils.check_file,
@@ -79,14 +67,35 @@ PARAMS = {
       ' name the output SAM files (unless "--names" is given).'
     ),
     'metavar': 'INPUT',
-    'dest': 'input',
+    'dest': 'input_list',
   },
   '--bt2': {
     'type': str,
     'nargs': '+',
     'default': '',
     'help': 'Additional arguments to pass to Bowtie 2.',
+    'dest': 'bowtie2_args',
   },
+  '--names': {
+    'nargs': '+',
+    'type': str,
+    'help': (
+      'Identifiers to use for the input libraries.' +
+      ' Must be given in the same order as the input files.' +
+      ' If omitted, the names will be the input file names without the extension.' +
+      ' The names must be in alphabetical order and should be legal parts of file names.'
+    ),
+    'dest': 'library_names',
+  },
+  '--label': {
+    'type': str,
+    'help': (
+      'Label of the experiment to be used in plot legends.' +
+      ' If not provided, the label is the basename of the OUTPUT directory.'
+    ),
+  },
+  '--ref': filter.PARAMS['--ref'].copy(),
+  '--dsb': filter.PARAMS['--dsb'].copy(),
   '--min_len': filter.PARAMS['--min_len'].copy(),
   '--max_sub': filter.PARAMS['--max_sub'].copy(),
   '--rc': filter.PARAMS['--rc'].copy(),
@@ -95,53 +104,46 @@ PARAMS = {
   '--reads': filter.PARAMS['--reads'].copy(),
   '--window': get_window.PARAMS['--window'].copy(),
   '--anchor': get_window.PARAMS['--anchor'].copy(),
-  '--anchor_var': get_window.PARAMS['--anchor_var'].copy(),
-  '--label': {
-    'type': str,
-    'help': (
-      'Label of the experiment to be used in plot legends.' +
-      ' If not provided, the label is the basename of the OUTPUT directory.'
-    ),
-  },
+  '--anchor_vars': get_window.PARAMS['--anchor_vars'].copy(),
   '--quiet': filter.PARAMS['--quiet'].copy(),
 }
 
 PARAMS['--stages']['required'] = False
-PARAMS['-o']['required'] = True
-PARAMS['--names']['required'] = False
 PARAMS['--no_align']['required'] = False
-PARAMS['--ref']['required'] = False
-PARAMS['--dsb']['required'] = False
+PARAMS['-o']['required'] = True
 PARAMS['-i']['required'] = False
 PARAMS['--bt2']['required'] = False
+PARAMS['--ref']['required'] = False
+PARAMS['--names']['required'] = False
+PARAMS['--reads']['required'] = False
+PARAMS['--dsb']['required'] = False
 PARAMS['--min_len']['required'] = False
 PARAMS['--max_sub']['required'] = False
 PARAMS['--rc']['required'] = False
 PARAMS['--consec']['required'] = False
 PARAMS['--touch']['required'] = False
-PARAMS['--reads']['required'] = False
 PARAMS['--window']['required'] = False
 PARAMS['--anchor']['required'] = False
-PARAMS['--anchor_var']['required'] = False
+PARAMS['--anchor_vars']['required'] = False
 PARAMS['--label']['required'] = False
 PARAMS['--quiet']['required'] = False
 
-
 PARAMS['-o']['help'] += ' Stages: all.'
-PARAMS['--names']['help'] += ' Stages: "0_align".'
-PARAMS['--ref']['help'] += ' Stages: "0_align", "1_filter",  "2_window".'
-PARAMS['--dsb']['help'] += ' Stages: "1_filter", "2_window".'
 PARAMS['-i']['help'] += ' Stages: "0_align".'
 PARAMS['--bt2']['help'] += ' Stages: "0_align" (may be omitted because of default).'
+PARAMS['--ref']['help'] += ' Stages: "0_align", "1_filter",  "2_window".'
+PARAMS['--names']['help'] += ' Stages: "0_align".'
+PARAMS['--reads']['help'] += ' Stages: "1_filter" (may be omitted because of default).'
+PARAMS['--dsb']['help'] += ' Stages: "1_filter", "2_window".'
 PARAMS['--min_len']['help'] += ' Stages: "1_filter" (may be omitted because of default).'
 PARAMS['--max_sub']['help'] += ' Stages: "1_filter" (may be omitted because of default).'
 PARAMS['--rc']['help'] += ' Stages: "1_filter" (may be omitted because of default).'
 PARAMS['--consec']['help'] += ' Stages: "1_filter" (may be omitted because of default).'
 PARAMS['--touch']['help'] += ' Stages: "1_filter" (may be omitted because of default).'
-PARAMS['--reads']['help'] += ' Stages: "1_filter" (may be omitted because of default).'
+PARAMS['--quiet']['help'] += ' Stages: "1_filter" (may be omitted because of default).'
 PARAMS['--window']['help'] += ' Stages: "2_window", "4_info" (may be omitted because of default).'
 PARAMS['--anchor']['help'] += ' Stages: "2_window" (may be omitted because of default).'
-PARAMS['--anchor_var']['help'] += ' Stages: "2_window" (may be omitted because of default).'
+PARAMS['--anchor_vars']['help'] += ' Stages: "2_window" (may be omitted because of default).'
 PARAMS['--label']['help'] += ' Stages: "4_info" (may be omitted because of default).'
 
 def post_process_args(args):
@@ -150,14 +152,13 @@ def post_process_args(args):
   args = get_window.post_process_args(args)
   # Allow any prefix of a stage name.
   args['stages'] = [x for x in STAGES if x.startswith(tuple(args['stages']))]
-  if args['names'] is not None:
-    if args['input'] is not None:
-      if len(args['names']) != len(args['input']):
-        raise Exception('Number of NAMES must be the same as the number of INPUTs.')
-    if not all(x == y for x, y in zip(args['names'], sorted(args['names']))):
+  if (args['library_names'] is not None) and (args['input_list'] is not None):
+    if len(args['library_names']) != len(args['input_list']):
+      raise Exception('Number of NAMES must be the same as the number of INPUTs.')
+    if not all(x == y for x, y in zip(args['library_names'], sorted(args['library_names']))):
       raise Exception('NAMES must be in alphabetical order.')
-  if args['input'] is not None:
-    f_names = [file_names.get_file_name(x) for x in args['input']]
+  if args['input_list'] is not None:
+    f_names = [file_names.get_file_name(x) for x in args['input_list']]
     if not all(x == y for x, y in zip(f_names, sorted(f_names))):
       raise Exception('INPUT must have file names in alphabetical order.')
   if args['no_align']:
@@ -183,141 +184,142 @@ def parse_args():
   group_align = parser.add_argument_group('Stage 0_align')
   group_filter = parser.add_argument_group('Stage 1_filter')
   group_window = parser.add_argument_group('Stage 2_window')
-  group_meta = parser.add_argument_group('Metadata')
+  group_info = parser.add_argument_group('Metadata')
 
   parser.add_argument('--stages', **PARAMS['--stages'])
-  group_multi.add_argument('-o', **PARAMS['-o'])
-  group_multi.add_argument('--names', **PARAMS['--names'])
+  parser.add_argument('--no_align', **PARAMS['--no_align'])
+  parser.add_argument('-o', **PARAMS['-o'])
   group_multi.add_argument('--ref', **PARAMS['--ref'])
+  group_multi.add_argument('--names', **PARAMS['--names'])
   group_multi.add_argument('--dsb', **PARAMS['--dsb'])
-  group_multi.add_argument('--quiet', **PARAMS['--quiet'])
-  group_multi.add_argument('--no_align', **PARAMS['--no_align'])
+  group_multi.add_argument('--window', **PARAMS['--window'])
   group_align.add_argument('-i', **PARAMS['-i'])
   group_align.add_argument('--bt2', **PARAMS['--bt2'])
+  group_filter.add_argument('--reads', **PARAMS['--reads'])
   group_filter.add_argument('--min_len', **PARAMS['--min_len'])
   group_filter.add_argument('--max_sub', **PARAMS['--max_sub'])
   group_filter.add_argument('--rc', **PARAMS['--rc'])
   group_filter.add_argument('--consec', **PARAMS['--consec'])
   group_filter.add_argument('--touch', **PARAMS['--touch'])
-  group_filter.add_argument('--reads', **PARAMS['--reads'])
-  group_window.add_argument('--window', **PARAMS['--window'])
+  group_filter.add_argument('--quiet', **PARAMS['--quiet'])
   group_window.add_argument('--anchor', **PARAMS['--anchor'])
-  group_window.add_argument('--anchor_var', **PARAMS['--anchor_var'])
-  group_meta.add_argument('--label', **PARAMS['--label'])
+  group_window.add_argument('--anchor_vars', **PARAMS['--anchor_vars'])
+  group_info.add_argument('--label', **PARAMS['--label'])
 
   return post_process_args(vars(parser.parse_args()))
 
 def do_0_align(
-  input,
-  names,
   output,
-  ref,
-  bt2,
+  input_list,
+  library_names,
+  ref_seq_file,
+  bowtie2_args,
 ):
-  if input is None:
+  if input_list is None:
     raise Exception('INPUT must be provided for stage "0_align".')
-  if ref is None:
+  if ref_seq_file is None:
     raise Exception('REF must be provided for stage "0_align".')
-  if names is None:
-    names = [file_names.get_file_name(x) for x in input]
-  bt2 = ' '.join(bt2)
+  if library_names is None:
+    library_names = [file_names.get_file_name(x) for x in input_list]
+  bowtie2_args = ' '.join(bowtie2_args)
   bowtie2_build_file = file_names.bowtie2_build(output)
   file_utils.make_parent_dir(bowtie2_build_file)
   log_utils.log_output('Bowtie2 build file: ' + bowtie2_build_file)
-  os.system(f'bowtie2-build-s {ref} {bowtie2_build_file} --quiet')
+  if os.system(f'bowtie2-build-s {ref_seq_file} {bowtie2_build_file} --quiet') != 0:
+    raise Exception('Bowtie 2 build failed.')
 
-  for i in range(len(input)):
-    sam_file = file_names.sam_file(output, names[i])
+  for i in range(len(input_list)):
+    sam_file = file_names.sam_file(output, library_names[i])
     file_utils.make_parent_dir(sam_file)
-    input_ext = os.path.splitext(input[i])[1]
+    input_ext = os.path.splitext(input_list[i])[1]
     if input_ext in ['.fastq', '.fq']:
       flags = '-q'
     elif input_ext in ['.fasta', '.fa', '.fna']:
       flags = '-f'
     else:
       flags = '-r'
-    bowtie2_command = f'bowtie2-align-s --no-hd {flags} {bt2} -x {bowtie2_build_file} {input[i]} -S {sam_file} --quiet'
+    bowtie2_command = f'bowtie2-align-s --no-hd {flags} {bowtie2_args} -x {bowtie2_build_file} {input_list[i]} -S {sam_file} --quiet'
     log_utils.log('Bowtie 2 command: ' + bowtie2_command)
-    os.system(bowtie2_command)
+    if os.system(bowtie2_command) != 0:
+      raise Exception('Bowtie 2 alignment failed.')
   log_utils.blank_line()
 
 def do_1_filter(
-  names,
+  library_names,
   output,
-  reads,
-  ref,
-  dsb,
-  min_len,
-  max_sub,
-  rc,
-  consec,
-  touch,
+  total_reads,
+  ref_seq_file,
+  dsb_pos,
+  min_length,
+  max_subst,
+  reverse_complement,
+  consecutive,
+  dsb_touch,
   quiet,
 ):
-  if ref is None:
+  if ref_seq_file is None:
     raise Exception('REF must be provided for stage "1_filter".')
-  if dsb is None:
+  if dsb_pos is None:
     raise Exception('DSB must be provided for stage "1_filter".')
-  if min_len is None:
-    min_len = dsb + 1
+  if min_length is None:
+    raise Exception('MIN_LEN must be provided for stage "1_filter".')
 
-  if names is None:
+  if library_names is None:
     # Infer names from the SAM files.
-    names = sorted([
+    library_names = sorted([
       file_names.get_file_name(x)
       for x in glob.glob(os.path.join(output, '*.sam'))
     ])
-  input = [file_names.sam_file(output, x) for x in names]
+  input_list = [file_names.sam_file(output, x) for x in library_names]
 
-  min_len = max(dsb + 1, min_len)
   filter.main(
-    input = input,
+    input_list = input_list,
     output = [
       file_names.filter(output, 'accepted'),
       file_names.filter(output, 'rejected'),
     ],
-    debug = file_names.filter(output, 'debug'),
-    names = names,
-    reads = reads,
-    ref = ref,
-    dsb = dsb,
-    min_len = min_len,
-    max_sub = max_sub,
-    rc = rc,
-    consec = consec,
-    touch = touch,
+    debug_file = file_names.filter(output, 'debug'),
+    library_names = library_names,
+    total_reads = total_reads,
+    ref_seq_file = ref_seq_file,
+    dsb_pos = dsb_pos,
+    min_length = min_length,
+    max_subst = max_subst,
+    reverse_complement = reverse_complement,
+    consecutive = consecutive,
+    dsb_touch = dsb_touch,
     quiet = quiet,
   )
 
 def do_2_window(
   output,
-  ref,
-  dsb,
-  window,
-  anchor,
-  anchor_var,
+  ref_seq_file,
+  dsb_pos,
+  window_size,
+  anchor_size,
+  anchor_vars,
 ):
-  if ref is None:
+  if ref_seq_file is None:
     raise Exception('REF must be provided for stage "2_window".')
-  if dsb is None:
+  if dsb_pos is None:
     raise Exception('DSB must be provided for stage "2_window".')
-  if window is None:
+  if window_size is None:
     raise Exception('WINDOW must be provided for stage "2_window".')
-  if anchor is None:
+  if anchor_size is None:
     raise Exception('ANCHOR must be provided for stage "2_window".')
-  if anchor_var is None:
+  if anchor_vars is None:
     raise Exception('ANCHOR_VAR must be provided for stage "2_window".')
 
   for subst_type in constants.SUBST_TYPES:
     get_window.main(
       input = file_names.filter(output, 'accepted'),
       output = file_names.window(output, subst_type),
-      ref = ref,
-      dsb = dsb,
-      window = window,
-      anchor = anchor,
-      anchor_var = anchor_var,
-      sub = subst_type,
+      ref_seq_file = ref_seq_file,
+      dsb_pos = dsb_pos,
+      window_size = window_size,
+      anchor_size = anchor_size,
+      anchor_vars = anchor_vars,
+      subst_type = subst_type,
     )
 
 def do_3_variation(output):
@@ -329,23 +331,23 @@ def do_3_variation(output):
 
 def do_4_info(
   output,
-  ref,
-  dsb,
-  window,
+  ref_seq_file,
+  dsb_pos,
+  window_size,
   label,
 ):
   if output is None:
     raise Exception('OUTPUT must be provided for stage "4_info".')
-  if ref is None:
+  if ref_seq_file is None:
     raise Exception('REF must be provided for stage "4_info".')
-  if dsb is None:
+  if dsb_pos is None:
     raise Exception('DSB must be provided for stage "4_info".')
-  if window is None:
+  if window_size is None:
     raise Exception('WINDOW must be provided for stage "4_info".')
   name = file_names.get_file_name(output)
   if label is None:
     label = name
-  ref_seq = file_utils.read_seq(ref)
+  ref_seq = file_utils.read_seq(ref_seq_file)
   data_info = common_utils.make_data_info(
     format = 'individual',
     names = [name],
@@ -353,8 +355,8 @@ def do_4_info(
     ref_seqs = [ref_seq],
     ref_seq_window = get_window.get_ref_seq_window(
       ref_seq = ref_seq,
-      dsb_pos = dsb,
-      window_size = window,
+      dsb_pos = dsb_pos,
+      window_size = window_size,
     ),
   )
   out_file = file_names.data_info(output)
@@ -362,61 +364,65 @@ def do_4_info(
   file_utils.write_json(data_info, out_file)
 
 def do_stages(
-  input,
-  names,
+  stages,
   output,
-  ref,
-  dsb,
-  min_len,
-  max_sub,
-  rc,
-  consec,
-  touch,
-  window,
-  anchor,
-  anchor_var,
-  reads,
-  label,
-  bt2,
+
+  input_list,
+  ref_seq_file,
+  bowtie2_args,
+
+  library_names,
+  total_reads,
+  dsb_pos,
+  min_length,
+  max_subst,
+  reverse_complement,
+  consecutive,
+  dsb_touch,
   quiet,
-  stages = STAGES,
+
+  window_size,
+  anchor_size,
+  anchor_vars,
+
+  label,
 ):
   # Copy reference sequence file to output directory.
-  if ref is not None:
-    shutil.copy(ref, file_names.ref_seq_file(output))
+  if ref_seq_file is not None:
+    shutil.copy(ref_seq_file, file_names.ref_seq_file(output))
 
   if '0_align' in stages:
     do_0_align(
-      input = input,
-      names = names,
+      input_list = input_list,
+      library_names = library_names,
       output = output,
-      ref = ref,
-      bt2 = bt2,
+      ref_seq_file = ref_seq_file,
+      bowtie2_args = bowtie2_args,
     )
 
   if '1_filter' in stages:
     do_1_filter(
-      names = names,
+      library_names = library_names,
       output = output,
-      reads = reads,
-      ref = ref,
-      dsb = dsb,
-      min_len = min_len,
-      max_sub = max_sub,
-      rc = rc,
-      consec = consec,
-      touch = touch,
+      total_reads = total_reads,
+      ref_seq_file = ref_seq_file,
+      dsb_pos = dsb_pos,
+      min_length = min_length,
+      max_subst = max_subst,
+      reverse_complement = reverse_complement,
+      consecutive = consecutive,
+      dsb_touch = dsb_touch,
       quiet = quiet,
     )
 
   if '2_window' in stages:
     do_2_window(
       output = output,
-      ref = ref,
-      dsb = dsb,
-      window = window,
-      anchor = anchor,
-      anchor_var = anchor_var,
+      ref_seq_file = ref_seq_file,
+      dsb_pos = dsb_pos,
+      window_size = window_size,
+      anchor_size = anchor_size,
+      anchor_vars = anchor_vars,
     )
 
   if '3_variation' in stages:
@@ -425,51 +431,59 @@ def do_stages(
   if '4_info' in stages:
     do_4_info(
       output = output,
-      ref = ref,
-      dsb = dsb,
-      window = window,
+      ref_seq_file = ref_seq_file,
+      dsb_pos = dsb_pos,
+      window_size = window_size,
       label = label,
     )
 
 def main(
-  input,
+  stages,
   output,
-  names,
-  ref,
-  dsb,
-  min_len,
-  max_sub,
-  rc,
-  consec,
-  touch,
-  window,
-  anchor,
-  anchor_var,
-  reads,
-  label,
-  bt2,
+
+  input_list,
+  ref_seq_file,
+  bowtie2_args,
+
+  library_names,
+  total_reads,
+  dsb_pos,
+  min_length,
+  max_subst,
+  reverse_complement,
+  consecutive,
+  dsb_touch,
   quiet,
-  stages = STAGES,
+
+  window_size,
+  anchor_size,
+  anchor_vars,
+
+  label,
 ):
   do_stages(
-    input = input,
-    names  = names,
-    output = output,
-    ref = ref,
-    dsb = dsb,
-    min_len = min_len,
-    max_sub = max_sub,
-    rc = rc,
-    consec = consec,
-    touch = touch,
-    window = window,
-    anchor = anchor,
-    anchor_var = anchor_var,
-    reads = reads,
-    label = label,
-    bt2 = bt2,
-    quiet = quiet,
     stages = stages,
+    output = output,
+
+    input_list = input_list,
+    ref_seq_file = ref_seq_file,
+    bowtie2_args = bowtie2_args,
+
+    library_names = library_names,
+    total_reads = total_reads,
+    dsb_pos = dsb_pos,
+    min_length = min_length,
+    max_subst = max_subst,
+    reverse_complement = reverse_complement,
+    consecutive = consecutive,
+    dsb_touch = dsb_touch,
+    quiet = quiet,
+
+    window_size = window_size,
+    anchor_size = anchor_size,
+    anchor_vars = anchor_vars,
+
+    label = label,
   )
 
 # This allows the "DSBplot-preprocess" command to be run from the command line.
