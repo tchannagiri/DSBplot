@@ -1,5 +1,4 @@
 import os
-
 import shutil
 import argparse
 import glob
@@ -222,10 +221,12 @@ def do_0_align(
   if library_names is None:
     library_names = [file_names.get_file_name(x) for x in input_list]
   bowtie2_args = ' '.join(bowtie2_args)
-  bowtie2_build_file = file_names.bowtie2_build(output)
-  file_utils.make_parent_dir(bowtie2_build_file)
-  log_utils.log_output('Bowtie2 build file: ' + bowtie2_build_file)
-  if os.system(f'bowtie2-build-s {ref_seq_file} {bowtie2_build_file} --quiet') != 0:
+  bowtie2_index_file = file_names.bowtie2_index(output)
+  # Existing Bowtie 2 index files must be overwritten.
+  # For some reason, Bowtie 2 does not overwrite the index file if it already exists.
+  file_utils.make_parent_dir(bowtie2_index_file, overwrite=True)
+  log_utils.log_output('Bowtie2 index file: ' + bowtie2_index_file)
+  if os.system(f'bowtie2-build-s {ref_seq_file} {bowtie2_index_file} --quiet') != 0:
     raise Exception('Bowtie 2 build failed.')
 
   for i in range(len(input_list)):
@@ -238,7 +239,7 @@ def do_0_align(
       flags = '-f'
     else:
       flags = '-r'
-    bowtie2_command = f'bowtie2-align-s --no-hd {flags} {bowtie2_args} -x {bowtie2_build_file} {input_list[i]} -S {sam_file} --quiet'
+    bowtie2_command = f'bowtie2-align-s --no-hd {flags} {bowtie2_args} -x {bowtie2_index_file} {input_list[i]} -S {sam_file} --quiet'
     log_utils.log('Bowtie 2 command: ' + bowtie2_command)
     if os.system(bowtie2_command) != 0:
       raise Exception('Bowtie 2 alignment failed.')

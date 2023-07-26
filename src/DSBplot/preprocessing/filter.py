@@ -227,7 +227,9 @@ PARAMS = {
     'dest': 'max_subst',
   },
   '--rc': {
-    'action': 'store_true',
+    'type': int,
+    'choices': [0, 1],
+    'default': 0,
     'help': (
       'Set if the reads are expected to be reverse-complemented compared to the reference sequence.' +
       ' This is useful if the reads are from the opposite strand as the reference sequence.' +
@@ -273,9 +275,7 @@ def post_process_args(args):
       raise Exception('Number of total reads must match the number of names.')
   if (args.get('input_list') is not None) and (args.get('library_names') is not None):
     if len(args['input_list']) != len(args['library_names']):
-      raise Exception(
-        'Number of input files must match the number of names.'
-      )
+      raise Exception('Number of input files must match the number of names.')
   if args.get('max_subst') is not None:
     if args['max_subst'] < 0:
       args['max_subst'] = float('inf')
@@ -283,6 +283,8 @@ def post_process_args(args):
     args['consecutive'] = bool(args['consecutive'])
   if args.get('dsb_touch') is not None:
     args['dsb_touch'] = bool(args['dsb_touch'])
+  if args.get('reverse_complement') is not None:
+    args['reverse_complement'] = bool(args['reverse_complement'])
   return args
 
 def parse_args():

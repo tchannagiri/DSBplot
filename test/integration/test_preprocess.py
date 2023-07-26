@@ -38,9 +38,9 @@ class TestPreprocess(unittest.TestCase):
         f'The files differ at line {i + 1}.\n{file_1}\n{file_2}'
       )
 
-  def do_test_preprocess(self):
+  def test_preprocess(self):
     """
-    Test the NHEJ filter with the given combination of file types for the reads
+    Test the filter with the given combination of file types for the reads
     and the reference sequence.
     """
     input = [
@@ -58,17 +58,18 @@ class TestPreprocess(unittest.TestCase):
     if os.path.exists(output):
       shutil.rmtree(output)
     
-    assert os.system(
-      'DSBplot-preprocess -o {} -i {} {} {} {} --ref {} --dsb 67 --label "Sense (R1)" --reads {} {} {} {}'
-      .format(output, *input, ref, *reads)
-    ) == 0
+    self.assertEqual(
+      os.system(
+        'DSBplot-preprocess -o {} -i {} {} {} {} --ref {} --dsb 67 --label "Sense (R1)" --reads {} {} {} {}'
+        .format(output, *input, ref, *reads)
+      ),
+      0,
+      'DSBplot-preprocess failed.'
+    )
 
     for file in TestPreprocess.get_check_files():
       print('Testing file: ' + file)
       self.check_equality(os.path.join(output, file), os.path.join(output_expected, file))
-
-  def test_filter(self):
-    self.do_test_preprocess()
 
 if __name__ == '__main__':
   unittest.main()

@@ -7,10 +7,15 @@ import json
 
 import DSBplot.utils.constants as constants
 
-def make_parent_dir(file_name):
+def make_dir(dir_name, overwrite=False):
+  if overwrite and os.path.exists(dir_name):
+    shutil.rmtree(dir_name)
+  os.makedirs(dir_name, exist_ok=True)
+
+def make_parent_dir(file_name, overwrite=False):
   dir_name = os.path.dirname(file_name)
   if dir_name != '':
-    os.makedirs(os.path.dirname(file_name), exist_ok=True)
+    make_dir(dir_name, overwrite=overwrite)
 
 def write_csv(data, file, **args):
   if type(file) == str:

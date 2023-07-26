@@ -23,8 +23,8 @@ def variation(dir, subst_type):
 def data_info(dir):
   return make_file_name(dir, 'data_info', ext='json')
 
-def bowtie2_build(dir):
-  return os.path.join(dir, 'bowtie2_build', 'build')
+def bowtie2_index(dir):
+  return os.path.join(dir, 'bowtie2', 'index')
 
 def filter(dir, suffix):
   return os.path.join(dir, 'filter_' + suffix + '.csv')
