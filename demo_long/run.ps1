@@ -74,9 +74,9 @@ foreach ($con in $constructs) {
 # Example of running preprocessing stages separately for one experiment
 DSBplot-preprocess -i input/fastq/Sense_R1_1.fq input/fastq/Sense_R1_2.fq input/fastq/Sense_R1_3.fq input/fastq/Sense_R1_4.fq --ref input/ref_seq/2DSB_Sense_R1.fa -o $preprocess_dir/Sense_R1 --stages 0_align
 DSBplot-preprocess --ref input/ref_seq/2DSB_Sense_R1.fa --dsb 67 -o $preprocess_dir/Sense_R1 --stages 1_filter
-DSBplot-preprocess --ref input/ref_seq/2DSB_Sense_R1.fa --dsb 67 -o $preprocess_dir/Sense_R1 --label Sense_R1 --reads 3000 3000 3000 3000 --stages 2_window
+DSBplot-preprocess -o $preprocess_dir/Sense_R1 --stages 2_window
 DSBplot-preprocess -o $preprocess_dir/Sense_R1 --stages 3_variation
-DSBplot-preprocess -o $preprocess_dir/Sense_R1 --ref input/ref_seq/2DSB_Sense_R1.fa --dsb 67 --stages 4_info
+DSBplot-preprocess -o $preprocess_dir/Sense_R1 --stages 4_info
 
 # Example of concatenating three experiments.
 # Note, this does not make biological sense, but is used here for demonstration purposes.

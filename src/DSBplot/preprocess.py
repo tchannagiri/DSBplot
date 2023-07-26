@@ -428,7 +428,7 @@ def main(
   log_utils.blank_line()
 
   if '0_align' in stages:
-    log_utils.log('Running stage "0_align".')
+    log_utils.log('Running preprocessing stage "0_align".')
     prev_args = {
       'output': output,
       'input_list': input_list,
@@ -440,7 +440,7 @@ def main(
     log_utils.blank_line()
 
   if '1_filter' in stages:
-    log_utils.log('Running stage "1_filter".')
+    log_utils.log('Running preprocessing stage "1_filter".')
     if os.path.exists(file_names.args_file(output, 'align')):
       prev_args = read_args(output, 'align')
       if ref_seq_file is None:
@@ -464,7 +464,7 @@ def main(
     log_utils.blank_line()
 
   if '2_window' in stages:
-    log_utils.log('Running stage "2_window".')
+    log_utils.log('Running preprocessing stage "2_window".')
     prev_args = read_args(output, 'filter')
     if ref_seq_file is None:
       ref_seq_file = prev_args.get('ref_seq_file')
@@ -482,12 +482,12 @@ def main(
     log_utils.blank_line()
 
   if '3_variation' in stages:
-    log_utils.log('Running stage "3_variation".')
+    log_utils.log('Running preprocessing stage "3_variation".')
     do_3_variation(output = output)
     log_utils.blank_line()
 
   if '4_info' in stages:
-    log_utils.log('Running stage "4_info".')
+    log_utils.log('Running preprocessing stage "4_info".')
     prev_args = read_args(output, 'window_' + constants.SUBST_TYPES[0])
     if ref_seq_file is None:
       ref_seq_file = prev_args.get('ref_seq_file')
