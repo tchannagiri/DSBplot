@@ -148,14 +148,8 @@ def post_process_args(args):
   args = args.copy()
   args = filter.post_process_args(args)
   args = get_window.post_process_args(args)
-  stages_old = tuple(args['stages'])
-  stages = []
-  for s in STAGES:
-    if s.startswith(stages_old):
-      # Some input stage is a prefix of s
-      stages.append(s)
-      break
-  args['stages'] = stages
+  # Allow any prefix of a stage name.
+  args['stages'] = [x for x in STAGES if x.startswith(tuple(args['stages']))]
   if args['names'] is not None:
     if args['input'] is not None:
       if len(args['names']) != len(args['input']):
