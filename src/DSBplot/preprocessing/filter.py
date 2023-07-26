@@ -11,6 +11,7 @@ import DSBplot.utils.alignment_utils as alignment_utils
 import DSBplot.utils.log_utils as log_utils
 
 RANK_NA = 999999999 # For indication an NA sequence rank
+MAX_SUBST_INF = 999999999 # For indication an infinite number of substitutions
 
 def check_consecutive_indel(ins_pos, del_pos):
   if (len(ins_pos) == 0) and (len(del_pos) == 0): # no in/dels
@@ -278,7 +279,7 @@ def post_process_args(args):
       raise Exception('Number of input files must match the number of names.')
   if args.get('max_subst') is not None:
     if args['max_subst'] < 0:
-      args['max_subst'] = float('inf')
+      args['max_subst'] = MAX_SUBST_INF
   if args.get('consecutive') is not None:
     args['consecutive'] = bool(args['consecutive'])
   if args.get('dsb_touch') is not None:
@@ -747,7 +748,6 @@ def do_filter(
         for l in debug_lines:
           debug_out.write(l + '\n')
     log_utils.log_output(debug_file)
-  log_utils.blank_line()
 
 def main(
   input_list,

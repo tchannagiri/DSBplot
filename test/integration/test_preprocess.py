@@ -10,12 +10,14 @@ class TestPreprocess(unittest.TestCase):
     """
     return [
       'data_info.json',
-      'filter_debug.csv',
       'ref_seq.fasta',
-      'variation_withoutSubst.csv',
-      'variation_withSubst.csv',
+      'filter_debug.csv',
       'window_withoutSubst.csv',
       'window_withSubst.csv',
+      'window_withSubst_debug.csv',
+      'variation_withoutSubst.csv',
+      'variation_withSubst.csv',
+      'variation_withSubst_debug.csv',
     ]
   
   def check_equality(self, file_1, file_2):

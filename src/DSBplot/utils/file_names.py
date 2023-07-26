@@ -7,6 +7,9 @@ IMAGE_DIR = 'images'
 def make_file_name(dir, *args, ext):
   return os.path.join(dir, '_'.join(map(str, args)) + '.' + ext)
 
+def args_file(dir, prefix):
+  return os.path.join(dir, prefix + '_args.json')
+
 def sam_file(dir, name):
   return make_file_name(dir, name, ext='sam')
 

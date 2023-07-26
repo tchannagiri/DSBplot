@@ -4,8 +4,8 @@ def get_alignment_window(
   dsb_pos,
   window_size,
   anchor_size,
-  anchor_sub,
-  anchor_indel,
+  anchor_substs,
+  anchor_indels,
 ):
   """
     Get the part of the alignment in a window around the DSB.
@@ -79,10 +79,10 @@ def get_alignment_window(
     return None, None
 
   if (
-    ((anchor_sub >= 0) and (left_anchor_sub > anchor_sub)) or
-    ((anchor_indel >= 0) and (left_anchor_indel > anchor_indel)) or
-    ((anchor_sub >= 0) and (right_anchor_sub > anchor_sub)) or
-    ((anchor_indel >= 0) and (right_anchor_indel > anchor_indel))
+    ((anchor_substs >= 0) and (left_anchor_sub > anchor_substs)) or
+    ((anchor_indels >= 0) and (left_anchor_indel > anchor_indels)) or
+    ((anchor_substs >= 0) and (right_anchor_sub > anchor_substs)) or
+    ((anchor_indels >= 0) and (right_anchor_indel > anchor_indels))
   ):
     return None, None
 

@@ -91,7 +91,6 @@ def main(input, output):
 
   file_utils.write_csv(variation_data, output)
   log_utils.log_output(output)
-  log_utils.blank_line()
 
 if __name__ == '__main__':
   main(**parse_args())

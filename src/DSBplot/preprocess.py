@@ -71,7 +71,7 @@ PARAMS = {
   '--bt2': {
     'type': str,
     'nargs': '+',
-    'default': '',
+    'default': [''],
     'help': 'Additional arguments to pass to Bowtie 2.',
     'dest': 'bowtie2_args',
   },
@@ -175,7 +175,11 @@ def parse_args():
       ' must the same value on each separate invocation. Two experiments should not' +
       ' be given the same OUTPUT directory. See parameter "--stages" and the README for more information' +
       ' on the individual stages. The input files for each' +
-      ' repeat of the experiment must be passed in alphabetical order.'
+      ' repeat of the experiment must be passed in alphabetical order.' +
+      ' Certain parameters may be omitted if the corresponding stage is not run,' +
+      ' the parameter has a default value, or the previous stage uses the same parameter' +
+      ' and the "*_args.json" file for the previous stage is present in the directory' +
+      ' (see the help for each parameter).'
     ),
     formatter_class = argparse.ArgumentDefaultsHelpFormatter,
   )
@@ -207,6 +211,16 @@ def parse_args():
 
   return post_process_args(vars(parser.parse_args()))
 
+def write_args(args, output, prefix):
+  out_file = file_names.args_file(output, prefix)
+  log_utils.log_output(out_file)
+  file_utils.write_json(args, out_file)
+
+def read_args(output, prefix):
+  in_file = file_names.args_file(output, prefix)
+  log_utils.log_input(in_file)
+  return file_utils.read_json(in_file)
+
 def do_0_align(
   output,
   input_list,
@@ -220,6 +234,13 @@ def do_0_align(
     raise Exception('REF must be provided for stage "0_align".')
   if library_names is None:
     library_names = [file_names.get_file_name(x) for x in input_list]
+  args = {
+    'output': output,
+    'input_list': input_list,
+    'library_names': library_names,
+    'ref_seq_file': ref_seq_file,
+    'bowtie2_args': bowtie2_args,
+  }
   bowtie2_args = ' '.join(bowtie2_args)
   bowtie2_index_file = file_names.bowtie2_index(output)
   # Existing Bowtie 2 index files must be overwritten.
@@ -243,11 +264,11 @@ def do_0_align(
     log_utils.log('Bowtie 2 command: ' + bowtie2_command)
     if os.system(bowtie2_command) != 0:
       raise Exception('Bowtie 2 alignment failed.')
-  log_utils.blank_line()
+  write_args(args, output, 'align')
 
 def do_1_filter(
-  library_names,
   output,
+  library_names,
   total_reads,
   ref_seq_file,
   dsb_pos,
@@ -273,24 +294,27 @@ def do_1_filter(
     ])
   input_list = [file_names.sam_file(output, x) for x in library_names]
 
-  filter.main(
-    input_list = input_list,
-    output = [
+  args = {
+    'input_list': input_list,
+    'output': [
       file_names.filter(output, 'accepted'),
       file_names.filter(output, 'rejected'),
     ],
-    debug_file = file_names.filter(output, 'debug'),
-    library_names = library_names,
-    total_reads = total_reads,
-    ref_seq_file = ref_seq_file,
-    dsb_pos = dsb_pos,
-    min_length = min_length,
-    max_subst = max_subst,
-    reverse_complement = reverse_complement,
-    consecutive = consecutive,
-    dsb_touch = dsb_touch,
-    quiet = quiet,
-  )
+    'debug_file': file_names.filter(output, 'debug'),
+    'library_names': library_names,
+    'total_reads': total_reads,
+    'ref_seq_file': ref_seq_file,
+    'dsb_pos': dsb_pos,
+    'min_length': min_length,
+    'max_subst': max_subst,
+    'reverse_complement': reverse_complement,
+    'consecutive': consecutive,
+    'dsb_touch': dsb_touch,
+    'quiet': quiet,
+  }
+
+  filter.main(**args)
+  write_args(args, output, 'filter')
 
 def do_2_window(
   output,
@@ -298,7 +322,8 @@ def do_2_window(
   dsb_pos,
   window_size,
   anchor_size,
-  anchor_vars,
+  anchor_substs,
+  anchor_indels,
 ):
   if ref_seq_file is None:
     raise Exception('REF must be provided for stage "2_window".')
@@ -308,27 +333,34 @@ def do_2_window(
     raise Exception('WINDOW must be provided for stage "2_window".')
   if anchor_size is None:
     raise Exception('ANCHOR must be provided for stage "2_window".')
-  if anchor_vars is None:
-    raise Exception('ANCHOR_VAR must be provided for stage "2_window".')
+  if anchor_substs is None:
+    raise Exception('ANCHOR_VARS must be provided for stage "2_window".')
+  if anchor_indels is None:
+    raise Exception('ANCHOR_VARS must be provided for stage "2_window".')
 
   for subst_type in constants.SUBST_TYPES:
-    get_window.main(
-      input = file_names.filter(output, 'accepted'),
-      output = file_names.window(output, subst_type),
-      ref_seq_file = ref_seq_file,
-      dsb_pos = dsb_pos,
-      window_size = window_size,
-      anchor_size = anchor_size,
-      anchor_vars = anchor_vars,
-      subst_type = subst_type,
-    )
+    args = {
+      'input': file_names.filter(output, 'accepted'),
+      'output': file_names.window(output, subst_type),
+      'ref_seq_file': ref_seq_file,
+      'dsb_pos': dsb_pos,
+      'window_size': window_size,
+      'anchor_size': anchor_size,
+      'anchor_substs': anchor_substs,
+      'anchor_indels': anchor_indels,
+      'subst_type': subst_type,
+    }
+    get_window.main(**args)
+    write_args(args, output, 'window_' + subst_type)
 
 def do_3_variation(output):
   for subst_type in constants.SUBST_TYPES:
-    get_variation.main(
-      input = file_names.window(output, subst_type),
-      output = file_names.variation(output, subst_type),
-    )
+    args = {
+      'input': file_names.window(output, subst_type),
+      'output': file_names.variation(output, subst_type),
+    }
+    get_variation.main(**args)
+    write_args(args, output, 'variation_' + subst_type)
 
 def do_4_info(
   output,
@@ -364,80 +396,6 @@ def do_4_info(
   log_utils.log_output(out_file)
   file_utils.write_json(data_info, out_file)
 
-def do_stages(
-  stages,
-  output,
-
-  input_list,
-  ref_seq_file,
-  bowtie2_args,
-
-  library_names,
-  total_reads,
-  dsb_pos,
-  min_length,
-  max_subst,
-  reverse_complement,
-  consecutive,
-  dsb_touch,
-  quiet,
-
-  window_size,
-  anchor_size,
-  anchor_vars,
-
-  label,
-):
-  # Copy reference sequence file to output directory.
-  if ref_seq_file is not None:
-    shutil.copy(ref_seq_file, file_names.ref_seq_file(output))
-
-  if '0_align' in stages:
-    do_0_align(
-      input_list = input_list,
-      library_names = library_names,
-      output = output,
-      ref_seq_file = ref_seq_file,
-      bowtie2_args = bowtie2_args,
-    )
-
-  if '1_filter' in stages:
-    do_1_filter(
-      library_names = library_names,
-      output = output,
-      total_reads = total_reads,
-      ref_seq_file = ref_seq_file,
-      dsb_pos = dsb_pos,
-      min_length = min_length,
-      max_subst = max_subst,
-      reverse_complement = reverse_complement,
-      consecutive = consecutive,
-      dsb_touch = dsb_touch,
-      quiet = quiet,
-    )
-
-  if '2_window' in stages:
-    do_2_window(
-      output = output,
-      ref_seq_file = ref_seq_file,
-      dsb_pos = dsb_pos,
-      window_size = window_size,
-      anchor_size = anchor_size,
-      anchor_vars = anchor_vars,
-    )
-
-  if '3_variation' in stages:
-    do_3_variation(output = output)
-
-  if '4_info' in stages:
-    do_4_info(
-      output = output,
-      ref_seq_file = ref_seq_file,
-      dsb_pos = dsb_pos,
-      window_size = window_size,
-      label = label,
-    )
-
 def main(
   stages,
   output,
@@ -458,34 +416,93 @@ def main(
 
   window_size,
   anchor_size,
-  anchor_vars,
+  anchor_substs,
+  anchor_indels,
 
   label,
 ):
-  do_stages(
-    stages = stages,
-    output = output,
+  # Copy reference sequence file to output directory.
+  if ref_seq_file is not None:
+    shutil.copy(ref_seq_file, file_names.ref_seq_file(output))
 
-    input_list = input_list,
-    ref_seq_file = ref_seq_file,
-    bowtie2_args = bowtie2_args,
+  log_utils.blank_line()
 
-    library_names = library_names,
-    total_reads = total_reads,
-    dsb_pos = dsb_pos,
-    min_length = min_length,
-    max_subst = max_subst,
-    reverse_complement = reverse_complement,
-    consecutive = consecutive,
-    dsb_touch = dsb_touch,
-    quiet = quiet,
+  if '0_align' in stages:
+    log_utils.log('Running stage "0_align".')
+    prev_args = {
+      'output': output,
+      'input_list': input_list,
+      'library_names': library_names,
+      'ref_seq_file': ref_seq_file,
+      'bowtie2_args': bowtie2_args,
+    }
+    do_0_align(**prev_args)
+    log_utils.blank_line()
 
-    window_size = window_size,
-    anchor_size = anchor_size,
-    anchor_vars = anchor_vars,
+  if '1_filter' in stages:
+    log_utils.log('Running stage "1_filter".')
+    if os.path.exists(file_names.args_file(output, 'align')):
+      prev_args = read_args(output, 'align')
+      if ref_seq_file is None:
+        ref_seq_file = prev_args.get('ref_seq_file')
+      if library_names is None:
+        library_names = prev_args.get('library_names')
 
-    label = label,
-  )
+    do_1_filter(
+      output = output,
+      library_names = library_names,
+      total_reads = total_reads,
+      ref_seq_file = ref_seq_file,
+      dsb_pos = dsb_pos,
+      min_length = min_length,
+      max_subst = max_subst,
+      reverse_complement = reverse_complement,
+      consecutive = consecutive,
+      dsb_touch = dsb_touch,
+      quiet = quiet,
+    )
+    log_utils.blank_line()
+
+  if '2_window' in stages:
+    log_utils.log('Running stage "2_window".')
+    prev_args = read_args(output, 'filter')
+    if ref_seq_file is None:
+      ref_seq_file = prev_args.get('ref_seq_file')
+    if dsb_pos is None:
+      dsb_pos = prev_args.get('dsb_pos')
+    do_2_window(
+      output = output,
+      ref_seq_file = ref_seq_file,
+      dsb_pos = dsb_pos,
+      window_size = window_size,
+      anchor_size = anchor_size,
+      anchor_substs = anchor_substs,
+      anchor_indels = anchor_indels,
+    )
+    log_utils.blank_line()
+
+  if '3_variation' in stages:
+    log_utils.log('Running stage "3_variation".')
+    do_3_variation(output = output)
+    log_utils.blank_line()
+
+  if '4_info' in stages:
+    log_utils.log('Running stage "4_info".')
+    prev_args = read_args(output, 'window_' + constants.SUBST_TYPES[0])
+    if ref_seq_file is None:
+      ref_seq_file = prev_args.get('ref_seq_file')
+    if dsb_pos is None:
+      dsb_pos = prev_args.get('dsb_pos')
+    if window_size is None:
+      window_size = prev_args.get('window_size')
+    do_4_info(
+      output = output,
+      ref_seq_file = ref_seq_file,
+      dsb_pos = dsb_pos,
+      window_size = window_size,
+      label = label,
+    )
+    log_utils.blank_line()
 
 # This allows the "DSBplot-preprocess" command to be run from the command line.
 def entry_point():

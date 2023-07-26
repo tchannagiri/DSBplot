@@ -138,7 +138,6 @@ def main(
     output_file = file_names.window(output, subst_type)
     file_utils.write_csv(data, output_file)
     log_utils.log_output(output_file)
-    log_utils.blank_line()
 
   ref_seq_window = set(
     file_utils.read_json(file_names.data_info(x))['ref_seq_window']
@@ -163,7 +162,6 @@ def main(
   output_file = file_names.data_info(output)
   file_utils.write_json(data_info, output_file)
   log_utils.log_output(output_file)
-  log_utils.blank_line()
 
   preprocess.do_3_variation(output)
 

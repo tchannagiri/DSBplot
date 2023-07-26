@@ -78,6 +78,10 @@ def post_process_args(args):
   args = args.copy()
   if args.get('subst_type') is not None:
     args['subst_type'] = constants.SUBST_TYPES[args['subst_type']]
+  if args.get('anchor_vars') is not None:
+    args['anchor_substs'] = args['anchor_vars'][0]
+    args['anchor_indels'] = args['anchor_vars'][1]
+    del args['anchor_vars']
   return args
 
 def parse_args():
@@ -126,8 +130,8 @@ def write_window(
   dsb_pos,
   window_size,
   anchor_size,
-  anchor_sub,
-  anchor_indel,
+  anchor_substs,
+  anchor_indels,
   subst_type,
 ):
   data = file_utils.read_csv(input)
@@ -150,8 +154,8 @@ def write_window(
       dsb_pos = dsb_pos,
       window_size = window_size,
       anchor_size = anchor_size,
-      anchor_sub = anchor_sub,
-      anchor_indel = anchor_indel,
+      anchor_substs = anchor_substs,
+      anchor_indels = anchor_indels,
     )
     if ref_align is None:
       continue
@@ -199,8 +203,8 @@ def get_ref_seq_window(ref_seq, dsb_pos, window_size):
     dsb_pos = dsb_pos,
     window_size = window_size,
     anchor_size = 0,
-    anchor_sub = 0,
-    anchor_indel = 0,
+    anchor_substs = 0,
+    anchor_indels = 0,
   )
   return ref_seq_window
 
@@ -211,7 +215,8 @@ def main(
   dsb_pos,
   window_size,
   anchor_size,
-  anchor_vars,
+  anchor_substs,
+  anchor_indels,
   subst_type,
 ):
   log_utils.log_input(input)
@@ -223,12 +228,10 @@ def main(
     dsb_pos = dsb_pos,
     window_size = window_size,
     anchor_size = anchor_size,
-    anchor_sub = anchor_vars[0],
-    anchor_indel = anchor_vars[1],
+    anchor_substs = anchor_substs,
+    anchor_indels = anchor_indels,
     subst_type = subst_type,
   )
-
-  log_utils.blank_line()
 
 if __name__ == '__main__':
   main(**parse_args())
