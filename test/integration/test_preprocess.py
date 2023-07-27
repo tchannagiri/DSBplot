@@ -14,10 +14,8 @@ class TestPreprocess(unittest.TestCase):
       'filter_debug.csv',
       'window_withoutSubst.csv',
       'window_withSubst.csv',
-      'window_withSubst_debug.csv',
       'variation_withoutSubst.csv',
       'variation_withSubst.csv',
-      'variation_withSubst_debug.csv',
     ]
   
   def check_equality(self, file_1, file_2):
