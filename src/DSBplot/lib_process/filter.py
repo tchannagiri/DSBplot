@@ -41,7 +41,7 @@ def check_dsb_touches_indel(dsb_pos, ins_pos, del_pos):
     ((dsb_pos + 1) in del_pos) # deletion on right of DSB
   )
 
-def check_insertion_special_case(
+def check_insertion_realign(
   ref_align,
   read_align,
   dsb_pos,
@@ -82,7 +82,7 @@ def check_insertion_special_case(
 
   return new_ref_align, read_align # read_align remains unchanged
 
-def check_deletion_special_case(
+def check_deletion_realign(
   ref_align,
   read_align,
   dsb_pos,
@@ -244,22 +244,22 @@ PARAMS = {
     'type': int,
     'choices': [0, 1],
     'default': 1,
-    'help': (
-      'Set to 0 to disable the check that all in/dels must be consecutive.' +
-      ' If this check is disabled, realignment is not performed.'
-    ),
+    'help': 'Enable (1) or disable (0) the check that all in/dels must be consecutive.',
     'dest': 'consecutive',
   },
   '--touch': {
     'type': int,
     'choices': [0, 1],
     'default': 1,
-    'help': (
-      'Set to 0 to disable the check that some in/dels must touch the DSB.' +
-      ' If this check is disabled, the "--dsb" option is ignored' +
-      ' and realignment is not performed.'
-    ),
+    'help': 'Enable (1) or disable (0) the check that some in/dels must touch the DSB.',
     'dest': 'dsb_touch',
+  },
+  '--realign': {
+    'type': int,
+    'choices': [0, 1],
+    'default': 1,
+    'help': 'Enable (1) or disable (0) realignment of reads to touch DSB and be consecutive.',
+    'dest': 'realign',
   },
   '--quiet': {
     'help': 'If present, do not output verbose log messages.',
@@ -286,6 +286,8 @@ def post_process_args(args):
     args['dsb_touch'] = bool(args['dsb_touch'])
   if args.get('reverse_complement') is not None:
     args['reverse_complement'] = bool(args['reverse_complement'])
+  if args.get('realign') is not None:
+    args['realign'] = bool(args['realign'])
   return args
 
 def parse_args():
@@ -310,6 +312,7 @@ def do_filter(
   reverse_complement,
   consecutive,
   dsb_touch,
+  realign,
   quiet,
 ):
   # read reference sequence from fasta file
@@ -332,9 +335,9 @@ def do_filter(
   rejected_not_consec_and_not_touch = [0] * len(input_list)
   rejected_min_len = [0] * len(input_list)
   accepted_repeat = [0] * len(input_list)
-  accepted_del_special = [0] * len(input_list)
-  accepted_ins_special = [0] * len(input_list)
-  accepted_ins_and_del_special = [0] * len(input_list)
+  accepted_del_realign = [0] * len(input_list)
+  accepted_ins_realign = [0] * len(input_list)
+  accepted_ins_and_del_realign = [0] * len(input_list)
   accepted_indel_other = [0] * len(input_list)
   accepted_no_indel = [0] * len(input_list)
 
@@ -445,32 +448,24 @@ def do_filter(
           raise Exception('Incorrect count of insertions and/or deletions')
         if num_sub_sam != num_sub:
           raise Exception('Incorrect count of substitutions')
-        
-        if num_sub > max_subst:
-          read_rejected.add(read_seq)
-          read_debug[read_seq] = 'max_sub'
-          rejected_max_sub[i] += 1
-          read_count_rejected[i][read_seq] = 1
-          continue
 
         if (num_ins > 0) or (num_del > 0):
           pass_consec = (not consecutive) or check_consecutive_indel(ins_pos, del_pos)
           pass_touch = (not dsb_touch) or check_dsb_touches_indel(dsb_pos, ins_pos, del_pos)
-          insertion_special_case = False
-          deletion_special_case = False
-          # We try realigning only when both consecutive and dsb_touch are required
-          # but one or both of the checks fail.
-          if (consecutive and dsb_touch) and not (pass_consec and pass_touch):
-            # Note: The in/del special cases may fail to identify
+          insertion_realign = False
+          deletion_realign = False
+          # We try realigning only when both consecutive and dsb_touch checks fail.
+          if realign and not (pass_consec and pass_touch):
+            # Note: The in/del realignments may fail to identify
             # certain edge cases when Bowtie picks an alignment that reduces the
             # number of substitutions by using mixed insertions and deletions, or
             # by using in/dels that are not continguous. This is because the
-            # the special cases always try to reduce (or keep equal) the
+            # the realignments always try to reduce (or keep equal) the
             # number of substitutions. This could potentially be solved by
             # choosing different scoring parameters in Bowtie 2, (e.g., penalize
             # gap-open more heavily) but this is not implemented currently.
             if (num_ins > 0) and (num_del == 0):
-              new_ref_align, new_read_align = check_insertion_special_case(
+              new_ref_align, new_read_align = check_insertion_realign(
                 ref_align,
                 read_align,
                 dsb_pos,
@@ -478,10 +473,10 @@ def do_filter(
               if new_ref_align is not None:
                 ref_align = new_ref_align
                 read_align = new_read_align
-                insertion_special_case = True
+                insertion_realign = True
 
             if (num_del > 0) and (num_ins == 0):
-              new_ref_align, new_read_align = check_deletion_special_case(
+              new_ref_align, new_read_align = check_deletion_realign(
                 ref_align,
                 read_align,
                 dsb_pos,
@@ -489,9 +484,9 @@ def do_filter(
               if new_ref_align is not None:
                 ref_align = new_ref_align
                 read_align = new_read_align
-                deletion_special_case = True
-            if insertion_special_case or deletion_special_case:
-              # if special case used, recompute info and do checks again
+                deletion_realign = True
+            if insertion_realign or deletion_realign:
+              # if realignment used, recompute info and do checks again
               cigar = alignment_utils.get_cigar(ref_align, read_align)
               ins_pos, del_pos, sub_pos = alignment_utils.get_var_pos(ref_align, read_align)
               num_ins = len(ins_pos)
@@ -501,15 +496,15 @@ def do_filter(
               pass_touch = check_dsb_touches_indel(dsb_pos, ins_pos, del_pos)
 
           if pass_consec and pass_touch:
-            if insertion_special_case and deletion_special_case:
-              read_debug[read_seq] = 'ins_and_del_special'
-              accepted_ins_and_del_special[i] += 1
-            elif insertion_special_case:
-              read_debug[read_seq] = 'ins_special'
-              accepted_ins_special[i] += 1
-            elif deletion_special_case:
-              read_debug[read_seq] = 'del_special'
-              accepted_del_special[i] += 1
+            if insertion_realign and deletion_realign:
+              read_debug[read_seq] = 'ins_and_del_realign'
+              accepted_ins_and_del_realign[i] += 1
+            elif insertion_realign:
+              read_debug[read_seq] = 'ins_realign'
+              accepted_ins_realign[i] += 1
+            elif deletion_realign:
+              read_debug[read_seq] = 'del_realign'
+              accepted_del_realign[i] += 1
             else:
               read_debug[read_seq] = 'indel_other'
               accepted_indel_other[i] += 1
@@ -532,12 +527,20 @@ def do_filter(
           read_debug[read_seq] = 'no_indel'
           accepted_no_indel[i] += 1
 
+        if num_sub > max_subst:
+          read_rejected.add(read_seq)
+          read_debug[read_seq] = 'max_sub'
+          rejected_max_sub[i] += 1
+          read_count_rejected[i][read_seq] = 1
+          continue
+
         read_accepted.add(read_seq)
         read_cigar_new[read_seq] = cigar
         read_num_sub[read_seq] = num_sub
         read_count_accepted[i][read_seq] = 1
       # End of loop over reads
     # End with statement
+
     if len(read_count_accepted[i]) == 0:
       raise Exception('No reads captured. Check input file.')
 
@@ -654,9 +657,9 @@ def do_filter(
 
   for i in range(len(input_list)):
     accepted_new[i] = (
-      accepted_del_special[i] +
-      accepted_ins_special[i] +
-      accepted_ins_and_del_special[i] +
+      accepted_del_realign[i] +
+      accepted_ins_realign[i] +
+      accepted_ins_and_del_realign[i] +
       accepted_indel_other[i] +
       accepted_no_indel[i]
     )
@@ -690,9 +693,9 @@ def do_filter(
     'total_accepted': total_accepted,
     'accepted_new': accepted_new,
     'accepted_repeat': accepted_repeat,
-    'accepted_deletion_special': accepted_del_special,
-    'accepted_insertion_special': accepted_ins_special,
-    'accepted_insertion_and_deletion_special': accepted_ins_and_del_special,
+    'accepted_deletion_realign': accepted_del_realign,
+    'accepted_insertion_realign': accepted_ins_realign,
+    'accepted_insertion_and_deletion_realign': accepted_ins_and_del_realign,
     'accepted_indel_other': accepted_indel_other,
     'accepted_no_indel': accepted_no_indel,
     'total_rejected': total_rejected,
@@ -717,9 +720,9 @@ def do_filter(
     f'    Accepted: '  + ', '.join([str(x) for x in total_accepted]),
     f'        Repeat: ' + ', '.join([str(x) for x in accepted_repeat]),
     f'        New: '  + ', '.join([str(x) for x in accepted_new]),
-    f'            Insertion special case: ' + ', '.join([str(x) for x in accepted_ins_special]),
-    f'            Deletion special case: ' + ', '.join([str(x) for x in accepted_del_special]),
-    f'            Insertion and deletion special case: ' + ', '.join([str(x) for x in accepted_ins_and_del_special]),
+    f'            Insertion realignment: ' + ', '.join([str(x) for x in accepted_ins_realign]),
+    f'            Deletion realignment: ' + ', '.join([str(x) for x in accepted_del_realign]),
+    f'            Insertion and deletion realignment: ' + ', '.join([str(x) for x in accepted_ins_and_del_realign]),
     f'            In/del other: ' + ', '.join([str(x) for x in accepted_indel_other]),
     f'            No in/del: ' + ', '.join([str(x) for x in accepted_no_indel]),
     f'    Rejected: ' + ', '.join([str(x) for x in total_rejected]),
@@ -762,6 +765,7 @@ def main(
   reverse_complement,
   consecutive,
   dsb_touch,
+  realign,
   quiet,
 ):
   do_filter(
@@ -778,6 +782,7 @@ def main(
     reverse_complement = reverse_complement,
     consecutive = consecutive,
     dsb_touch = dsb_touch,
+    realign = realign,
     quiet = quiet,
   )
 

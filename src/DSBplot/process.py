@@ -100,6 +100,7 @@ PARAMS = {
   '--rc': filter.PARAMS['--rc'].copy(),
   '--consec': filter.PARAMS['--consec'].copy(),
   '--touch': filter.PARAMS['--touch'].copy(),
+  '--realign': filter.PARAMS['--realign'].copy(),
   '--reads': filter.PARAMS['--reads'].copy(),
   '--window': get_window.PARAMS['--window'].copy(),
   '--anchor': get_window.PARAMS['--anchor'].copy(),
@@ -107,6 +108,7 @@ PARAMS = {
   '--quiet': filter.PARAMS['--quiet'].copy(),
 }
 
+# Set whether the parameters are required or not
 PARAMS['--stages']['required'] = False
 PARAMS['--no_align']['required'] = False
 PARAMS['-o']['required'] = True
@@ -121,12 +123,14 @@ PARAMS['--max_sub']['required'] = False
 PARAMS['--rc']['required'] = False
 PARAMS['--consec']['required'] = False
 PARAMS['--touch']['required'] = False
+PARAMS['--realign']['required'] = False
 PARAMS['--window']['required'] = False
 PARAMS['--anchor']['required'] = False
 PARAMS['--anchor_vars']['required'] = False
 PARAMS['--label']['required'] = False
 PARAMS['--quiet']['required'] = False
 
+# Add help messages saying which stages each parameter is used in.
 PARAMS['-o']['help'] += ' Stages: all.'
 PARAMS['-i']['help'] += ' Stages: "0_align".'
 PARAMS['--bt2']['help'] += ' Stages: "0_align" (may be omitted because of default).'
@@ -139,6 +143,7 @@ PARAMS['--max_sub']['help'] += ' Stages: "1_filter" (may be omitted because of d
 PARAMS['--rc']['help'] += ' Stages: "1_filter" (may be omitted because of default).'
 PARAMS['--consec']['help'] += ' Stages: "1_filter" (may be omitted because of default).'
 PARAMS['--touch']['help'] += ' Stages: "1_filter" (may be omitted because of default).'
+PARAMS['--realign']['help'] += ' Stages: "1_filter" (may be omitted because of default).'
 PARAMS['--quiet']['help'] += ' Stages: "1_filter" (may be omitted because of default).'
 PARAMS['--window']['help'] += ' Stages: "2_window", "4_info" (may be omitted because of default).'
 PARAMS['--anchor']['help'] += ' Stages: "2_window" (may be omitted because of default).'
@@ -204,6 +209,7 @@ def parse_args():
   group_filter.add_argument('--rc', **PARAMS['--rc'])
   group_filter.add_argument('--consec', **PARAMS['--consec'])
   group_filter.add_argument('--touch', **PARAMS['--touch'])
+  group_filter.add_argument('--realign', **PARAMS['--realign'])
   group_filter.add_argument('--quiet', **PARAMS['--quiet'])
   group_window.add_argument('--anchor', **PARAMS['--anchor'])
   group_window.add_argument('--anchor_vars', **PARAMS['--anchor_vars'])
@@ -277,6 +283,7 @@ def do_1_filter(
   reverse_complement,
   consecutive,
   dsb_touch,
+  realign,
   quiet,
 ):
   if ref_seq_file is None:
@@ -310,6 +317,7 @@ def do_1_filter(
     'reverse_complement': reverse_complement,
     'consecutive': consecutive,
     'dsb_touch': dsb_touch,
+    'realign': realign,
     'quiet': quiet,
   }
 
@@ -412,6 +420,7 @@ def main(
   reverse_complement,
   consecutive,
   dsb_touch,
+  realign,
   quiet,
 
   window_size,
@@ -459,6 +468,7 @@ def main(
       reverse_complement = reverse_complement,
       consecutive = consecutive,
       dsb_touch = dsb_touch,
+      realign = realign,
       quiet = quiet,
     )
     log_utils.blank_line()
