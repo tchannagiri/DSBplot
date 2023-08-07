@@ -1,4 +1,4 @@
-import DSBplot.plot_histogram.plot_histogram as plot_histogram
+import DSBplot.lib_histogram.plot_histogram as plot_histogram
 
 def parse_args():
   return plot_histogram.parse_args()

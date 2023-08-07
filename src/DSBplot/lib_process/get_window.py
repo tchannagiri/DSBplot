@@ -6,8 +6,8 @@ import DSBplot.utils.file_utils as file_utils
 import DSBplot.utils.log_utils as log_utils
 import DSBplot.utils.alignment_utils as alignment_utils
 import DSBplot.utils.constants as constants
-import DSBplot.preprocessing.filter as filter
-import DSBplot.preprocessing.alignment_window as alignment_window
+import DSBplot.lib_process.filter as filter
+import DSBplot.lib_process.alignment_window as alignment_window
 
 PARAMS = {
   '-i': {

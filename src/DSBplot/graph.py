@@ -1,4 +1,4 @@
-import DSBplot.plot_graph.plot_graph as plot_graph
+import DSBplot.lib_graph.plot_graph as plot_graph
 
 def parse_args():
   return plot_graph.parse_args()

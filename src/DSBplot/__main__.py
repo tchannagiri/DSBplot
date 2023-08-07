@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-import DSBplot.preprocess as preprocess
+import DSBplot.process as process
 import DSBplot.graph as graph
 import DSBplot.histogram as histogram
 import DSBplot.concat as concat
@@ -11,14 +11,14 @@ def entry_point():
   parser = argparse.ArgumentParser(
     description = (
       'DSBplot main command.' +
-      'Use one of the options commands "preprocess", "graph", "histogram", or "concat".' +
+      'Use one of the options commands "process", "graph", "histogram", or "concat".' +
       ' Follow by "--help" for more information on individual commands.' +
-      ' E.g., "python -m DSBplot preprocess --help".'
+      ' E.g., "python -m DSBplot process --help".'
     )
   )
   parser.add_argument(
     'command',
-    choices = ['preprocess', 'graph', 'histogram', 'concat'],
+    choices = ['process', 'graph', 'histogram', 'concat'],
     help = 'Command to run.',
   )
   parser.add_argument(
@@ -30,9 +30,9 @@ def entry_point():
   if sys.argv[1] != args.command:
     raise Exception('Error: "sys.argv[1]" != "args.command".')
   sys.argv.pop(1)
-  if args.command == 'preprocess':
-    sys.argv[0] = preprocess.__file__
-    preprocess.entry_point()
+  if args.command == 'process':
+    sys.argv[0] = process.__file__
+    process.entry_point()
   elif args.command == 'graph':
     sys.argv[0] = graph.__file__
     graph.entry_point()

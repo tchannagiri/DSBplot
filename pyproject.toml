@@ -31,7 +31,7 @@ dependencies = [
 
 [project.scripts]
 DSBplot = "DSBplot.__main__:entry_point"
-DSBplot-preprocess = "DSBplot.preprocess:entry_point"
+DSBplot-process = "DSBplot.process:entry_point"
 DSBplot-graph = "DSBplot.graph:entry_point"
 DSBplot-histogram = "DSBplot.histogram:entry_point"
 DSBplot-concat = "DSBplot.concat:entry_point"

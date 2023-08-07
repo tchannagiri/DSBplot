@@ -5,11 +5,11 @@
 This `DSBplot` software is intended to allow processing and visualizing high-throughput sequencing data obtained for the purpose of studying double-strand break (DSB) repair due to the nonhomologous end-joining (NHEJ) repair mechanism. Basically, this means that we study the indels (insertions and deletions of nucleotides) that occur near the DSB site. The accompanying article can be found at LINK. This protocol was originally used in the study Jeon et al. ([link](https://doi.org/10.1101/2022.11.01.514688)) for studying DSB repair in human cells. That publication contains several examples of the graphs in the supplementary figures, as well as a discussion of insights gained from the resulting figures.
 
 The overall functionality of the package is to:
-  1. Preprocess DNA-seq reads that have been obtained from DSB (double-strand break) repair experiments.
+  1. Process DNA-seq short reads that have been obtained from DSB repair experiments.
   2. Quantify the variations (insertions, deletions, and substitutions) near the DSB site using sequence alignment.
-  3. Visualize the resulting variations using two types of figures: *sequence graphs* and *variation histograms*.
+  3. Visualize the resulting variations using two types of figures: *variation-distance graphs* and *variation-position histograms*.
 
-The expected inputs are DNA-seq libraries that have been treated in a very specific manner to properly allowing infering the variation with alignments. For a more detailed description of the expected input, see section [Commands](#commands) and the publication associated with this software (LINK).
+The expected inputs are DNA-seq short read libraries that have been obtained with *targeted amplicon sequencing*, meaning that sequencing primers are placed surround the DSB site to amplify a specific sequence around the DSB repair site. For a more detailed description of the expected input and how to the run the software, see section [Commands](#commands) and the publication associated with this software (LINK).
 
 ## Citation
 
@@ -24,53 +24,59 @@ XXX
 ## Installation
 
 To install the package, use the command
+
 ```
 pip install DSBplot
 ```
-The required Python version is >=3.11.0. The required dependencies are:
-* kaleido==0.1.0.post1 (only this version will work, please see [here](https://github.com/plotly/Kaleido/issues/134)).
-* Levenshtein>=0.21.0
-* matplotlib>=3.7.1
-* networkx>=3.1
-* numpy>=1.24.3
-* pandas>=2.0.1
-* Pillow>=9.5.0
-* plotly>=5.14.1
-* scikit-learn>=1.2.2
-To install these dependencies use the command
-```
-pip install kaleido==0.1.0.post1 Levenshtein>=0.21.0 matplotlib>=3.7.1 networkx>=3.1 numpy>=1.24.3 pandas>=2.0.1 Pillow>=9.5.0 plotly>=5.14.1 scikit-learn>=1.2.2
-```
-For a full list of requirements, please see `requirements.txt`.
 
-Bowtie 2 (version >= 2.5.0) should be installed and available on the system path. Particularly, the executables `bowtie2-build-s` and `bowtie2-align-s` should be available as commands (internally, we use the Python function `os.system()` to run Bowtie 2).
+The tested Python version is 3.11.0. The required dependencies are:
+
+* kaleido (if using window the version *must* be "0.1.0.post1", please see [here](https://github.com/plotly/Kaleido/issues/134)).
+* Levenshtein (tested version 0.21.0)
+* matplotlib (tested version 3.7.1)
+* networkx (tested version 3.1)
+* numpy (tested version 1.24.3)
+* pandas (tested version 2.0.1)
+* Pillow (tested version 9.5.0)
+* plotly (tested version 5.14.1)
+* scikit-learn (tested version 1.2.2)
+
+To install these dependencies use the command
+
+```
+pip install kaleido Levenshtein matplotlib networkx numpy pandas Pillow plotly scikit-learn
+```
+
+For a full list of the libaries used in testing, please see `requirements.txt`.
+
+Bowtie 2 (tested version 2.5.0) should be installed and available on the system path. Particularly, the executables `bowtie2-build-s` and `bowtie2-align-s` should be available as commands (internally, we use the Python function `os.system()` to run Bowtie 2).
 
 ## Commands
 
 This package is based on the following four commands:
 
-* `DSBplot-preprocess`: takes as input the trimmed FASTQ reads files and a FASTA file containing the reference sequence, and creates the intermediate tables of DNA sequences needed for plotting the graphs and histograms. The input directories should represent replicate experiments (e.g., biological replicates).
-* `DSBplot-comparison`: takes as input two directories created by `preprocess` and creates a directory that contains the intermediate tables needed for plotting comparison graphs. Both of the directories must have been created with the same reference sequence.
-* `DSBplot-graph`: takes as input a collection of the output directories of either `preprocess` or `comparison`, lays out sequences in all inputs, and plots a separate graph for each input.
-* `DSBplot-histogram`: takes as input an output directories of `preprocess` (outputs of `comparison` are not valid) and plots a histogram showing the type and position of variations (insertions, deletion, or substitutions) in the sequences.
+* `DSBplot-process`: takes as input the trimmed FASTQ reads files and a FASTA file containing the reference sequence, and creates the intermediate tables of DNA sequences needed for plotting the graphs and histograms. The input directories should represent replicate experiments (e.g., biological replicates).
+* `DSBplot-comparison`: takes as input two directories created by `process` and creates a directory that contains the intermediate tables needed for plotting comparison graphs. Both of the directories must have been created with the same reference sequence.
+* `DSBplot-graph`: takes as input a collection of the output directories of either `process` or `comparison`, lays out sequences in all inputs, and plots a separate graph for each input.
+* `DSBplot-histogram`: takes as input an output directories of `process` (outputs of `comparison` are not valid) and plots a histogram showing the type and position of variations (insertions, deletion, or substitutions) in the sequences.
 
 Once DSBplot is installed, these commands should be available from the command line. More information about each command is given in the following subsections. We use the notation `NAME` to refer to the value of a command-line parameter set by the user and the notation `--name` to refer to the parameter itself. The notation `file_name.ext` is also used to refer to file names.
 
-### `DSBplot-preprocess`
+### `DSBplot-process`
 
-The `DSBplot-preprocess` command perform alignment and preprocessing of the raw FASTQ data.
+The `DSBplot-process` command perform alignment and processing of the raw FASTQ data.
 
 #### Input
 
-We expect that the input FASTQ files to `preprocess` are *trimmed*, meaning that the sequencing adaptors have been removed. We also expected that the region of DNA between these adaptors is exactly the region of DNA represented by the reference sequence. This mean that if a given read represents a perfectly repaired DNA strand, it should identical with the reference sequence (assuming no substitution errors due to library preparation or sequencing). If multiple input FASTQ files are given, it is assumed that they are repeats of the same treatment condition. They are all processed identically and then combined into a single file (see [preprocessing stages](#prepcocessing-stages) below).
+We expect that the input FASTQ files to `process` are *trimmed*, meaning that the sequencing adaptors have been removed. We also expected that the region of DNA between these adaptors is exactly the region of DNA represented by the reference sequence. This mean that if a given read represents a perfectly repaired DNA strand, it should identical with the reference sequence (assuming no substitution errors due to library preparation or sequencing). If multiple input FASTQ files are given, it is assumed that they are repeats of the same treatment condition. They are all processed identically and then combined into a single file (see [processing stages](#prepcocessing-stages) below).
 
 #### Ignoring substitutions
 
-The preprocessing pipeline produces two different versions of most files: one *ignoring* substitutions (suffix "withoutSubst") and another *keeping* substitutions (suffix "withSubst"). The processing for files that ignore substitutions contains an extra step that replaces alignment substitutions (mismatches) with perfect matches with the reference sequence. We chose to ignore substitutions in our analysis because we noticed a similar distribution of substitutions occurring in both the experiment group (where DNA double-strand breaks were induced) and the control group (where no DSBs were induced). This suggests that the majority of substitutions were likely caused by DNA damage during library preparation or sequencing errors, rather than the process of repairing double-strand breaks. In the command `graph.py`, the `--subst_type` parameter controls whether to use the output with or without substitutions. The `histogram.py` command only uses the output with substitutions, since it is used to examine the distribution of substitutions.
+The processing pipeline produces two different versions of most files: one *ignoring* substitutions (suffix "withoutSubst") and another *keeping* substitutions (suffix "withSubst"). The processing for files that ignore substitutions contains an extra step that replaces alignment substitutions (mismatches) with perfect matches with the reference sequence. We chose to ignore substitutions in our analysis because we noticed a similar distribution of substitutions occurring in both the experiment group (where DNA double-strand breaks were induced) and the control group (where no DSBs were induced). This suggests that the majority of substitutions were likely caused by DNA damage during library preparation or sequencing errors, rather than the process of repairing double-strand breaks. In the command `graph.py`, the `--subst_type` parameter controls whether to use the output with or without substitutions. The `histogram.py` command only uses the output with substitutions, since it is used to examine the distribution of substitutions.
 
-#### Preprocessing stages
+#### Processing stages
 
-This `preprocess` command is broken in separate stages so that each stage can be run separately (potentially on different machines). However, the stages must be run in the correct order indicated by their prefixes. When running the stages separately, the value of the `OUTPUT` directory must the same value on each separate invocation. Two different experiments should not be given the same `OUTPUT` directory or the data from the second will overwrite the first. The following describes each stage in more detail.
+This `process` command is broken in separate stages so that each stage can be run separately (potentially on different machines). However, the stages must be run in the correct order indicated by their prefixes. When running the stages separately, the value of the `OUTPUT` directory must the same value on each separate invocation. Two different experiments should not be given the same `OUTPUT` directory or the data from the second will overwrite the first. The following describes each stage in more detail.
 
 1. **0_align**: Align FASTQ reads against FASTA reference sequence. This stage requires multiple input FASTQ files representing independent replicates of the same treatment condition. The alignment is done independently for each of the input FASTQs. The output of this step is a set of [SAM](https://samtools.github.io/hts-specs/SAMv1.pdf) files. Please ensure that [Bowtie 2](https://bowtie-bio.sourceforge.net/bowtie2/index.shtml) is installed and that the commands `bowtie2-build-s` and `bowtie2-align-s` are available on the system path (using the Python command `os.system()`). The output directories of this stage are:
     * `0_bowtie2_build`: The Bowtie 2 index files built with `bowtie2-build-s`.
@@ -97,11 +103,11 @@ This `preprocess` command is broken in separate stages so that each stage can be
 5. **4_graph**: Precompute data needed to plot the graphs, such as adjacency information and summary statistics of the graphs. The output will be in the subdirectory `4_graph`.
 6. **5_histogram**: Precompute data needed to plot the histograms, such as the position and frequency of the different types of variations. The output will be in the subdirectory `5_histogram`.
 
-For more information about the parameters, please use the command `DSBplot-preprocess --help`.
+For more information about the parameters, please use the command `DSBplot-process --help`.
 
 ### `DSBplot-comparison`
 
-This command creates data needed to compare two different sequencing libraries. Specifically, it takes as input two directories that were created using the `DSBplot-preprocess` command, and will output a third directory that contains equivalent data for creating comparison graphs of the two samples. For meaningful comparisons, it is important that the reference sequences (after restricting to the specified window) are identical between the two libraries. The output data will contain the same columns as that output from `DSBplot-preprocess`, but will have two additional columns (with suffixes `_1` and `_2`) for the frequencies of the two different samples being compared. The original frequency column, with no suffix, will contain the maximum of these two frequencies. The output will be in the subdirectories `3_window` and `4_graph`. Note that the histogram data is not recomputed because the comparison data should not be used to create histograms. For more details about the parameters, please use the command `DSBplot-comparison --help`.
+This command creates data needed to compare two different sequencing libraries. Specifically, it takes as input two directories that were created using the `DSBplot-process` command, and will output a third directory that contains equivalent data for creating comparison graphs of the two samples. For meaningful comparisons, it is important that the reference sequences (after restricting to the specified window) are identical between the two libraries. The output data will contain the same columns as that output from `DSBplot-process`, but will have two additional columns (with suffixes `_1` and `_2`) for the frequencies of the two different samples being compared. The original frequency column, with no suffix, will contain the maximum of these two frequencies. The output will be in the subdirectories `3_window` and `4_graph`. Note that the histogram data is not recomputed because the comparison data should not be used to create histograms. For more details about the parameters, please use the command `DSBplot-comparison --help`.
 
 ### `DSBplot-graph`
 
@@ -121,7 +127,7 @@ For more details about the parameters, please use the command `DSBplot-histogram
 
 ## Graphs
 
-In this section, we will explain the visual elements of the output graphs generated by the `graph.py` command. Please note that we use the terms "sequence" and "vertex" interchangeably, as there is a one-to-one correspondence between the windowed sequences produced by the [`DSBplot-preprocess`](#dsbplot-preprocess) command and the vertices of the graph.
+In this section, we will explain the visual elements of the output graphs generated by the `graph.py` command. Please note that we use the terms "sequence" and "vertex" interchangeably, as there is a one-to-one correspondence between the windowed sequences produced by the [`DSBplot-process`](#dsbplot-process) command and the vertices of the graph.
 
 ### Layouts
 
@@ -143,7 +149,7 @@ In this section, we describe the visual features of the graphs. Not all paramete
   * Outline: The outline color is intended to differentiate the reference sequence vertex from the other vertices. The colors are determined by the `--node_reference_outline_color` and `--node_outline_color` parameters.
   * Color: There are several ways the vertex color is determined:
     * Variation type: This mode is only for individual graphs. We give vertices a color depending on the type of variations present in their alignment: insertions only, deletions only, substitutions only, mixed (which is a combinations of insertions, deletions, and substitution), and none (which represents the reference sequence). These colors can be defined by using the `--var_type_colors` parameter.
-    * Frequency ratio (continuous): This mode is only used for comparison graphs, and can be activated by setting the parameter `--node_comparison_color_type continuous`. In this mode, a color gradient is used for each vertex to indicate the frequency ratio of the vertex between the two experiments being compared. The ratio is calculated by putting the vertex's frequency in the first sample in the numerator and the vertex's frequency in the second sample in the denominator (the order is determined during preprocessing). The colors at the two ends of the gradient are specified by the `--node_comparison_colors` parameter, while the colors in between are smoothly interpolated based on the frequency ratio. The range of ratios at the two ends of the gradient is determined by the `--node_freq_ratio_range` parameter.
+    * Frequency ratio (continuous): This mode is only used for comparison graphs, and can be activated by setting the parameter `--node_comparison_color_type continuous`. In this mode, a color gradient is used for each vertex to indicate the frequency ratio of the vertex between the two experiments being compared. The ratio is calculated by putting the vertex's frequency in the first sample in the numerator and the vertex's frequency in the second sample in the denominator (the order is determined during processing). The colors at the two ends of the gradient are specified by the `--node_comparison_colors` parameter, while the colors in between are smoothly interpolated based on the frequency ratio. The range of ratios at the two ends of the gradient is determined by the `--node_freq_ratio_range` parameter.
     * Frequency ratio (discrete): This mode is only used for comparison graphs, and can be activated by setting the parameter `--node_comparison_color_type discrete`. In this mode, three colors are used to indicate the frequency ratio of the vertex between the two experiments being compared. If the frequency ratio is less than `NODE_FREQ_RATIO_RANGE[0]`, the color `NODE_COMPARISON_COLORS[1]` is displayed (meaning higher in sample 2). If the frequency ratio is greater than `NODE_FREQ_RATIO_RANGE[1]`, the color `NODE_FREQ_RATIO_RANGE[1]` is displayed (meaning higher in sample 1). If the frequency ratio is between `NODE_FREQ_RATIO_RANGE[0]` and `NODE_FREQ_RATIO_RANGE[1]` (inclusive), the vertex is colored white.
 * Edges: All edges in the graph indicate a 1-nucleotide variation (insertion, deletion, or substitution) between the two vertices that are connected. The display of edges and which types of edges to show can be controlled by using the `--edge_show` and `--edge_types` parameters.
 * Legends: The legends describe the vertex size, vertex outline, vertex color, and the edges. These can be all drawn by using the `--legend` parameter. The legends will be drawn in the right margin of the figure. To ensure enough room, use the `--margin_top_px`, `--margin_bottom_px`, `--margin_left_px`, and `--margin_right_px` parameters. The different legends are laid out vertically. To control the spacing between them use the `--legend_spacing_px` parameter.
@@ -160,20 +166,20 @@ To begin this demonstration set the terminal working directory to the `demo_shor
 
 The FASTQ files have already been trimmed so that they should correspond to the reference sequence. Note that this is demonstration data that has been generated by taking a small subset of an actual dataset.
 
-We will run commands so that the output data is written to the `output/Sense_R1` directory. To run all preprocessing stages use the command:
+We will run commands so that the output data is written to the `output/Sense_R1` directory. To run all processing stages use the command:
 ```
-DSBplot-preprocess --input data/input/fastq/Sense_R1_1.fq data/input/fastq/Sense_R1_2.fq data/input/fastq/Sense_R1_3.fq data/input/fastq/Sense_R1_4.fq --ref_seq_file data/input/ref_seq/2DSB_Sense_R1.fa --dsb_pos 67 --output data/output/Sense_R1 --label "Sense" --total_reads 3000 3000 3000 3000
+DSBplot-process --input data/input/fastq/Sense_R1_1.fq data/input/fastq/Sense_R1_2.fq data/input/fastq/Sense_R1_3.fq data/input/fastq/Sense_R1_4.fq --ref_seq_file data/input/ref_seq/2DSB_Sense_R1.fa --dsb_pos 67 --output data/output/Sense_R1 --label "Sense" --total_reads 3000 3000 3000 3000
 ```
 In the command we have indicated that the DSB site is between the 67th and 68th nucleotide on the reference sequence (`--dsb_pos 67`), and each of the FASTQ files has 3000 reads (`--total_reads 3000 3000 3000 3000`).
 
-If you want to run the preprocessing stages separately, use the commands:
+If you want to run the processing stages separately, use the commands:
 ```
-DSBplot-preprocess --input data/input/fastq/Sense_R1_1.fq data/input/fastq/Sense_R1_2.fq data/input/fastq/Sense_R1_3.fq data/input/fastq/Sense_R1_4.fq --ref_seq_file data/input/ref_seq/2DSB_Sense_R1.fa --output data/output/Sense_R1 --stages 0_align
-DSBplot-preprocess --ref_seq_file data/input/ref_seq/2DSB_Sense_R1.fa --dsb_pos 67 --output data/output/Sense_R1 --stages 1_filter
-DSBplot-preprocess --output data/output/Sense_R1 --stages 2_combine
-DSBplot-preprocess --ref_seq_file data/input/ref_seq/2DSB_Sense_R1.fa --dsb_pos 67 --output data/output/Sense_R1 --label Sense_R1 --total_reads 3000 3000 3000 3000 --stages 3_window
-DSBplot-preprocess --output data/output/Sense_R1 --stages 4_graph
-DSBplot-preprocess --output data/output/Sense_R1 --stages 5_histogram
+DSBplot-process --input data/input/fastq/Sense_R1_1.fq data/input/fastq/Sense_R1_2.fq data/input/fastq/Sense_R1_3.fq data/input/fastq/Sense_R1_4.fq --ref_seq_file data/input/ref_seq/2DSB_Sense_R1.fa --output data/output/Sense_R1 --stages 0_align
+DSBplot-process --ref_seq_file data/input/ref_seq/2DSB_Sense_R1.fa --dsb_pos 67 --output data/output/Sense_R1 --stages 1_filter
+DSBplot-process --output data/output/Sense_R1 --stages 2_combine
+DSBplot-process --ref_seq_file data/input/ref_seq/2DSB_Sense_R1.fa --dsb_pos 67 --output data/output/Sense_R1 --label Sense_R1 --total_reads 3000 3000 3000 3000 --stages 3_window
+DSBplot-process --output data/output/Sense_R1 --stages 4_graph
+DSBplot-process --output data/output/Sense_R1 --stages 5_histogram
 ```
 The data written to `output/Sense_R1` should be exactly the same whether the stages are run together or separately. The raw data used for plotting the variation graphs will be contained in `output/Sense_R1/4_graph` while the data for the variation histograms will be contained in `output/Sense_R1/5_histogram`. Data from other stages of the processing can also be found in other subdirectories of `output/Sense_R1`.
 
@@ -222,7 +228,7 @@ The output variation histograms are shown below.
 
 For more information about the commands or their parameters, use the commands:
 ```
-DSBplot-preprocess --help
+DSBplot-process --help
 DSBplot-comparison --help
 DSBplot-graph --help
 DSBplot-histogram --help

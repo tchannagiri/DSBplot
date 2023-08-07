@@ -191,7 +191,7 @@ PARAMS = {
     'help': (
       'Total number reads in each experiment.' +
       ' This may be strictly greater than the number of reads in the INPUT' +
-      ' files if some reads were discarded during preprocessing.' +
+      ' files if some reads were discarded during processing.' +
       ' The number of arguments must be the same as the number of INPUTs.' +
       ' If not provided, the total reads in the INPUT read files are used.'
     ),

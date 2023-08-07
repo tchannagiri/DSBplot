@@ -2,7 +2,7 @@ import os
 import shutil
 import unittest
 
-class TestPreprocess(unittest.TestCase):
+class TestProcess(unittest.TestCase):
   def get_check_files():
     """
     The files that should be checked for equality between the
@@ -38,7 +38,7 @@ class TestPreprocess(unittest.TestCase):
         f'The files differ at line {i + 1}.\n{file_1}\n{file_2}'
       )
 
-  def test_preprocess(self):
+  def test_process(self):
     """
     Test the filter with the given combination of file types for the reads
     and the reference sequence.
@@ -60,14 +60,14 @@ class TestPreprocess(unittest.TestCase):
     
     self.assertEqual(
       os.system(
-        'DSBplot-preprocess -o {} -i {} {} {} {} --ref {} --dsb 67 --label "Sense (R1)" --reads {} {} {} {}'
+        'DSBplot-process -o {} -i {} {} {} {} --ref {} --dsb 67 --label "Sense (R1)" --reads {} {} {} {}'
         .format(output, *input, ref, *reads)
       ),
       0,
-      'DSBplot-preprocess failed.'
+      'DSBplot-process failed.'
     )
 
-    for file in TestPreprocess.get_check_files():
+    for file in TestProcess.get_check_files():
       print('Testing file: ' + file)
       self.check_equality(os.path.join(output, file), os.path.join(output_expected, file))
 

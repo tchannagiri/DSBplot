@@ -21,7 +21,7 @@ import DSBplot.utils.file_utils as file_utils
 import DSBplot.utils.kmer_utils as kmer_utils
 import DSBplot.utils.alignment_utils as alignment_utils
 import DSBplot.utils.file_names as file_names
-import DSBplot.plot_graph.plot_graph_helper as plot_graph_helper
+import DSBplot.lib_graph.plot_graph_helper as plot_graph_helper
 
 LAYOUT_PROPERTIES = {
  'radial': {

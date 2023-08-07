@@ -9,9 +9,9 @@ import DSBplot.utils.file_utils as file_utils
 import DSBplot.utils.log_utils as log_utils
 import DSBplot.utils.constants as constants
 
-import DSBplot.preprocessing.filter as filter
-import DSBplot.preprocessing.get_window as get_window
-import DSBplot.preprocessing.get_variation as get_variation
+import DSBplot.lib_process.filter as filter
+import DSBplot.lib_process.get_window as get_window
+import DSBplot.lib_process.get_variation as get_variation
 
 STAGES = ['0_align', '1_filter', '2_window', '3_variation', '4_info']
 
@@ -168,7 +168,7 @@ def post_process_args(args):
 def parse_args():
   parser = argparse.ArgumentParser(
     description = (
-      'Perform alignment and preprocessing for raw FASTQ data.' +
+      'Perform alignment and processing for raw FASTQ data.' +
       ' This is script is broken into separate stages so that each stage' +
       ' can be run separately. However, the stages must be run in the correct order indicated' +
       ' by their prefix numbers. If running the stages separately, the value of OUTPUT' +
@@ -428,7 +428,7 @@ def main(
   log_utils.blank_line()
 
   if '0_align' in stages:
-    log_utils.log('Running preprocessing stage "0_align".')
+    log_utils.log('Running processing stage "0_align".')
     prev_args = {
       'output': output,
       'input_list': input_list,
@@ -440,7 +440,7 @@ def main(
     log_utils.blank_line()
 
   if '1_filter' in stages:
-    log_utils.log('Running preprocessing stage "1_filter".')
+    log_utils.log('Running processing stage "1_filter".')
     if os.path.exists(file_names.args_file(output, 'align')):
       prev_args = read_args(output, 'align')
       if ref_seq_file is None:
@@ -464,7 +464,7 @@ def main(
     log_utils.blank_line()
 
   if '2_window' in stages:
-    log_utils.log('Running preprocessing stage "2_window".')
+    log_utils.log('Running processing stage "2_window".')
     prev_args = read_args(output, 'filter')
     if ref_seq_file is None:
       ref_seq_file = prev_args.get('ref_seq_file')
@@ -482,12 +482,12 @@ def main(
     log_utils.blank_line()
 
   if '3_variation' in stages:
-    log_utils.log('Running preprocessing stage "3_variation".')
+    log_utils.log('Running processing stage "3_variation".')
     do_3_variation(output = output)
     log_utils.blank_line()
 
   if '4_info' in stages:
-    log_utils.log('Running preprocessing stage "4_info".')
+    log_utils.log('Running processing stage "4_info".')
     prev_args = read_args(output, 'window_' + constants.SUBST_TYPES[0])
     if ref_seq_file is None:
       ref_seq_file = prev_args.get('ref_seq_file')
@@ -504,7 +504,7 @@ def main(
     )
     log_utils.blank_line()
 
-# This allows the "DSBplot-preprocess" command to be run from the command line.
+# This allows the "DSBplot-process" command to be run from the command line.
 def entry_point():
   main(**parse_args())
 

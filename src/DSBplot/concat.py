@@ -8,7 +8,7 @@ import DSBplot.utils.common_utils as common_utils
 import DSBplot.utils.file_utils as file_utils
 import DSBplot.utils.log_utils as log_utils
 import DSBplot.utils.file_names as file_names
-import DSBplot.preprocess as preprocess
+import DSBplot.process as process
 
 import numpy as np
 
@@ -16,7 +16,7 @@ def parse_args():
   parser = argparse.ArgumentParser(
     description = (
       'Concatenate together library files from samples that have been sequenced multiple times.' +
-      ' Operates on the output of the preprocessing.'
+      ' Operates on the output of the processing.'
     ),
     formatter_class = argparse.ArgumentDefaultsHelpFormatter,
   )
@@ -24,7 +24,7 @@ def parse_args():
     '-i',
     type = common_utils.check_dir,
     help = (
-      ' Input directory, which is the output of "preprocess.py".' +
+      ' Input directory, which is the output of "process.py".' +
       ' There must be the same number of columns in all input data sets.' +
       ' The count columns must be in the same order they should be concatentated in.'
     ),
@@ -163,7 +163,7 @@ def main(
   file_utils.write_json(data_info, output_file)
   log_utils.log_output(output_file)
 
-  preprocess.do_3_variation(output)
+  process.do_3_variation(output)
 
 # This allows the "DSBplot-concat" command to be run from the command line.
 def entry_point():
