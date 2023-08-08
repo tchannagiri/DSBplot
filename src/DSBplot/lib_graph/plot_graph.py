@@ -131,7 +131,7 @@ def parse_args():
       'Output files. If omitted, no output will be written' +
       ' (useful only when using "--interactive").' +
       ' The file extension should be either ".html" for interactive HTML output' +
-      ' or any image file format supported by the Plotly package.' +
+      ' or any image file format supported by the Plotly package (e.g., ".png", ".pdf", etc.,).' +
       ' If present, number of arguments should match' +
       ' the number of input directories.'
     ),
@@ -196,6 +196,7 @@ def parse_args():
       ' shows the range of y-values of the nodes.'
     ),
     dest = 'universal_layout_y_axis_y_range',
+    metavar = ('UNIVERSAL_LAYOUT_Y_AXIS_Y_MIN', 'UNIVERSAL_LAYOUT_Y_AXIS_Y_MAX'),
   )
   universal_group.add_argument(
     '--ul_xax_del_y',
@@ -235,12 +236,13 @@ def parse_args():
       ' shows the range of x-values of the nodes.'
     ),
     dest = 'universal_layout_x_axis_x_range',
+    metavar = ('UNIVERSAL_LAYOUT_X_AXIS_X_MIN', 'UNIVERSAL_LAYOUT_X_AXIS_X_MAX'),
   )
   universal_group.add_argument(
     '--ul_xax_del_label_type',
     type = str,
-    choices = ['rel', 'abs'],
-    default = 'rel',
+    choices = constants.GRAPH_UNIVERSAL_X_AXIS_LABEL_TYPES,
+    default = constants.GRAPH_UNIVERSAL_X_AXIS_LABEL_TYPE,
     help = (
       'The type of labeling to use for the universal layout deletion x-axis (if present).' +
       ' "rel" = "relative" labels have 0 in the middle with negative/positive values on the left/right.' +
@@ -328,6 +330,7 @@ def parse_args():
       ' For no size scaling, set both values to the same number.'
     ),
     dest = 'node_size_px_range',
+    metavar = ('NODE_SIZE_PX_MIN', 'NODE_SIZE_PX_MAX'),
   )
   node_group.add_argument(
     '--size_freq',
@@ -339,6 +342,7 @@ def parse_args():
       ' Higher frequencies are clipped to this value.'
     ),
     dest = 'node_size_freq_range',
+    metavar = ('NODE_SIZE_FREQ_MIN', 'NODE_SIZE_FREQ_MAX'),
   )
   node_group.add_argument(
     '--filter_freq',
@@ -347,6 +351,7 @@ def parse_args():
     default = constants.GRAPH_NODE_FILTER_FREQ_RANGE,
     help = 'Min and max frequency to filter nodes by.',
     dest = 'node_filter_freq_range',
+    metavar = ('NODE_FILTER_FREQ_MIN', 'NODE_FILTER_FREQ_MAX'),
   )
   node_group.add_argument(
     '--filter_dist',
@@ -355,6 +360,7 @@ def parse_args():
     default = constants.GRAPH_NODE_FILTER_DIST_RANGE,
     help = 'Min and max distance to filter nodes by.',
     dest = 'node_filter_dist_range',
+    metavar = ('NODE_FILTER_DIST_MIN', 'NODE_FILTER_DIST_MAX'),
   )
   node_group.add_argument(
     '--outline_scale',
@@ -377,6 +383,7 @@ def parse_args():
       ' Typically, the min value should be < 1 and the max value should be > 1.'
     ),
     dest = 'node_freq_ratio_range',
+    metavar = ('NODE_FREQ_RATIO_MIN', 'NODE_FREQ_RATIO_MAX'),
   )
   node_comparison_group.add_argument(
     '--ratio_colors',
@@ -390,6 +397,7 @@ def parse_args():
       ' recognized keywords such as "red", "blue", "green".'
     ),
     dest = 'node_freq_ratio_colors',
+    metavar = ('NODE_FREQ_RATIO_COLOR_1', 'NODE_FREQ_RATIO_COLOR_2'),
   )
   node_comparison_group.add_argument(
     '--ratio_color_type',
@@ -462,12 +470,13 @@ def parse_args():
     help = (
       'The colors for the different variations types.' +
       ' They must be specified in the order: ' +
-      ', '.join([x.upper() for x in constants.GRAPH_NODE_VARIATION_TYPE_COLORS]) + '.' +
+      ', '.join([x.upper() for x in constants.VARIATION_TYPES]) + '.' +
       ' See the documentation for the "--var_types" argument for more information.' +
       ' May be specified in hex (e.g., "#ff0000" for red) or with' +
       ' recognized keywords such as "red", "blue", "green".'
     ),
     dest = 'node_var_type_colors',
+    metavar = tuple('NODE_VAR_TYPE_COLOR_' + x.upper() for x in constants.VARIATION_TYPES)
   )
   edge_group.add_argument(
     '--edge',
@@ -549,6 +558,7 @@ def parse_args():
       ' May only be used with pixel image output formats (e.g., PNG).'
     ),
     dest = 'crop_x',
+    metavar = ('CROP_X_MIN', 'CROP_X_MAX'),
   )
   framing_group.add_argument(
     '--crop_y',
@@ -561,6 +571,7 @@ def parse_args():
       ' May only be used with pixel image output formats (e.g., PNG).'
     ),
     dest = 'crop_y',
+    metavar = ('CROP_Y_MIN', 'CROP_Y_MAX'),
   )
   framing_group.add_argument(
     '--range_x',
@@ -574,6 +585,7 @@ def parse_args():
       ' which shows the range of x-values of the nodes.'
     ),
     dest = 'plot_range_x',
+    metavar = ('PLOT_RANGE_X_MIN', 'PLOT_RANGE_X_MAX'),
   )
   framing_group.add_argument(
     '--range_y',
@@ -587,6 +599,7 @@ def parse_args():
       ' which shows the range of y-values of the nodes.'
     ),
     dest = 'plot_range_y',
+    metavar = ('PLOT_RANGE_Y_MIN', 'PLOT_RANGE_Y_MAX'),
   )
   legend_group.add_argument(
     '--legends',
@@ -663,13 +676,11 @@ def parse_args():
     type = int,
     nargs = '+',
     help = (
-      'Whether to reverse complement the sequences in the data sets.' +
+      'Whether to reverse complement (1) or not (0) the sequences in the data sets.' +
       ' If present, the number of values must be the same as the number of input directories.' +
-      ' "1" mean reverse complement the sequence and "0" means do not.'
       ' Used for making a layout for data sets that have reference sequences'
       ' that are the reverse complements of each other.'
-      ' If "1" also uses the reverse complement of sequences when determining the'
-      ' display labels and hover text.' +
+      ' Reverse complementing also affects the display labels and hover text in HTML output.' +
       ' This affects the universal layout and fractal layout.'
     ),
     dest = 'reverse_complement_list',

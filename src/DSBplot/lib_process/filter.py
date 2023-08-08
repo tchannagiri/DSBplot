@@ -150,8 +150,8 @@ PARAMS = {
     'type': common_utils.check_file_output,
     'required': True,
     'help': 'Output CSV file name for the accepted and rejected reads, respectively.',
-    'metavar': 'OUTPUT',
     'dest': 'output',
+    'metavar': ('OUTPUT_ACCEPTED', 'OUTPUT_REJECTED'),
   },
   '--ref': {
     'type': common_utils.check_file,

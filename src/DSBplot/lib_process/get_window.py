@@ -60,6 +60,7 @@ PARAMS = {
       ' Set to either/both to -1 to disable the respective limit.'
     ),
     'dest': 'anchor_vars',
+    'metavar': ('ANCHOR_SUBST', 'ANCHOR_INDEL'),
   },
   '--sub': {
     'type': int,
