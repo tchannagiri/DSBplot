@@ -32,19 +32,22 @@ def split_seqs_into_variations(window_data):
   """
     Split sequences into their individual variations.
   """
-  value_cols = [x for x in window_data.columns if (x.startswith('freq_') or x.startswith('count_'))]
+  value_cols = [
+    x for x in window_data.columns
+    if (x.startswith('freq_') or x.startswith('count_'))
+  ]
   variation_data = window_data.copy()
   variation_data = variation_data[['ref_align', 'read_align'] + value_cols]
 
   # Separate into individual variations
   new_data = []
   for row in variation_data.to_dict('records'):
-    dist_ref = sum(alignment_utils.count_variations(row['ref_align'], row['read_align']))
-    if dist_ref > 0:
+    num_var = sum(alignment_utils.count_variations(row['ref_align'], row['read_align']))
+    if num_var > 0:
       for var in alignment_utils.get_variation_info(row['ref_align'], row['read_align']):
         new_data.append({
           **{k: row[k] for k in value_cols},
-          'dist_ref': dist_ref,
+          'num_var': num_var,
           'var_pos': var[0],
           'var_type': var[1],
           'var_letter': var[2],
@@ -56,7 +59,7 @@ def split_seqs_into_variations(window_data):
       columns = (
         value_cols + [
           'freq_mean',
-          'dist_ref',
+          'num_var',
           'var_pos',
           'var_type',
           'var_letter',
@@ -65,7 +68,7 @@ def split_seqs_into_variations(window_data):
     )
   
   variation_data = variation_data.groupby([
-    'dist_ref',
+    'num_var',
     'var_pos',
     'var_type',
     'var_letter',
@@ -75,7 +78,7 @@ def split_seqs_into_variations(window_data):
 
   variation_data = variation_data[
     value_cols + [
-      'dist_ref',
+      'num_var',
       'var_pos',
       'var_type',
       'var_letter',

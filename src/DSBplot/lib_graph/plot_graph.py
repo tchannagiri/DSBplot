@@ -742,13 +742,13 @@ def make_radial_layout(graph):
   ref_nodes = []
 
   for _, data in node_list:
-    if data['dist_ref'] == 0:
+    if data['num_var'] == 0:
       ref_nodes.append(data)
     else:
-      dist_ref = data['dist_ref']
+      num_var = data['num_var']
       var_type = data['var_type']
-      bucket_dict[var_type].setdefault(dist_ref, [])
-      bucket_dict[var_type][dist_ref].append(data)
+      bucket_dict[var_type].setdefault(num_var, [])
+      bucket_dict[var_type][num_var].append(data)
 
   xy_dict = {}
   for data in ref_nodes:
@@ -771,21 +771,21 @@ def make_radial_layout(graph):
       zig_zag_angle = 30
     else:
       raise Exception('Impossible: ' + str(var_type))
-    for dist_ref in bucket_dict[var_type]:
+    for num_var in bucket_dict[var_type]:
       bucket = list(sorted(
-        bucket_dict[var_type][dist_ref],
+        bucket_dict[var_type][num_var],
         key = lambda x: x['freq_mean'],
         reverse = True,
       ))
 
-      delta_angle = dist_ref + zig_zag_angle * (-1)**dist_ref / dist_ref
+      delta_angle = num_var + zig_zag_angle * (-1)**num_var / num_var
       delta_dist = 0
       angle_list = np.linspace(((180 - delta_angle) / 180) * np.pi, (delta_angle / 180) * np.pi, len(bucket))
 
       for angle, data in zip(angle_list, bucket):
         xy_dict[data['id']] = (
-          (dist_ref * dist_scale + delta_dist) * np.cos(angle),
-          ((dist_ref * dist_scale + delta_dist) * np.sin(angle) + 2) * y_sign
+          (num_var * dist_scale + delta_dist) * np.cos(angle),
+          ((num_var * dist_scale + delta_dist) * np.sin(angle) + 2) * y_sign
         )
   return xy_dict
 
@@ -816,21 +816,21 @@ def make_fractal_layout(graph):
   ref_nodes = []
 
   for _, data in node_list:
-    if data['dist_ref'] == 0:
+    if data['num_var'] == 0:
       ref_nodes.append(data)
     else:
-      dist_ref = data['dist_ref']
+      num_var = data['num_var']
       var_type = data['var_type']
-      bucket_dict[var_type].setdefault(dist_ref, [])
-      bucket_dict[var_type][dist_ref].append(data)
+      bucket_dict[var_type].setdefault(num_var, [])
+      bucket_dict[var_type][num_var].append(data)
 
   xy_dict = {}
   for data in ref_nodes:
     xy_dict[data['id']] = (0, 0)
   for var_type in bucket_dict:
-    for dist_ref in bucket_dict[var_type]:
+    for num_var in bucket_dict[var_type]:
       bucket = list(sorted(
-        bucket_dict[var_type][dist_ref],
+        bucket_dict[var_type][num_var],
         key = lambda x: x['freq_mean'],
         reverse = True,
       ))
@@ -856,9 +856,9 @@ def make_fractal_layout(graph):
 
 # Determines how the rows are laid out in the insertion side
 # of the universal layout.
-def get_universal_insertion_row_spec(dist_ref):
-  rows = 2 ** ((dist_ref - 1) // 2)
-  cols = 4 ** dist_ref // rows
+def get_universal_insertion_row_spec(num_var):
+  rows = 2 ** ((num_var - 1) // 2)
+  cols = 4 ** num_var // rows
   row_space = 2 / rows
   return {
     'rows': rows,
@@ -869,7 +869,7 @@ def get_universal_insertion_row_spec(dist_ref):
 def get_pos_universal(
   ref_align,
   read_align,
-  dist_ref,
+  num_var,
   var_type,
   cut_pos_ref,
   x_scale_insertion = constants.GRAPH_UNIVERSAL_X_SCALE_INSERTION,
@@ -890,14 +890,14 @@ def get_pos_universal(
       )
     )
     
-    row_spec_curr = get_universal_insertion_row_spec(dist_ref)
+    row_spec_curr = get_universal_insertion_row_spec(num_var)
     num_rows = row_spec_curr['rows']
     num_cols = row_spec_curr['cols']
     row = kmer_index % num_rows
     col = kmer_index // num_rows
     prev_rows_offset = 0
-    for dist_ref_prev in range(1, dist_ref):
-      row_spec_prev = get_universal_insertion_row_spec(dist_ref_prev)
+    for num_var_prev in range(1, num_var):
+      row_spec_prev = get_universal_insertion_row_spec(num_var_prev)
       prev_rows_offset += row_spec_prev['rows'] * row_spec_prev['row_space']
 
     curr_row_offset = row * row_spec_curr['row_space']
@@ -913,10 +913,10 @@ def get_pos_universal(
     # A deletion with equal number of deletions on either side of the
     # cut position should be placed at x = 0.
     first_del_pos = alignment_utils.get_first_deletion_pos(read_align)
-    last_del_pos = first_del_pos + dist_ref - 1
+    last_del_pos = first_del_pos + num_var - 1
     avg_del_pos = (first_del_pos + last_del_pos) / 2
     x = avg_del_pos - (cut_pos_ref + 0.5)
-    y = -dist_ref
+    y = -num_var
     return (
       x * x_scale_deletion,
       y * y_scale_deletion,
@@ -937,23 +937,23 @@ def make_universal_layout(
   ref_nodes = []
 
   for _, data in node_list:
-    if data['dist_ref'] == 0:
+    if data['num_var'] == 0:
       ref_nodes.append(data)
     else:
-      dist_ref = data['dist_ref']
+      num_var = data['num_var']
       var_type = data['var_type']
       if var_type not in bucket_dict:
         raise Exception('Unhandled variation type for universal layout: ' + str(var_type))
-      bucket_dict[var_type].setdefault(dist_ref, [])
-      bucket_dict[var_type][dist_ref].append(data)
+      bucket_dict[var_type].setdefault(num_var, [])
+      bucket_dict[var_type][num_var].append(data)
 
   xy_dict = {}
   for data in ref_nodes:
     xy_dict[data['id']] = (0, 0)
   for var_type in bucket_dict:
-    for dist_ref in bucket_dict[var_type]:
+    for num_var in bucket_dict[var_type]:
       bucket = list(sorted(
-        bucket_dict[var_type][dist_ref],
+        bucket_dict[var_type][num_var],
         key = lambda x: x['freq_mean'],
         reverse = True,
       ))
@@ -964,7 +964,7 @@ def make_universal_layout(
         xy_dict[data['id']] = get_pos_universal(
           ref_align = ref_align,
           read_align = read_align,
-          dist_ref = dist_ref,
+          num_var = num_var,
           var_type = var_type,
           cut_pos_ref = cut_pos_ref,
           x_scale_insertion = x_scale_insertion,
@@ -993,37 +993,37 @@ def make_universal_y_axis(
   x_scale_deletion = constants.GRAPH_UNIVERSAL_X_SCALE_DELETION,
   y_scale_deletion = constants.GRAPH_UNIVERSAL_Y_SCALE_DELETION,
 ):
-  tick_list = [{'dist_ref': 0, 'y_pos': 0}]
-  dist_ref = 0
+  tick_list = [{'num_var': 0, 'y_pos': 0}]
+  num_var = 0
   finish_insertion = False
   finish_deletion = False
   while (not finish_insertion) or (not finish_deletion):
-    dist_ref += 1
+    num_var += 1
     for var_type in ['ins', 'del']:
       # Make a pair of ref_align and read_align that simulates
       # the correct number of insertions or deletions.
       ref_align = (
         ('A' * cut_pos_ref) +
-        ('-' * dist_ref) +
+        ('-' * num_var) +
         ('A' * (ref_length - cut_pos_ref))
       )
-      read_align = 'A' * (ref_length + dist_ref)
+      read_align = 'A' * (ref_length + num_var)
       if var_type == 'del':
         ref_align, read_align = read_align, ref_align
 
       if var_type == 'ins':
-        if (max_tick_insertion is not None) and (dist_ref > max_tick_insertion):
+        if (max_tick_insertion is not None) and (num_var > max_tick_insertion):
           finish_insertion = True
           continue
       elif var_type == 'del':
-        if (max_tick_deletion is not None) and (dist_ref > max_tick_deletion):
+        if (max_tick_deletion is not None) and (num_var > max_tick_deletion):
           finish_deletion = True
           continue
 
       y_pos = get_pos_universal(
         ref_align = ref_align,
         read_align = read_align,
-        dist_ref = dist_ref,
+        num_var = num_var,
         var_type = var_type,
         cut_pos_ref = cut_pos_ref,
         x_scale_insertion = x_scale_insertion,
@@ -1043,7 +1043,7 @@ def make_universal_y_axis(
 
       tick_list.append(
         {
-          'dist_ref': dist_ref,
+          'num_var': num_var,
           'y_pos': y_pos,
         }
       )
@@ -1065,7 +1065,7 @@ def make_universal_y_axis(
       # set left anchor at tick end
       x = x_pos + tick_length,
       y = tick['y_pos'],
-      text = str(tick['dist_ref']),
+      text = str(tick['num_var']),
       showarrow = False,
       font_size = tick_font_size * font_size_scale,
       xanchor = 'left',
@@ -1147,7 +1147,7 @@ def make_universal_x_axis(
       x_pos = get_pos_universal(
         ref_align = fake_ref_align,
         read_align = fake_read_align,
-        dist_ref = 1,
+        num_var = 1,
         var_type = 'ins',
         cut_pos_ref = cut_pos_ref,
         x_scale_insertion = x_scale_insertion,
@@ -1177,21 +1177,21 @@ def make_universal_x_axis(
     tick_list_negative = []
     pos_labels = constants.get_position_labels(deletion_label_type, ref_length)
     for deletion_start in range(1, (ref_length // 2) + 1):
-      dist_ref = 1 + (ref_length // 2) - deletion_start
-      if (deletion_tick_type == 'midpoint') and ((dist_ref % 2) != 1):
+      num_var = 1 + (ref_length // 2) - deletion_start
+      if (deletion_tick_type == 'midpoint') and ((num_var % 2) != 1):
         # only odd deletions so mid point is on an integer
         continue
-      deletion_mid = deletion_start + (dist_ref - 1) // 2
+      deletion_mid = deletion_start + (num_var - 1) // 2
       fake_ref_align = 'A' * ref_length
       fake_read_align = (
         'A' * (deletion_start - 1) +
-        '-' * dist_ref +
+        '-' * num_var +
         'A' * (ref_length // 2)
       )
       x_pos = get_pos_universal(
         fake_ref_align,
         fake_read_align,
-        dist_ref,
+        num_var,
         'del',
         cut_pos_ref,
       )[0]
@@ -1317,14 +1317,14 @@ def make_graph_layout_single(
     layout = nx.shell_layout(
       graph,
       dim = 2,
-      nlist = group_graph_nodes_by(graph, 'dist_ref'),
+      nlist = group_graph_nodes_by(graph, 'num_var'),
     )
   elif layout_type == 'spiral':
     layout = nx.spiral_layout(graph, dim=2)
   elif layout_type == 'circular':
     layout = nx.circular_layout(graph, dim=2)
   elif layout_type == 'multipartite':
-    layout = nx.multipartite_layout(graph, subset_key='dist_ref')
+    layout = nx.multipartite_layout(graph, subset_key='num_var')
   else:
     raise Exception('Unknown layout type: ' + str(layout_type))
 
@@ -2058,7 +2058,7 @@ def get_data(
       )
     ]
     node_data = node_data.loc[
-      node_data['dist_ref'].between(
+      node_data['num_var'].between(
         node_filter_dist_range[0],
         node_filter_dist_range[1],
         inclusive = 'both',

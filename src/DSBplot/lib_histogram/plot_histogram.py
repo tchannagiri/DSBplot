@@ -64,7 +64,7 @@ def get_variation_data(
   data_info,
   var_type,
   format,
-  y_axis_column = 'dist_ref',
+  y_axis_column = 'num_var',
   reverse_pos = False,
 ):
   ref_length = len(data_info['ref_seq_window'])

@@ -41,7 +41,7 @@ def format_hover_html(data_info, the_dict, format_type, reverse_complement=False
       'id',
       *freq_columns,
       'var_type',
-      'dist_ref',
+      'num_var',
       'sub',
       'ins',
       'del',

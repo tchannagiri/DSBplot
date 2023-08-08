@@ -33,7 +33,7 @@ def get_node_data(data):
   """
     Get the data for the vertices of the graph.
   """
-  dist_ref = []
+  num_var = []
   var_type = []
   sub = []
   ins = []
@@ -60,7 +60,7 @@ def get_node_data(data):
     else:
       var = 'mix'
     var_type.append(var)
-    dist_ref.append(num_ins + num_del + num_subst)
+    num_var.append(num_ins + num_del + num_subst)
     sub.append(num_subst)
     ins.append(num_ins)
     dels.append(num_del)
@@ -71,8 +71,8 @@ def get_node_data(data):
     [x for x in data.columns if x in ['freq_mean', 'freq_mean_1', 'freq_mean_2']]
   ].to_dict('list')
   data.update({
-    'is_ref': [x == 0 for x in dist_ref],
-    'dist_ref': dist_ref,
+    'is_ref': [x == 0 for x in num_var],
+    'num_var': num_var,
     'var_type': var_type,
     'sub': sub,
     'ins': ins,

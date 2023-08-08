@@ -10,8 +10,8 @@ import DSBplot.utils.sam_utils as sam_utils
 import DSBplot.utils.alignment_utils as alignment_utils
 import DSBplot.utils.log_utils as log_utils
 
-RANK_NA = 999999999 # For indication an NA sequence rank
-MAX_SUBST_INF = 999999999 # For indication an infinite number of substitutions
+RANK_NA = 999999999 # For indicating the sequence did not appear in the library
+MAX_SUBST_INF = 999999999 # For indicating an infinite number of substitutions are allowed
 
 def check_consecutive_indel(ins_pos, del_pos):
   if (len(ins_pos) == 0) and (len(del_pos) == 0): # no in/dels
@@ -607,7 +607,7 @@ def do_filter(
   for i in range(len(input_list)):
     read_seq_list = list(read_count_rejected[i].keys())
     data = pd.DataFrame({'seq': read_seq_list})
-    data['count_' + library_names[i]] = [read_count_accepted[i][read_seq] for read_seq in read_seq_list]
+    data['count_' + library_names[i]] = [read_count_rejected[i][read_seq] for read_seq in read_seq_list]
     data['freq_' + library_names[i]] = data['count_' + library_names[i]] / total_reads[i]
     data['rank_' + library_names[i]] = [read_rank[i][read_seq] for read_seq in read_seq_list]
     data = data.set_index('seq').reindex(read_rejected)
@@ -706,13 +706,15 @@ def do_filter(
     'rejected_wrong_rc': rejected_wrong_rc,
     'rejected_pos_not_1': rejected_pos_not_1,
     'rejected_min_len': rejected_min_len,
-    'rejected_max_sub': rejected_max_sub,
     'rejected_not_consec': rejected_not_consec,
     'rejected_not_touch': rejected_not_touch,
     'rejected_not_consec_and_not_touch': rejected_not_consec_and_not_touch,
+    'rejected_max_sub': rejected_max_sub,
   }).T.rename_axis('debug')
   debug_data.columns = ['count_' + x for x in library_names]
-  debug_data[['freq_' + x for x in library_names]] = debug_data[['count_' + x for x in library_names]].divide(total_reads_1, axis='columns')
+  debug_data[['freq_' + x for x in library_names]] = (
+    debug_data[['count_' + x for x in library_names]].divide(total_reads_1, axis='columns')
+  )
   debug_data = debug_data.reset_index()
   debug_lines = [
     f'Header lines: ' + ', '.join([str(x) for x in header]),
@@ -733,10 +735,10 @@ def do_filter(
     f'            Wrong RC flag: ' + ', '.join([str(x) for x in rejected_wrong_rc]),
     f'            POS != 1: ' + ', '.join([str(x) for x in rejected_pos_not_1]),
     f'            Min length: ' + ', '.join([str(x) for x in rejected_min_len]),
-    f'            Max substitutions: ' + ', '.join([str(x) for x in rejected_max_sub]),
     f'            Not consecutive: ' + ', '.join([str(x) for x in rejected_not_consec]),
     f'            DSB not touch: ' + ', '.join([str(x) for x in rejected_not_touch]),
     f'            Not consecutive and DSB not touch: ' + ', '.join([str(x) for x in rejected_not_consec_and_not_touch]),
+    f'            Max substitutions: ' + ', '.join([str(x) for x in rejected_max_sub]),
   ]
 
   if (debug_file is None) and not quiet:

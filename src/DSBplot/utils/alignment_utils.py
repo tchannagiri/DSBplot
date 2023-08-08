@@ -177,12 +177,13 @@ def get_variation_info(ref_align, read_align):
   variation_info = []
   for i in range(len(ref_align)):
     if ref_align[i] != read_align[i]:
+      var_letter = ref_align[i] + read_align[i]
       if (ref_align[i] != '-') and (read_align[i] != '-'):
-        variation_info.append((ref_i, 'sub', '{}>{}'.format(ref_align[i], read_align[i])))
+        variation_info.append((ref_i, 'sub', var_letter))
       elif ref_align[i] == '-':
-        variation_info.append((ref_i - 1, 'ins', read_align[i]))
+        variation_info.append((ref_i - 1, 'ins', var_letter))
       elif read_align[i] == '-':
-        variation_info.append((ref_i, 'del', read_align[i]))
+        variation_info.append((ref_i, 'del', var_letter))
       else:
         raise Exception(
           'Overlapping dashes in alignment: ' +
