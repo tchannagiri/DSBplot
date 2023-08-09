@@ -62,7 +62,7 @@ PARAMS = {
       ' Each file is considered a repeat of the same experiment.' +
       ' If "0_align" is omitted and a custom alignnment approach is used, ' +
       ' then the aligned SAM files must be placed in OUTPUT directory.' +
-      ' The input file basenames must be in alphabetical order and are used to'
+      ' The input file basenames must be in alphabetical order and are used to' +
       ' name the output SAM files (unless "--names" is given).'
     ),
     'metavar': 'INPUT',
@@ -266,7 +266,10 @@ def do_0_align(
       flags = '-f'
     else:
       flags = '-r'
-    bowtie2_command = f'bowtie2-align-s --no-hd {flags} {bowtie2_args} -x {bowtie2_index_file} {input_list[i]} -S {sam_file} --quiet'
+    bowtie2_command = (
+      f'bowtie2-align-s --no-hd {flags} {bowtie2_args}' +
+      f' -x {bowtie2_index_file} {input_list[i]} -S {sam_file} --quiet'
+    )
     log_utils.log('Bowtie 2 command: ' + bowtie2_command)
     if os.system(bowtie2_command) != 0:
       raise Exception('Bowtie 2 alignment failed.')

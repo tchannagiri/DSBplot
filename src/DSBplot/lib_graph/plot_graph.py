@@ -117,7 +117,9 @@ def parse_args():
       ' (i.e., the 20bp section of the reference around the DSB site should be the same' +
       ' in all libraries). All the libraries will be laid out using combined x/y-coordinate' +
       ' assignments to the vertices. To plot a comparion graph between two libraries,' +
-      f' specify both directories as a single argument separated by "{constants.COMPARISON_SEP}".'
+      f' specify both directories as a single argument separated by "{constants.COMPARISON_SEP}"' +
+      ' (there should be only these characters and no extra spaces).'
+      ' The reference sequence windows of the two libraries must be identical.'
     ),
     required = True,
     metavar = 'INPUT',
@@ -152,7 +154,7 @@ def parse_args():
     '--interactive',
     action = 'store_true',
     help = (
-      'If present, opens the interactive version in a browser.'
+      'If present, opens the interactive version in a browser.' +
       ' Uses the Ploty library "figure.show()" function to do so.'
     ),
   )
@@ -165,8 +167,13 @@ def parse_args():
   )
   layout_group.add_argument(
     '--sep',
-    action = 'store_true',
-    help = 'If present, separate the connected components of the graph.',
+    choices = [0, 1],
+    type = int,
+    default = 0,
+    help = (
+    'Whether to separate (1) the connected components of the graph' +
+    ' or lay them out together (0).'
+    ),
     dest = 'graph_layout_separate_components',
   )
   universal_group.add_argument(
@@ -175,7 +182,7 @@ def parse_args():
     help = (
       'If present, shows a y-axis at the given x position' +
       ' showing the distances to the reference.' +
-      ' Universal layout only.'
+      ' Universal layout only.' +
       ' To determine appropriate values to set please see the console log, which' +
       ' shows the range of x-values of the nodes.' +
       ' Set to 0 to automatically determine the position.'
@@ -204,7 +211,7 @@ def parse_args():
     help = (
       'If present, shows an x-axis for deletions at the given y position' +
       ' showing the approximate position of the deleted ranges.' +
-      ' Universal layout only.'
+      ' Universal layout only.' +
       ' To determine appropriate values to set please see the console log, which' +
       ' shows the range of y-values of the nodes.' +
       ' Set to 0 to automatically determine the position.'
@@ -241,14 +248,14 @@ def parse_args():
   universal_group.add_argument(
     '--ul_xax_del_label_type',
     type = str,
-    choices = constants.GRAPH_UNIVERSAL_X_AXIS_LABEL_TYPES,
-    default = constants.GRAPH_UNIVERSAL_X_AXIS_LABEL_TYPE,
+    choices = constants.GRAPH_UNIVERSAL_X_AXIS_DELETION_TYPES,
+    default = constants.GRAPH_UNIVERSAL_X_AXIS_DELETION_TYPE,
     help = (
       'The type of labeling to use for the universal layout deletion x-axis (if present).' +
       ' "rel" = "relative" labels have 0 in the middle with negative/positive values on the left/right.' +
       ' "abs" = "absolute" labels have 1 on the left and the length of the reference sequence on the right.'
     ),
-    dest = 'universal_layout_x_axis_deletion_label_type',
+    dest = 'universal_layout_x_axis_deletion_type',
   )
   universal_group.add_argument(
     '--ul_yax_del_max_tick',
@@ -644,9 +651,8 @@ def parse_args():
     type = str,
     nargs = '+',
     help = (
-    'If present, adds a title to the plot with this value.' +
-    ' Number of arguments should match the number of input' +
-    ' files.'
+      'If present, adds a title to the plot with this value.' +
+      ' Number of arguments should match the number of input files.'
     ),
     dest = 'title_list',
   )
@@ -678,8 +684,8 @@ def parse_args():
     help = (
       'Whether to reverse complement (1) or not (0) the sequences in the data sets.' +
       ' If present, the number of values must be the same as the number of input directories.' +
-      ' Used for making a layout for data sets that have reference sequences'
-      ' that are the reverse complements of each other.'
+      ' Used for making a layout for data sets that have reference sequences' +
+      ' that are the reverse complements of each other.' +
       ' Reverse complementing also affects the display labels and hover text in HTML output.' +
       ' This affects the universal layout and fractal layout.'
     ),
@@ -716,8 +722,8 @@ def parse_args():
     args['reverse_complement_list'] = [0] * len(args['input_list'])
   if len(args['reverse_complement_list']) != len(args['input_list']):
     raise Exception(
-      'Incorrect number of reverse complement flags.'
-      'Got {}. Expected {}.'.format(
+      'Incorrect number of reverse complement flags.' +
+      ' Got {}. Expected {}.'.format(
         len(args['reverse_complement_list']), len(args['input_list'])
       )
     )
@@ -738,6 +744,8 @@ def parse_args():
   args['edge_show'] = bool(args['edge_show'])
 
   args['node_subst_type'] = constants.SUBST_TYPES[args['node_subst_type']]
+
+  args['graph_layout_separate_components'] = bool(args['graph_layout_separate_components'])
 
   return args
 
@@ -2515,7 +2523,7 @@ def main(
   universal_layout_x_axis_x_range,
   universal_layout_y_axis_insertion_max_tick,
   universal_layout_y_axis_deletion_max_tick,
-  universal_layout_x_axis_deletion_label_type,
+  universal_layout_x_axis_deletion_type,
   universal_layout_x_scale_insertion,
   universal_layout_y_scale_insertion,
   universal_layout_x_scale_deletion,
@@ -2720,7 +2728,7 @@ def main(
           ref_length = len(data_info_list[i]['ref_seq_window']),
           cut_pos_ref = len(data_info_list[i]['ref_seq_window']) // 2,
           x_range = universal_layout_x_axis_x_range,
-          deletion_label_type = universal_layout_x_axis_deletion_label_type,
+          deletion_label_type = universal_layout_x_axis_deletion_type,
           x_scale_insertion = universal_layout_x_scale_insertion,
           y_scale_insertion = universal_layout_y_scale_insertion,
           x_scale_deletion = universal_layout_x_scale_deletion,
