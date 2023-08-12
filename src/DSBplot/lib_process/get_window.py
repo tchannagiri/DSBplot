@@ -44,7 +44,8 @@ PARAMS = {
     'default': 20,
     'help': (
       'Size of anchor on left/right of the window to check for' +
-      ' substitutions and indels. See "--anchor_var".'
+      ' substitutions and indels. See "--anchor_var".' +
+      ' Set to 0 to disable anchor checking.' 
     ),
     'dest': 'anchor_size',
   },
