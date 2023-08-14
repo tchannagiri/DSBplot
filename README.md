@@ -280,3 +280,10 @@ Although not covered here, comparison graphs may be produced by specifying two i
 ## Contact
 
 For questions about this software please contact the maintainer Tejasvi Channagiri at [tchannagiri@gmail.com](mailto://tchannagiri@gmail.com).
+
+## Contributors
+
+* Tejasvi Channagiri
+* Margherita Ferrari
+* Youngkyu Jeon
+* Penghao Xu
