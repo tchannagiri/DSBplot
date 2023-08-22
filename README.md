@@ -157,6 +157,8 @@ Different *layouts*, specified with the `--layout` parameter, are used to positi
 ![Universal layout vertex placement key](figures/graph_layout_scheme.png)
 *Figure 1: Universal layout vertex placement key.*
 
+A useful feature of the `DSBplot-graph` command is the `--debug` parameter that allows users to output tables that describe the vertices plotted, their coordinates, and the edge between the vertices. This may be used to debug the layout algorithms or to extract the vertex coordinates for use in other software.
+
 ### Graph aesthetics
 
 In this section, we describe the visual features of the graphs. Not all parameters are described here; for a full description please use `DSBplot-graph --help`.
@@ -219,7 +221,7 @@ Next, the plotting commands will write the output figures to the `plots` directo
 DSBplot-graph -i $output_dir/Sense_R1 -o plots/graph/Sense_R1_universal.png --debug $debug_dir/universal --layout universal --title "Sense_R1 Universal Layout" --width 2400 --height 1800 --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0
 ```
 
-A single input is given and a single output is plotted. The positions of the axes are set to 0 (`--ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0`) to indicate they should be automatically chosen. To position the axes manually or zoom in o certain parts of the graph using parameters `--range_x` and `--range_y`, please see the console output after running this command, which shows the $x$ and $y$ ranges of the plotted vertices. In this case, the console should read:
+A single input is given and a single output is plotted. Debug files (`--debug $debug_dir/universal`) are written that show the vertices plotted, their coordinates, and the edges between vertices. The positions of the axes are set to 0 (`--ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0`) to indicate they should be automatically chosen. To position the axes manually or zoom in o certain parts of the graph using parameters `--range_x` and `--range_y`, please see the console output after running this command, which shows the $x$ and $y$ ranges of the plotted vertices. In this case, the console should read:
 
 ```
 Figure[0] x-range: -10.0 to 10.0
