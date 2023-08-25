@@ -9,7 +9,7 @@ import DSBplot.utils.file_utils as file_utils
 import DSBplot.utils.log_utils as log_utils
 import DSBplot.utils.constants as constants
 
-import DSBplot.lib_process.filter as filter
+import DSBplot.lib_process.filter_reads as filter_reads
 import DSBplot.lib_process.get_window as get_window
 import DSBplot.lib_process.get_variation as get_variation
 
@@ -93,19 +93,19 @@ PARAMS = {
       ' If not provided, the label is the basename of the OUTPUT directory.'
     ),
   },
-  '--ref': filter.PARAMS['--ref'].copy(),
-  '--dsb': filter.PARAMS['--dsb'].copy(),
-  '--min_len': filter.PARAMS['--min_len'].copy(),
-  '--max_sub': filter.PARAMS['--max_sub'].copy(),
-  '--rc': filter.PARAMS['--rc'].copy(),
-  '--consec': filter.PARAMS['--consec'].copy(),
-  '--touch': filter.PARAMS['--touch'].copy(),
-  '--realign': filter.PARAMS['--realign'].copy(),
-  '--reads': filter.PARAMS['--reads'].copy(),
+  '--ref': filter_reads.PARAMS['--ref'].copy(),
+  '--dsb': filter_reads.PARAMS['--dsb'].copy(),
+  '--min_len': filter_reads.PARAMS['--min_len'].copy(),
+  '--max_sub': filter_reads.PARAMS['--max_sub'].copy(),
+  '--rc': filter_reads.PARAMS['--rc'].copy(),
+  '--consec': filter_reads.PARAMS['--consec'].copy(),
+  '--touch': filter_reads.PARAMS['--touch'].copy(),
+  '--realign': filter_reads.PARAMS['--realign'].copy(),
+  '--reads': filter_reads.PARAMS['--reads'].copy(),
   '--window': get_window.PARAMS['--window'].copy(),
   '--anchor': get_window.PARAMS['--anchor'].copy(),
   '--anchor_vars': get_window.PARAMS['--anchor_vars'].copy(),
-  '--quiet': filter.PARAMS['--quiet'].copy(),
+  '--quiet': filter_reads.PARAMS['--quiet'].copy(),
 }
 
 # Set whether the parameters are required or not
@@ -152,7 +152,7 @@ PARAMS['--label']['help'] += ' Stages: "4_info" (may be omitted because of defau
 
 def post_process_args(args):
   args = args.copy()
-  args = filter.post_process_args(args)
+  args = filter_reads.post_process_args(args)
   args = get_window.post_process_args(args)
   # Allow any prefix of a stage name.
   args['stages'] = [x for x in STAGES if x.startswith(tuple(args['stages']))]
@@ -324,7 +324,7 @@ def do_1_filter(
     'quiet': quiet,
   }
 
-  filter.main(**args)
+  filter_reads.main(**args)
   write_args(args, output, 'filter')
 
 def do_2_window(
