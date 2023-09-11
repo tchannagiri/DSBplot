@@ -300,7 +300,7 @@ def do_1_filter(
     # Infer names from the SAM files.
     library_names = sorted([
       file_names.get_file_name(x)
-      for x in glob.glob(os.path.join(output, '*.sam'))
+      for x in sorted(glob.glob(os.path.join(output, '*.sam')))
     ])
   input_list = [file_names.sam_file(output, x) for x in library_names]
 
@@ -438,6 +438,29 @@ def main(
     shutil.copy(ref_seq_file, file_names.ref_seq_file(output))
 
   log_utils.blank_line()
+
+  # Check if any of the inputs are SAM files and if so, copy them to output
+  if (input_list is not None) and any((os.path.splitext(x)[1] == '.sam') for x in input_list):
+    log_utils.log('Got SAM input. Skipping alignment.')
+    if not all((os.path.splitext(x)[1] == '.sam') for x in input_list):
+      raise Exception('All of or none of the input files must be SAM files (".sam" extension).')
+    for i in range(len(input_list)):
+      file_in = input_list[i]
+      if library_names is not None:
+        file_out = file_names.sam_file(output, library_names[i])
+      else:
+        file_out = file_names.sam_file(output, file_names.get_file_name(file_in))
+      shutil.copy(file_in, file_out)
+      log_utils.log_output(file_in)
+    stages = [x for x in stages if (x != '0_align')]
+    prev_args = {
+      'output': output,
+      'input_list': input_list,
+      'library_names': library_names,
+      'ref_seq_file': ref_seq_file,
+    }
+    write_args(prev_args, output, 'align')
+    log_utils.blank_line()
 
   if '0_align' in stages:
     log_utils.log('Running processing stage "0_align".')

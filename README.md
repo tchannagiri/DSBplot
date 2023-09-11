@@ -32,7 +32,7 @@ pip install DSBplot
 
 The tested Python version is 3.11.0. The required dependencies are:
 
-* kaleido (tested version 0.1.0.post1; if using window the version *must* be 0.1.0.post1, please see [here](https://github.com/plotly/Kaleido/issues/134)).
+* kaleido (tested version 0.1.0.post1; if using Windows OS the version *must* be 0.1.0.post1, please see [here](https://github.com/plotly/Kaleido/issues/134)).
 * Levenshtein (tested version 0.21.0)
 * matplotlib (tested version 3.7.1)
 * networkx (tested version 3.1)
@@ -55,6 +55,8 @@ Bowtie 2 (tested version 2.5.0) should be installed and available on the system 
 ## Commands
 
 This package contains the following four commands:
+
+TODO: START MODIFYING HERE TO MAKE CLEAR THAT CAN USE EITHER SAM OR FASTA FILES AS INPUT!!!
 
 * `DSBplot-process`: Takes as input the trimmed and quality-filtered FASTQ reads files and a FASTA file containing the reference sequence, and creates the intermediate tables needed for plotting the graphs and histograms. The input files for a single `DSBplot-process` invocation should represent replicate experiments (e.g., biological replicates).
 * `DSBplot-graph`: Takes as input a collection of the output directories of `DSBplot-process`, lays out sequences in all inputs, and plots a separate graph for each input.
