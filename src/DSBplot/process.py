@@ -24,17 +24,12 @@ PARAMS = {
       'Stages to run. Choices: "0_align", "1_filter", "2_window", "3_variation", "4_info".' +
       ' Any prefix of a stage name can be used (e.g., "0" for "0_align").' +
       ' The stages must be run in the correct order indicated by their prefix numbers.' +
-      ' 0_align: Align reads to reference sequence using Bowtie 2 ' +
-      ' (may be omitted if a custom alignment approach is used; resulting SAM files must be put in the OUTPUT directory).' +
-      ' 1_filter: Filter reads based on different criteria. Will use all SAM files placed in OUTPUT.' +
+      ' 0_align: Align reads to reference sequence using Bowtie 2 unless SAM files are used as input.' +
+      ' 1_filter: Filter reads based on different criteria.' +
       ' 2_window: Extract the nucleotide sequences and alignment from around the DSB site.' +
       ' 3_variation: Split alignment windows into individual variations (used for plotting variation-position histograms).' +
       ' 4_info: Make a data info (metadata) file describing the experiment.'
     ),
-  },
-  '--no_align': {
-    'action': 'store_true',
-    'help': 'Shorthand for omitting the "0_align" stage (see "--stages").',
   },
   '-o': {
     'type': common_utils.check_dir_output,
@@ -55,14 +50,14 @@ PARAMS = {
       'Input files of raw reads.' +
       ' The following file entensions are allowed: ' +
       ' FASTQ: ".fastq", ".fq."; FASTA: "fasta", ".fa", "fna";' +
-      ' text: all others. FASTQ files are processed with the ' +
+      ' SAM: ".sam"; text: all others. FASTQ files are processed with the ' +
       ' Bowtie 2 flag "-q", FASTA files are processed with the Bowtie 2 flag "-f",' +
       ' and text files are processed with the Bowtie 2 flag "-r".' +
       ' Please see the Bowtie 2 manual at http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml.' +
-      ' Each file is considered a repeat of the same experiment.' +
-      ' If "0_align" is omitted and a custom alignnment approach is used, ' +
-      ' then the aligned SAM files must be placed in OUTPUT directory.' +
-      ' The input file basenames must be in alphabetical order and are used to' +
+      ' If SAM files as used as input the alignment is omitted' +
+      ' (the SAM files must be aligned with exactly the same reference sequence passed with "--ref").' +
+      ' Each FASTQ/SAM file is considered a repeat of the same experiment.' +
+      ' The input file base names must be in alphabetical order and are used to' +
       ' name the output SAM files (unless "--names" is given).'
     ),
     'metavar': 'INPUT',
@@ -110,7 +105,6 @@ PARAMS = {
 
 # Set whether the parameters are required or not
 PARAMS['--stages']['required'] = False
-PARAMS['--no_align']['required'] = False
 PARAMS['-o']['required'] = True
 PARAMS['-i']['required'] = False
 PARAMS['--bt2']['required'] = False
@@ -165,9 +159,6 @@ def post_process_args(args):
     f_names = [file_names.get_file_name(x) for x in args['input_list']]
     if not all(x == y for x, y in zip(f_names, sorted(f_names))):
       raise Exception('INPUT must have file names in alphabetical order.')
-  if args['no_align']:
-    args['stages'] = [x for x in args['stages'] if (x != '0_align')]
-  del args['no_align']
   return args
 
 def parse_args():
@@ -177,7 +168,9 @@ def parse_args():
       ' This is script is broken into separate stages so that each stage' +
       ' can be run separately. However, the stages must be run in the correct order indicated' +
       ' by their prefix numbers. If running the stages separately, the value of OUTPUT' +
-      ' must the same value on each separate invocation. Two experiments should not' +
+      ' must the same value on each separate invocation.' +
+      ' The OUTPUT directory should be empty or not exist before running this script.' +
+      ' Two experiments should not' +
       ' be given the same OUTPUT directory. See parameter "--stages" and the README for more information' +
       ' on the individual stages. The input files for each' +
       ' repeat of the experiment must be passed in alphabetical order.' +
@@ -195,7 +188,6 @@ def parse_args():
   group_info = parser.add_argument_group('Metadata')
 
   parser.add_argument('--stages', **PARAMS['--stages'])
-  parser.add_argument('--no_align', **PARAMS['--no_align'])
   parser.add_argument('-o', **PARAMS['-o'])
   group_multi.add_argument('--ref', **PARAMS['--ref'])
   group_multi.add_argument('--names', **PARAMS['--names'])
