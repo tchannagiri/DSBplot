@@ -600,7 +600,10 @@ def do_filter(
     ['rank_' + x for x in library_names] +
     ['seq']
   ]
-  data_accepted = data_accepted.sort_values('freq_mean', ascending=False)
+  data_accepted = data_accepted.sort_values(
+    ['freq_mean', 'seq'],
+    ascending = [False, True],
+  )
 
   # Make the rejected read data
   data_list = []
@@ -624,7 +627,6 @@ def do_filter(
   data_rejected = (
     pd.concat([data_common] + data_list, join='outer', axis='columns')
     .fillna(0)
-    .sort_values(by='rank_' + library_names[0])
     .reset_index()
   )
   for col in data_rejected.columns:
@@ -643,7 +645,10 @@ def do_filter(
     ['rank_' + x for x in library_names] +
     ['seq']
   ]
-  data_rejected = data_rejected.sort_values('freq_mean', ascending=False)
+  data_rejected = data_rejected.sort_values(
+    ['freq_mean', 'seq'],
+    ascending = [False, True],
+  )
 
   file_utils.write_csv(data_accepted, output)
   file_utils.write_csv(data_rejected, output_rejected)
