@@ -2,6 +2,6 @@
   "format": "individual",
   "ref_seq_window": "GACTCCTCCCGACGGCTGCT",
   "name": "Sense_R1",
-  "label": "Sense (R1)",
+  "label": "Sense_R1",
   "ref_seq": "TTCAAGTGGGAGCGCGTGATGAACTTCGAGGACGGCGGCGTGGCGACCGTGACCCAGGACTCCTCCCGACGGCTGCTTCATCTACAAGGTGAAGTTCATCGGCGTGAACTTCC"
 }
