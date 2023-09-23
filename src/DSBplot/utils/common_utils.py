@@ -63,3 +63,11 @@ def make_data_info(
   else:
     raise Exception('Unknown data format: ' + str(format))
   return data_info
+
+def sort_by_count(data, count_cols, other_cols):
+  count_max = data[count_cols].max(axis='columns')
+  data['__temp__'] = -count_max # Sort descending
+  data = data.sort_values(['__temp__'] + other_cols)
+  data = data.drop(columns=['__temp__'])
+  data = data.reset_index(drop=True)
+  return data

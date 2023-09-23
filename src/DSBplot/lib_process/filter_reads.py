@@ -600,9 +600,10 @@ def do_filter(
     ['rank_' + x for x in library_names] +
     ['seq']
   ]
-  data_accepted = data_accepted.sort_values(
-    ['freq_mean', 'seq'],
-    ascending = [False, True],
+  data_accepted = common_utils.sort_by_count(
+    data_accepted,
+    ['count_' + x for x in library_names],
+    ['seq'],
   )
 
   # Make the rejected read data
@@ -645,9 +646,10 @@ def do_filter(
     ['rank_' + x for x in library_names] +
     ['seq']
   ]
-  data_rejected = data_rejected.sort_values(
-    ['freq_mean', 'seq'],
-    ascending = [False, True],
+  data_rejected = common_utils.sort_by_count(
+    data_rejected,
+    ['count_' + x for x in library_names],
+    ['seq'],
   )
 
   file_utils.write_csv(data_accepted, output)

@@ -187,10 +187,11 @@ def write_window(
   ).reset_index()
   data = data.drop(columns='read_seq').reset_index(drop=True)
 
-  data = data.sort_values(
-    ['freq_mean', 'ref_align', 'read_align'],
-    ascending = [False, True, True],
-  ).reset_index(drop=True)
+  data = common_utils.sort_by_count(
+    data,
+    [x for x in value_cols if x.startswith('count_')],
+    ['ref_align', 'read_align'],
+  )
 
   file_utils.write_csv(data, output)
   log_utils.log_output(output)

@@ -40,11 +40,6 @@ def get_node_data(data):
   dels = []
   indel = []
 
-  data = data.sort_values(
-    ['freq_mean', 'ref_align', 'read_align'],
-    ascending = [False, True, True],
-  )
-
   for row in data.to_dict('records'):
     num_ins, num_del, num_subst = (
       alignment_utils.count_variations(row['ref_align'], row['read_align'])

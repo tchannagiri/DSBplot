@@ -128,7 +128,8 @@ def main(
 
     data[freq_cols] = data[count_cols].divide(reads_1, axis='columns')
     data['freq_mean'] = data[['freq_' + x for x in library_names]].mean(axis='columns')
-    data = data.sort_values('freq_mean', ascending=False)
+    data = common_utils.sort_by_count(data, count_cols, ['ref_align', 'read_align'])
+    
     data = data[
       ['ref_align', 'read_align', 'freq_mean'] +
       freq_cols +

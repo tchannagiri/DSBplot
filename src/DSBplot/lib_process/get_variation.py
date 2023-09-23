@@ -74,9 +74,10 @@ def split_seqs_into_variations(window_data):
     'var_letter',
   ]).sum().reset_index()
 
-  variation_data = variation_data.sort_values(
-    ['freq_mean', 'num_var', 'var_type', 'var_pos', 'var_letter'],
-    ascending = [False, True, True, True, True],
+  variation_data = common_utils.sort_by_count(
+    variation_data,
+    [x for x in value_cols if x.startswith('count_')],
+    ['num_var', 'var_type', 'var_pos', 'var_letter'],
   )
 
   variation_data = variation_data[
