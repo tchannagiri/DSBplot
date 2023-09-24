@@ -96,7 +96,7 @@ foreach ($ext in $graph_exts) {
         $con = $x[0]
         $con1 = $x[1]
         $con2 = $x[2]
-        DSBplot-graph -i $process_dir/${con1}::$process_dir/${con2} -o $plots_dir/graph/$ext/$layout/${con}.${ext} --debug debug/$layout --layout universal --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0 --width 2400 --height 1800 --ratio_colors "#cf191b" "#33a02c" --colorbar_scale 3 --font_scale 3 --legend_x 100 --legend_y -100 --mar_r 900 --legends ratio_cont
+        DSBplot-graph -i $process_dir/${con1}::$process_dir/${con2} -o $plots_dir/graph/$ext/$layout/${con}.${ext} --debug debug/$layout --layout $layout --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0 --width 2400 --height 1800 --ratio_colors "#cf191b" "#33a02c" --colorbar_scale 3 --font_scale 3 --legend_x 100 --legend_y -100 --mar_r 900 --legends ratio_cont
       }
     }
   }

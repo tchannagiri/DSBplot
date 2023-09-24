@@ -50,16 +50,16 @@ histogram_exts=("png" "pdf")
 histograms_var_types=("sub" "ins" "del")
 
 constructs_plot=(
-  ("Sense_R1")
-  ("Sense_R2")
-  ("BranchD_R1")
-  ("BranchD_R2")
-  ("pCMVD_R1")
-  ("pCMVD_R2")
-  ("Sense_BranchD_R1" "Sense_R1" "BranchD_R1")
-  ("Sense_BranchD_R2" "Sense_R2" "BranchD_R2")
-  ("Sense_pCMVD_R1" "Sense_R1" "pCMVD_R1")
-  ("Sense_pCMVD_R2" "Sense_R2" "pCMVD_R2")
+  "Sense_R1"
+  "Sense_R2"
+  "BranchD_R1"
+  "BranchD_R2"
+  "pCMVD_R1"
+  "pCMVD_R2"
+  "Sense_BranchD_R1:Sense_R1:BranchD_R1"
+  "Sense_BranchD_R2:Sense_R2:BranchD_R2"
+  "Sense_pCMVD_R1:Sense_R1:pCMVD_R1"
+  "Sense_pCMVD_R2:Sense_R2:pCMVD_R2"
 )
 
 ### Processing ###
@@ -85,14 +85,16 @@ DSBplot-concat -i "$process_dir/Sense_R2" "$process_dir/BranchD_R2" "$process_di
 for ext in "${graph_exts[@]}"; do
   for layout in "${graph_layouts[@]}"; do
     for x in "${constructs_plot[@]}"; do
+      # split x using the ":" character
+      IFS=':'; read -r -a x <<< "$x"
       if [ ${#x[@]} -eq 1 ]; then
         con="${x[0]}"
-        DSBplot-graph -i "$process_dir/${con}" -o "$plots_dir/graph/$ext/$layout/${con}.${ext}" --debug "debug/$layout" --layout universal --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0 --width 2400 --height 1800 --font_scale 3 --legend_x 100 --legend_y 0 --mar_r 900 --legends size var_type 
+        DSBplot-graph -i "$process_dir/${con}" -o "$plots_dir/graph/$ext/$layout/${con}.${ext}" --debug "debug/$layout" --layout "$layout" --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0 --width 2400 --height 1800 --font_scale 3 --legend_x 100 --legend_y 0 --mar_r 900 --legends size var_type 
       elif [ ${#x[@]} -eq 3 ]; then
         con="${x[0]}"
         con1="${x[1]}"
         con2="${x[2]}"
-        DSBplot-graph -i "$process_dir/${con1}::$process_dir/${con2}" -o "$plots_dir/graph/$ext/$layout/${con}.${ext}" --debug "debug/$layout" --layout universal --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0 --width 2400 --height 1800 --ratio_colors "#cf191b" "#33a02c" --colorbar_scale 3 --font_scale 3 --legend_x 100 --legend_y -100 --mar_r 900 --legends ratio_cont
+        DSBplot-graph -i "$process_dir/${con1}::$process_dir/${con2}" -o "$plots_dir/graph/$ext/$layout/${con}.${ext}" --debug "debug/$layout" --layout "$layout" --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0 --width 2400 --height 1800 --ratio_colors "#cf191b" "#33a02c" --colorbar_scale 3 --font_scale 3 --legend_x 100 --legend_y -100 --mar_r 900 --legends ratio_cont
       fi
     done
   done
