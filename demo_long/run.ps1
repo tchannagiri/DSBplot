@@ -91,7 +91,7 @@ foreach ($ext in $graph_exts) {
     foreach ($x in $constructs_plot) {
       if ($x.Length -eq 1) {
         $con = $x[0]
-        DSBplot-graph -i $process_dir/${con} -o $plots_dir/graph/$ext/$layout/${con}.${ext} --debug debug/$layout --layout universal --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0 --width 2400 --height 1800 --font_scale 3 --legend_x 100 --legend_y 0 --mar_r 900 --legends size var_type 
+        DSBplot-graph -i $process_dir/${con} -o $plots_dir/graph/$ext/$layout/${con}.${ext} --debug debug/$layout --layout $layout --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0 --width 2400 --height 1800 --font_scale 3 --legend_x 100 --legend_y 0 --mar_r 900 --legends size var_type 
       } elseif ($x.Length -eq 3) {
         $con = $x[0]
         $con1 = $x[1]
