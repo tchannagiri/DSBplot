@@ -49,6 +49,9 @@ $ref_seq_file = @{
 
 $graph_exts = @("png", "pdf", "html")
 $graph_layouts = @("universal", "kamada", "radial")
+# Whether or not to separate connected components of the graphs.
+# Needed for the Kamada-Kawaii because otherwise the structure is muddled.
+$sep = @{"universal" = 0; "kamada" = 1; "radial" = 0}
 
 $histogram_exts = @("png", "pdf")
 $histograms_var_types = @("sub", "ins", "del")
@@ -91,12 +94,12 @@ foreach ($ext in $graph_exts) {
     foreach ($x in $constructs_plot) {
       if ($x.Length -eq 1) {
         $con = $x[0]
-        DSBplot-graph -i $process_dir/${con} -o $plots_dir/graph/$ext/$layout/${con}.${ext} --debug debug/$layout --layout $layout --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0 --width 2400 --height 1800 --font_scale 3 --legend_x 100 --legend_y 0 --mar_r 900 --legends size var_type 
+        DSBplot-graph -i $process_dir/${con} -o $plots_dir/graph/$ext/$layout/${con}.${ext} --debug debug/$layout --layout $layout --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0 --width 2400 --height 1800 --font_scale 3 --legend_x 100 --legend_y 0 --mar_r 900 --legends size var_type --sep $sep[$layout]
       } elseif ($x.Length -eq 3) {
         $con = $x[0]
         $con1 = $x[1]
         $con2 = $x[2]
-        DSBplot-graph -i $process_dir/${con1}::$process_dir/${con2} -o $plots_dir/graph/$ext/$layout/${con}.${ext} --debug debug/$layout --layout $layout --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0 --width 2400 --height 1800 --ratio_colors "#cf191b" "#33a02c" --colorbar_scale 3 --font_scale 3 --legend_x 100 --legend_y -100 --mar_r 900 --legends ratio_cont
+        DSBplot-graph -i $process_dir/${con1}::$process_dir/${con2} -o $plots_dir/graph/$ext/$layout/${con}.${ext} --debug debug/$layout --layout $layout --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0 --width 2400 --height 1800 --ratio_colors "#cf191b" "#33a02c" --colorbar_scale 3 --font_scale 3 --legend_x 100 --legend_y -100 --mar_r 900 --legends ratio_cont --sep $sep[$layout]
       }
     }
   }
@@ -116,7 +119,8 @@ foreach ($ext in $graph_exts) {
     --legend_x 100 --legend_y -100 `
     --mar_t 300 --mar_r 900 --mar_l 0 --mar_b 0 `
     --font_scale 3 --colorbar_scale 3 `
-    --layout $layout --width 2400 --height 1800
+    --layout $layout --width 2400 --height 1800 `
+    --sep $sep[$layout]
   }
 }
 
