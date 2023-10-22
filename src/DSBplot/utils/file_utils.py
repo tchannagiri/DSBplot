@@ -25,7 +25,7 @@ def write_csv(data, file, **args):
     na_rep = 'NA',
     quoting = csv.QUOTE_NONNUMERIC,
     index = args.get('index', False),
-    lineterminator = '\n',
+    line_terminator = '\n', # FIXME: Change line_terminator => lineterminator
   )
 
 def read_csv(file):
