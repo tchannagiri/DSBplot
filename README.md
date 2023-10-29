@@ -160,8 +160,6 @@ Different *layouts*, specified with the `--layout` parameter, are used to positi
 
 The `--debug` parameter of the `DSBplot-graph` command allows users to output tables that describe the vertices plotted, their coordinates, and the edge between the vertices. This may be used to debug the layout algorithms or to extract the vertex coordinates for use in other software.
 
-CONTINUE HERE
-
 ### Graph aesthetics
 
 In this section, we describe the visual features of the graphs. Not all parameters are described here; for a full description please use `DSBplot-graph --help`.
@@ -178,53 +176,66 @@ In this section, we describe the visual features of the graphs. Not all paramete
 * Edges: All edges in the graphs indicate a 1-nucleotide variation (insertion, deletion, or substitution) between the two vertices that are connected. The display of edges can be controlled by using the `--edge` and `--edge_types` parameters.
 * Legends: The legends describe the vertex size, vertex outline, vertex color, and the edges. Any/all of these can be drawn by using the `--legends` parameter. The legends will be drawn in the right margin of the figure. To ensure enough room, use the `--mar_t`, `--mar_b`, `--mar_l`, and `--mar_r` parameters to size the margins. The different legends are laid out vertically. To control the spacing between them use the `--legend_spacing` parameter.
 * Title: Titles can be optionally added to the top margin of each figure using the `--title` parameter (as many titles as inputs must be specified).
-* Universal layout axes: To illustrate the vertex placement for the universal layout, axes can be drawn on the figure. Using the `--ul_xax_del_y_pos` parameter, a horizontal axis can be drawn on the deletion side (below the reference sequence), which, for each deletion vertex, shows the approximate position of the range of deleted nucleotides (see [Figure 1](#graphs)). Using the `--ul_xax_ins_y_pos` parameter, a horizontal axis can be drawn on the insertion side (above the reference sequence) to show the alphabetical order of the nucleotides. Using the `--ul_yax_x_pos` parameter, a vertical axis can be drawn to show the Levenshtein distance of vertices from the reference vertex. There are several other parameters to control various aspects of the axes: `--ul_xax_del_type`, `--ul_yax_y_range`, `--ul_xax_x_range`, `--ul_yax_del_max_tick`, and `--ul_yax_ins_max_tick`. The following are used to scale the axes by different amounts, mostly for the purpose of aesthetics: `--ul_x_scale_ins`, `--ul_y_scale_ins`, `--ul_x_scale_del`, and `--ul_y_scale_del`. To help positioning the axes, a message is printed to the console showing the range of $x$- and $y$-coordinates for each figure when `DSBplot-graph` is run.
+* Universal layout axes: To illustrate the vertex placement for the universal layout, axes can be drawn on the figure. Using the `--ul_xax_del_y_pos` parameter, a horizontal axis can be drawn on the deletion side (below the reference sequence), which, for each deletion vertex, shows the approximate position of the range of deleted nucleotides (see [Figure 1](#graphs)). Using the `--ul_xax_ins_y_pos` parameter, a horizontal axis can be drawn on the insertion side (above the reference sequence) to show the alphabetical order of the nucleotides. Using the `--ul_yax_x_pos` parameter, a vertical axis can be drawn to show the Levenshtein distance of vertices from the reference vertex. There are several other parameters to control various aspects of the axes: `--ul_xax_del_type`, `--ul_yax_y_range`, `--ul_xax_x_range`, `--ul_yax_del_max_tick`, and `--ul_yax_ins_max_tick`. The following are used to scale the axes by different amounts for aesthetics purposes: `--ul_x_scale_ins`, `--ul_y_scale_ins`, `--ul_x_scale_del`, and `--ul_y_scale_del`. To help positioning the axes, a message is printed to the console showing the range of $x$- and $y$-coordinates for each figure when `DSBplot-graph` is run.
 
 ## Demonstration
 
-To begin this demonstration set the terminal working directory to the `demo_short` directory. The full sequence of commands described here are also included in the `run.ps1` and `run.sh` scripts, which should run in less than a minute on a personal computer. Several example input files are available in the `input` directory:
+To begin this demonstration set the terminal working directory to the `demo_short` directory. The full sequence of commands described here are also included in the `run.ps1` (PowerShell) and `run.sh` (bash) scripts, which should run in less than a minute on a personal computer. Several example input files are available in the `input` directory:
 
 * `data_demo/fastq/Sense_R1_1.fa`, `data_demo/fastq/Sense_R1_2.fa`, `data_demo/fastq/Sense_R1_3.fa`, `data_demo/fastq/Sense_R1_4.fa`: High-throughput sequencing reads in FASTQ format for four biological replicates of an experiment called "Sense_R1".
-* `input/ref_seq/2DSB_Sense_R1.fastq`: Reference sequence FASTA file for the Sense_R1 reads.
+* `input/ref_seq/2DSB_Sense_R1.fa`: Reference sequence FASTA file for the Sense_R1 reads.
+* `data_demo/sam/Sense_R1_1.sam`, `data_demo/sam/Sense_R1_2.sam`, `data_demo/sam/Sense_R1_3.sam`, `data_demo/sam/Sense_R1_4.sam`: The four FASTQ files above aligned to the reference sequence above using Bowtie 2.
 
-The FASTQ files have already been trimmed so that they should align correctly to the reference sequence. If you compare the reads in the FASTQ files with the reference sequence FASTA, you will observe that the beginning of each read is very similar to the beginning of the reference sequence (although most reads are long enough to reach to the end of the reference). This is demonstration data that has been generated by taking a small subset of an actual dataset.
+The FASTQ files have already been trimmed so that they should align correctly to the reference sequence. If you compare the reads in the FASTQ files with the reference sequence FASTA, you will observe that the beginning of each read is very similar to the beginning of the reference sequence (although most reads are not long enough to reach to the end of the reference). This is demonstration data that has been generated by taking a small subset of an actual dataset from the study [Jeon et al. (2022)]((https://doi.org/10.1101/2022.11.01.514688)).
 
 The output data will be written to the `output/Sense_R1` directory. First, set up the directory names by running:
 
 ```
-$input_dir = "input/fastq"
+# Powershell
+$input_fq_dir = "input/fastq"
+$input_sam_dir = "input/sam"
 $ref_seq_dir = "input/ref_seq"
 $output_dir = "output"
 $debug_dir = "debug"
 ```
 
-To run all processing stages use the command:
+We show three different ways of running the pipeline.
 
-```
-DSBplot-process -i $input_dir/Sense_R1_1.fq $input_dir/Sense_R1_2.fq $input_dir/Sense_R1_3.fq $input_dir/Sense_R1_4.fq --ref $ref_seq_dir/2DSB_Sense_R1.fa --dsb 67 -o $output_dir/Sense_R1 --label "Sense (R1)" --reads 3000 3000 3000 3000
-```
+* To run all processing stages use the command:
+  
+  ```
+  # Powershell
+  DSBplot-process -i $input_fq_dir/Sense_R1_1.fq $input_fq_dir/Sense_R1_2.fq $input_fq_dir/Sense_R1_3.fq $input_fq_dir/Sense_R1_4.fq --ref $ref_seq_dir/2DSB_Sense_R1.fa --dsb 67 -o $output_dir/Sense_R1 --label "Sense_R1" --reads 3000 3000 3000 3000
+  ```
 
-The command indicates that the DSB site is between the 67th and 68th nucleotide on the reference sequence (`--dsb 67`), and each FASTQ file has 3000 reads (`--reads 3000 3000 3000 3000`).
+* To run the processing stages separately, use the commands:
+  
+  ```
+  # Powershell
+  DSBplot-process -i "$input_fq_dir/Sense_R1_1.fq" "$input_fq_dir/Sense_R1_2.fq" "$input_fq_dir/Sense_R1_3.fq" "$input_fq_dir/Sense_R1_4.fq" --ref "$ref_seq_dir/2DSB_Sense_R1.fa" -o "$output_dir/Sense_R1" --stages 0
+  DSBplot-process --ref "$ref_seq_dir/2DSB_Sense_R1.fa" --dsb 67 -o "$output_dir/Sense_R1" --reads 3000 3000 3000 3000 --stages 1_filter
+  DSBplot-process -o "$output_dir/Sense_R1" --stages 2_window
+  DSBplot-process -o "$output_dir/Sense_R1" --stages 3_variation
+  DSBplot-process -o "$output_dir/Sense_R1" --stages 4_info
+  ```
 
-To run the processing stages separately, use the commands:
+* To run the processing stages with pre-aligned SAM files, use the commands:
+  
+  ```
+  # Powershell
+  DSBplot-process -i "$input_sam_dir/Sense_R1_1.sam" "$input_sam_dir/Sense_R1_2.sam" "$input_sam_dir/Sense_R1_3.sam" "$input_sam_dir/Sense_R1_4.sam" --ref "$ref_seq_dir/2DSB_Sense_R1.fa" --dsb 67 -o "$output_dir/Sense_R1" --label "Sense_R1" --reads 3000 3000 3000 3000
+  ```
 
-```
-DSBplot-process -i $input_dir/Sense_R1_1.fq $input_dir/Sense_R1_2.fq $input_dir/Sense_R1_3.fq $input_dir/Sense_R1_4.fq --ref $ref_seq_dir/2DSB_Sense_R1.fa -o $output_dir/Sense_R1 --stages 0
-DSBplot-process --ref $ref_seq_dir/2DSB_Sense_R1.fa --dsb 67 -o $output_dir/Sense_R1 --reads 3000 3000 3000 3000 --stages 1_filter
-DSBplot-process -o $output_dir/Sense_R1 --stages 2_window
-DSBplot-process -o $output_dir/Sense_R1 --stages 3_variation
-DSBplot-process -o $output_dir/Sense_R1 --stages 4_info
-```
-
-The data written to `output/Sense_R1` should be exactly the same whether the stages are run together or separately. The raw data used for plotting the variation-distance graphs will be contained in `output/Sense_R1/window_withoutSubst.tsv` and `output/Sense_R1/variation_withSubst.tsv`. The data for the variation-position histograms will be contained in `output/Sense_R1/variation_withoutSubst.tsv` and `output/Sense_R1/variation_withSubst.tsv`.
+The commands indicates that the DSB site is between the 67th and 68th nucleotide on the reference sequence (`--dsb 67`), and each FASTQ file has 3000 reads (`--reads 3000 3000 3000 3000`). The data written to `output/Sense_R1` should be exactly the same whether the stages are run together, separately, or with SAM files (the input SAM files have been aligned using Bowtie 2 in the same way the pipeline normally does with input FASTQ files). The raw data used for plotting the variation-distance graphs will be contained in `output/Sense_R1/window_withoutSubst.tsv` and `output/Sense_R1/variation_withSubst.tsv`. The data for the variation-position histograms will be contained in `output/Sense_R1/variation_withoutSubst.tsv` and `output/Sense_R1/variation_withSubst.tsv`.
 
 Next, the plotting commands will write the output figures to the `plots` directory. To plot a variation-distance graph using the Universal layout with axes use the command:
 
 ```
+# PowerShell
 DSBplot-graph -i $output_dir/Sense_R1 -o plots/graph/Sense_R1_universal.png --debug $debug_dir/universal --layout universal --title "Sense_R1 Universal Layout" --width 2400 --height 1800 --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0
 ```
 
-A single input is given and a single output is plotted. Debug files (`--debug $debug_dir/universal`) are written that show the vertices plotted, their coordinates, and the edges between vertices. The positions of the axes are set to 0 (`--ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0`) to indicate they should be automatically chosen. To position the axes manually or zoom in o certain parts of the graph using parameters `--range_x` and `--range_y`, please see the console output after running this command, which shows the $x$ and $y$ ranges of the plotted vertices. In this case, the console should read:
+A single input is given and a single output is plotted. Debug files (`--debug $debug_dir/universal`) are written that show the vertices plotted, their coordinates, and the edges between vertices. The positions of the axes are set to 0 (`--ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0`) to indicate they should be automatically chosen. To position the axes manually or zoom in on certain parts of the graph (i.e., parameters `--range_x` and `--range_y`), please see the console output after running this command, which shows the $x$ and $y$ ranges of the plotted vertices. In this case, the console should read:
 
 ```
 Figure[0] x-range: -10.0 to 10.0
@@ -234,6 +245,7 @@ Figure[0] y-range: -17.0 to 41.8125
 The Kamada-Kawaii and Radial layouts may similarily be plotted using the commands:
 
 ```
+# PowerShell
 DSBplot-graph -i $output_dir/Sense_R1 -o plots/graph/Sense_R1_kamada.png --debug $debug_dir/kamada --layout kamada --title "Sense_R1 Kamada-Kawaii Layout" --width 2400 --height 1800 --sep 1
 DSBplot-graph -i $output_dir/Sense_R1 -o plots/graph/Sense_R1_radial.png --debug $debug_dir/radial --layout radial --title "Sense_R1 Radial Layout" --width 2400 --height 1800
 ```
@@ -248,6 +260,7 @@ The outputs for each of the three layouts are shown below.
 To create interactive HTMLs of the previously plotted figures, use the commands:
 
 ```
+# PowerShell
 DSBplot-graph -i $output_dir/Sense_R1 -o plots/graph/Sense_R1_universal.html --layout universal --title "Sense_R1 Universal Layout" --width 2400 --height 1800 --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0
 DSBplot-graph -i $output_dir/Sense_R1 -o plots/graph/Sense_R1_kamada.html --layout kamada --title "Sense_R1 Kamada-Kawaii Layout" --width 2400 --height 1800 --sep 1
 DSBplot-graph -i $output_dir/Sense_R1 -o plots/graph/Sense_R1_radial.html --layout radial --title "Sense_R1 Radial Layout" --width 2400 --height 1800
@@ -280,7 +293,7 @@ DSBplot-graph --help
 DSBplot-histogram --help
 ```
 
-Although not covered here, comparison graphs may be produced by specifying two input directories, separated by `::` (there should be only these characters and no extra spaces). Please see the more detailed demo script in the `demo_long` subdirectory of the repository root directory for contains examples of making comparison graphs and other features of the commands.
+Although not covered here, comparison graphs may be produced by specifying two input directories, separated by `::` (there should be only these characters and no extra spaces). Please see the more detailed demo script in the `demo_long` directory for examples of making comparison graphs and other features of the commands.
 
 ## Contact
 
@@ -288,7 +301,7 @@ For questions about this software please contact the maintainer Tejasvi Channagi
 
 ## Contributors
 
-* Tejasvi Channagiri
-* Margherita Ferrari
-* Youngkyu Jeon
-* Penghao Xu
+* Tejasvi Channagiri (https://github.com/tchannagiri)
+* Margherita Ferrari (https://github.com/mmferrari)
+* Youngkyu Jeon 
+* Penghao Xu (https://github.com/xph9876)
