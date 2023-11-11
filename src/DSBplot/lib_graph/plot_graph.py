@@ -1504,9 +1504,17 @@ def make_graph_layout(
   # Center the whole thing a bit
   if LAYOUT_PROPERTIES[layout_type]['normalize']:
     if layout.shape[0] < 10:
-      layout = layout.applymap(lambda x: 0.33 + 0.33 * x) # FIXME: Change applymap => map
+      # FIXME: remove try/except eventually
+      try:
+        layout = layout.map(lambda x: 0.33 + 0.33 * x) # new function name
+      except:
+        layout = layout.applymap(lambda x: 0.33 + 0.33 * x) # old function name
     else:
-      layout = layout.applymap(lambda x: 0.1 + 0.8 * x) # FIXME: Change applymap => map
+      # FIXME: remove try/except eventually
+      try:
+        layout = layout.map(lambda x: 0.1 + 0.8 * x) # new function name
+      except:
+        layout = layout.applymap(lambda x: 0.1 + 0.8 * x) # old function name
   return layout
 
 def make_legend(

@@ -20,13 +20,23 @@ def make_parent_dir(file_name, overwrite=False):
 def write_csv(data, file, **args):
   if type(file) == str:
     make_parent_dir(file)
-  data.to_csv(
-    file,
-    na_rep = 'NA',
-    quoting = csv.QUOTE_NONNUMERIC,
-    index = args.get('index', False),
-    line_terminator = '\n', # FIXME: Change line_terminator => lineterminator
-  )
+  # FIXME: remove try/except eventually
+  try:
+    data.to_csv(
+      file,
+      na_rep = 'NA',
+      quoting = csv.QUOTE_NONNUMERIC,
+      index = args.get('index', False),
+      lineterminator = '\n', # new argument name
+    )
+  except:
+    data.to_csv(
+      file,
+      na_rep = 'NA',
+      quoting = csv.QUOTE_NONNUMERIC,
+      index = args.get('index', False),
+      line_terminator = '\n', # old argument name
+    )
 
 def read_csv(file):
   return pd.read_csv(
