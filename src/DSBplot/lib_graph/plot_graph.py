@@ -2175,8 +2175,12 @@ def make_graph_layout_all(
     data_info = data_info_list[0],
     graph = graph_combined,
     layout_type = graph_layout_type,
-    separate_components = graph_layout_separate_components,
     graph_layout_precomputed = None,
+    separate_components = graph_layout_separate_components,
+    universal_x_scale_insertion = universal_x_scale_insertion,
+    universal_y_scale_insertion = universal_y_scale_insertion,
+    universal_x_scale_deletion = universal_x_scale_deletion,
+    universal_y_scale_deletion = universal_y_scale_deletion,
   )
 
   # Join layout with alignment string
