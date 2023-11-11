@@ -109,18 +109,36 @@ foreach ($ext in $graph_exts) {
 foreach ($ext in $graph_exts) {
   foreach ($layout in $graph_layouts) {
     $output_dir = "$plots_dir/graph/$ext/${layout}_combined"
-    DSBplot-graph `
-    -i $process_dir/BranchD_R1 $process_dir/BranchD_R2 $process_dir/Sense_R1 $process_dir/Sense_R2 $process_dir/pCMVD_R1 $process_dir/pCMVD_R2 $process_dir/Sense_R1::$process_dir/BranchD_R1 $process_dir/Sense_R2::$process_dir/BranchD_R2 $process_dir/Sense_R1::$process_dir/pCMVD_R1 $process_dir/Sense_R2::$process_dir/pCMVD_R2 `
-    --title "BranchΔ (R1)" "BranchΔ (R2)" "Sense (R1)" "Sense (R2)" "pCMVΔ (R1)" "pCMVΔ (R2)" "Sense / BranchΔ (R1)" "Sense / BranchΔ (R2)" "Sense / pCMVΔ (R1)" "Sense / pCMVΔ (R2)" `
-    -o $output_dir/BranchD_R1.${ext} $output_dir/BranchD_R2.${ext} $output_dir/Sense_R1.${ext} $output_dir/Sense_R2.${ext} $output_dir/pCMVD_R1.${ext} $output_dir/pCMVD_R2.${ext} $output_dir/Sense_BranchD_R1.${ext} $output_dir/Sense_BranchD_R2.${ext} $output_dir/Sense_pCMVD_R1.${ext} $output_dir/Sense_pCMVD_R2.${ext} `
-    --debug debug/${layout}_combined `
-    --legends ratio_cont var_type `
-    --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0 `
-    --legend_x 100 --legend_y -100 `
-    --mar_t 300 --mar_r 900 --mar_l 0 --mar_b 0 `
-    --font_scale 3 --colorbar_scale 3 `
-    --layout $layout --width 2400 --height 1800 `
-    --sep $sep[$layout]
+    if ($layout -eq "universal") {
+      # Additional formatting arguments for universal layout
+      DSBplot-graph `
+        -i $process_dir/BranchD_R1 $process_dir/BranchD_R2 $process_dir/Sense_R1 $process_dir/Sense_R2 $process_dir/pCMVD_R1 $process_dir/pCMVD_R2 $process_dir/Sense_R1::$process_dir/BranchD_R1 $process_dir/Sense_R2::$process_dir/BranchD_R2 $process_dir/Sense_R1::$process_dir/pCMVD_R1 $process_dir/Sense_R2::$process_dir/pCMVD_R2 `
+        --title "BranchΔ (R1)" "BranchΔ (R2)" "Sense (R1)" "Sense (R2)" "pCMVΔ (R1)" "pCMVΔ (R2)" "Sense / BranchΔ (R1)" "Sense / BranchΔ (R2)" "Sense / pCMVΔ (R1)" "Sense / pCMVΔ (R2)" `
+        -o $output_dir/BranchD_R1.${ext} $output_dir/BranchD_R2.${ext} $output_dir/Sense_R1.${ext} $output_dir/Sense_R2.${ext} $output_dir/pCMVD_R1.${ext} $output_dir/pCMVD_R2.${ext} $output_dir/Sense_BranchD_R1.${ext} $output_dir/Sense_BranchD_R2.${ext} $output_dir/Sense_pCMVD_R1.${ext} $output_dir/Sense_pCMVD_R2.${ext} `
+        --debug debug/${layout}_combined `
+        --legends ratio_cont var_type `
+        --ul_yax_x 12 --ul_xax_del_y 0 --ul_xax_ins_y 0 `
+        --ul_y_scale_ins 10 --ul_y_scale_del 8 `
+        --range_x -12 13 --range_y -175 225 `
+        --legend_x 100 --legend_y -100 `
+        --mar_t 300 --mar_r 1200 --mar_l 0 --mar_b 0 `
+        --font_scale 4 --colorbar_scale 3 `
+        --layout $layout --width 2400 --height 3000 `
+        --sep $sep[$layout]
+    } else {
+      DSBplot-graph `
+        -i $process_dir/BranchD_R1 $process_dir/BranchD_R2 $process_dir/Sense_R1 $process_dir/Sense_R2 $process_dir/pCMVD_R1 $process_dir/pCMVD_R2 $process_dir/Sense_R1::$process_dir/BranchD_R1 $process_dir/Sense_R2::$process_dir/BranchD_R2 $process_dir/Sense_R1::$process_dir/pCMVD_R1 $process_dir/Sense_R2::$process_dir/pCMVD_R2 `
+        --title "BranchΔ (R1)" "BranchΔ (R2)" "Sense (R1)" "Sense (R2)" "pCMVΔ (R1)" "pCMVΔ (R2)" "Sense / BranchΔ (R1)" "Sense / BranchΔ (R2)" "Sense / pCMVΔ (R1)" "Sense / pCMVΔ (R2)" `
+        -o $output_dir/BranchD_R1.${ext} $output_dir/BranchD_R2.${ext} $output_dir/Sense_R1.${ext} $output_dir/Sense_R2.${ext} $output_dir/pCMVD_R1.${ext} $output_dir/pCMVD_R2.${ext} $output_dir/Sense_BranchD_R1.${ext} $output_dir/Sense_BranchD_R2.${ext} $output_dir/Sense_pCMVD_R1.${ext} $output_dir/Sense_pCMVD_R2.${ext} `
+        --debug debug/${layout}_combined `
+        --legends ratio_cont var_type `
+        --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0 `
+        --legend_x 100 --legend_y -100 `
+        --mar_t 300 --mar_r 900 --mar_l 0 --mar_b 0 `
+        --font_scale 3 --colorbar_scale 3 `
+        --layout $layout --width 2400 --height 1800 `
+        --sep $sep[$layout]
+    }
   }
 }
 
