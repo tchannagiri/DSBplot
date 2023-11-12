@@ -116,7 +116,7 @@ foreach ($ext in $graph_exts) {
         --title "BranchΔ (R1)" "BranchΔ (R2)" "Sense (R1)" "Sense (R2)" "pCMVΔ (R1)" "pCMVΔ (R2)" "Sense / BranchΔ (R1)" "Sense / BranchΔ (R2)" "Sense / pCMVΔ (R1)" "Sense / pCMVΔ (R2)" `
         -o $output_dir/BranchD_R1.${ext} $output_dir/BranchD_R2.${ext} $output_dir/Sense_R1.${ext} $output_dir/Sense_R2.${ext} $output_dir/pCMVD_R1.${ext} $output_dir/pCMVD_R2.${ext} $output_dir/Sense_BranchD_R1.${ext} $output_dir/Sense_BranchD_R2.${ext} $output_dir/Sense_pCMVD_R1.${ext} $output_dir/Sense_pCMVD_R2.${ext} `
         --debug debug/${layout}_combined `
-        --legends ratio_cont var_type `
+        --legends ratio_cont var_type size `
         --ul_yax_x 12 --ul_xax_del_y 0 --ul_xax_ins_y 0 `
         --ul_y_scale_ins 10 --ul_y_scale_del 8 `
         --range_x -12 13 --range_y -175 225 `
