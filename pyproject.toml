@@ -14,7 +14,6 @@ classifiers = [
   "Operating System :: OS Independent",
 ]
 dependencies = [
-  "kaleido",
   "Levenshtein",
   "matplotlib",
   "networkx",

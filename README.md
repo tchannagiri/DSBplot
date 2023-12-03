@@ -30,17 +30,17 @@ To install the package, use the command:
 pip install DSBplot
 ```
 
-The tested Python version is 3.11.0. The required dependencies are:
+The tested Python version is 3.11.0. The dependencies are:
 
-* kaleido (tested version 0.1.0.post1; if using Windows OS the version *must* be 0.1.0.post1, please see [here](https://github.com/plotly/Kaleido/issues/134)).
-* Levenshtein (tested version 0.21.0)
-* matplotlib (tested version 3.7.1)
-* networkx (tested version 3.1)
-* numpy (tested version 1.24.3)
-* pandas (tested version 2.0.1)
-* Pillow (tested version 9.5.0)
-* plotly (tested version 5.14.1)
-* scikit-learn (tested version 1.2.2)
+* kaleido: Tested version 0.1.0.post1. If using Windows OS the version *must* be 0.1.0.post1, please see [here](https://github.com/plotly/Kaleido/issues/134). This dependency is *optional* and is only needed if you want to export the figures to non-HTML image formats (e.g., PNG or SVG). If you do not need this functionality, you may omit this dependency.
+* Levenshtein: Tested version 0.21.0. Required.
+* matplotlib. Tested version 3.7.1. Required.
+* networkx. Tested version 3.1. Required.
+* numpy. Tested version 1.24.3. Required.
+* pandas. Tested version 2.0.1. Required.
+* Pillow. Tested version 9.5.0. Required.
+* plotly. Tested version 5.14.1. Required.
+* scikit-learn. Tested version 1.2.2. Required.
 
 To install these dependencies, please use the command:
 
@@ -157,9 +157,6 @@ Different *layouts*, specified with the `--layout` parameter, are used to positi
 * Universal layout: We refer to this layout as the "Universal" layout because it assigns a predefined position to every admissable insertion and deletion, regardless of the subset of insertions and deletions present in the dataset. In contrast to the Kamada-Kawai algorithm, which positions vertices in a data-dependent manner, this layout algorithm is less flexible but highly interpretable and reproducible. This layout also only applies to data *without* substitutions (specified with `--sub 0`), and does not allow sequences with mixed insertions/deletions (it currently fails if such sequences are encountered). All inputs should also have indels consecutive and touching the DSB site (in `DSBplot-process`, set with `--consec 1` and `--touch 1`, which are the defaults). Therefore, the admissable vertices always have either a single run of deletions touching the DSB site or a single run of insertions exactly at the DSB site. If these criteria are not met, the behavior is either undefined or an error message. The universal layout places the reference vertex at the center of the figure, with insertion vertices above and deletion vertices below. For both insertion and deletion vertices, the $y$-coordinate is determined by the Levenshtein distance between the vertex's sequence and the reference sequence, which is simply the number indels in the vertex's alignment. If a vertex's Levenshtein distance is $d$, then deletion vertices are placed $d * \alpha$ units below the reference, while insertion vertices are placed $d * \beta$ units above, where $\alpha, \beta$ are positive scaling factors determined by the parameters `--ul_y_scale_ins` and `--ul_y_scale_del`. The $x$-coordinates of vertices are determined using different rules for insertions and deletions. Insertion vertices are ordered from left to right by alphabetical order, while deletion vertices are ordered from left to right based on the positions of the deleted nucleotides with respect to the DSB site. Please see **Extended Data Figure 7** of [Jeon *et al.* (2022)]((https://doi.org/10.1101/2022.11.01.514688)) for further explanation of this layout. There are several parameters to adjust the visuals of the universal layout. Please see the parameters prefixed with `--ul_`. 
 * Radial: This layout arranges the vertices in concentric circles around the reference sequence. The reference vertex is positioned at the center of the figure, while the insertion and deletion vertices are placed above and below the reference, respectively. The Levenshtein distance between a vertex and the reference determines its physical distance from the reference vertex. For instance, vertices with a Levenshtein distance of 1 are placed in the first concentric circle around the reference, and those with a Levenshtein distance of 2 are placed in the second circle, and so on. In each circle, insertion vertices are arranged in a clockwise direction based on their frequency, with the most frequent vertex at the top, while deletion vertices are arranged in a counterclockwise direction, also based on their frequency, with the most frequent vertex at the bottom. To ensure that the vertices do not overlap and edges are not collinear, heuristics are used to perturb the vertices slightly.
 
-![Universal layout vertex placement key](figures/graph_layout_scheme.png)
-*Figure 1: Universal layout vertex placement key.*
-
 The `--debug` parameter of the `DSBplot-graph` command allows users to output tables that describe the vertices plotted, their coordinates, and the edge between the vertices. This may be used to debug the layout algorithms or to extract the vertex coordinates for use in other software.
 
 ### Graph aesthetics
@@ -230,7 +227,7 @@ We show three different ways of running the pipeline.
 
 The commands indicates that the DSB site is between the 67th and 68th nucleotide on the reference sequence (`--dsb 67`), and each FASTQ file has 3000 reads (`--reads 3000 3000 3000 3000`). The data written to `output/Sense_R1` should be exactly the same whether the stages are run together, separately, or with SAM files (the input SAM files have been aligned using Bowtie 2 in the same way the pipeline normally does with input FASTQ files). The raw data used for plotting the variation-distance graphs will be contained in `output/Sense_R1/window_withoutSubst.tsv` and `output/Sense_R1/variation_withSubst.tsv`. The data for the variation-position histograms will be contained in `output/Sense_R1/variation_withoutSubst.tsv` and `output/Sense_R1/variation_withSubst.tsv`.
 
-Next, the plotting commands will write the output figures to the `plots` directory. To plot a variation-distance graph using the Universal layout with axes use the command:
+Next, the plotting commands will write the output figures to the `plots` directory. To plot a variation-distance graph using the Universal layout with axes use the command (this will only work if the kaleido package is installed, see [Installation](#installation)):
 
 ```
 # PowerShell
@@ -244,7 +241,7 @@ Figure[0] x-range: -10.0 to 10.0
 Figure[0] y-range: -17.0 to 41.8125
 ```
 
-The Kamada-Kawaii and Radial layouts may similarily be plotted using the commands:
+The Kamada-Kawaii and Radial layouts may similarily be plotted using the commands (this will only work if the kaleido package is installed, see [Installation](#installation)):
 
 ```
 # PowerShell
