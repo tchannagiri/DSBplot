@@ -1,6 +1,6 @@
 [project]
 name = "DSBplot"
-version = "0.0.1"
+version = "0.1.0"
 authors = [
   { name="Tejasvi Channagiri", email="tchannagiri@gmail.com" },
 ]
