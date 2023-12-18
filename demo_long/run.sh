@@ -43,6 +43,8 @@ ref_seq_file["BranchD_R2"]="input/ref_seq/2DSB_BranchD_R1.fa"
 ref_seq_file["pCMVD_R1"]="input/ref_seq/2DSB_pCMVD_R1.fa"
 ref_seq_file["pCMVD_R2"]="input/ref_seq/2DSB_pCMVD_R1.fa"
 
+# PNG and PDF generation for graphs requires kaleido to be installed.
+# Please see installation instructions in the README.
 graph_exts=("png" "pdf" "html")
 graph_layouts=("universal" "kamada" "radial")
 # Whether or not to separate connected components of the graphs.

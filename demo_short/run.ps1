@@ -25,6 +25,8 @@ DSBplot-process -o $output_dir/Sense_R1 --stages 4_info
 DSBplot-process -i $input_sam_dir/Sense_R1_1.sam $input_sam_dir/Sense_R1_2.sam $input_sam_dir/Sense_R1_3.sam $input_sam_dir/Sense_R1_4.sam --ref $ref_seq_dir/2DSB_Sense_R1.fa --dsb 67 -o $output_dir/Sense_R1 --label "Sense_R1" --reads 3000 3000 3000 3000
 
 ### Plot the graphs (PNG) ###
+# PNG and PDF generation for graphs requires kaleido to be installed.
+# Please see installation instructions in the README.
 DSBplot-graph -i $output_dir/Sense_R1 -o plots/graph/Sense_R1_universal.png --debug $debug_dir/universal --layout universal --title "Sense_R1 Universal Layout" --width 2400 --height 1800 --ul_yax_x 0 --ul_xax_del_y 0 --ul_xax_ins_y 0
 DSBplot-graph -i $output_dir/Sense_R1 -o plots/graph/Sense_R1_kamada.png --debug $debug_dir/kamada --layout kamada --title "Sense_R1 Kamada-Kawaii Layout" --width 2400 --height 1800 --sep 1
 DSBplot-graph -i $output_dir/Sense_R1 -o plots/graph/Sense_R1_radial.png --debug $debug_dir/radial --layout radial --title "Sense_R1 Radial Layout" --width 2400 --height 1800

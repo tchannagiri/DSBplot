@@ -32,7 +32,7 @@ pip install DSBplot
 
 The tested Python version is 3.11.0. The dependencies are:
 
-* kaleido: Tested version 0.1.0.post1. If using Windows OS the version *must* be 0.1.0.post1, please see [here](https://github.com/plotly/Kaleido/issues/134). This dependency is *optional* and is only needed if you want to export the figures to non-HTML image formats (e.g., PNG or SVG). If you do not need this functionality, you may omit this dependency.
+* kaleido: Tested version 0.1.0.post1. If using Windows OS the version *must* be 0.1.0.post1, please see [here](https://github.com/plotly/Kaleido/issues/134). This dependency is *optional* and is only needed if you want to save graph to non-HTML image formats (e.g., PNG or SVG). If you do not need this functionality, you may omit this dependency.
 * Levenshtein: Tested version 0.21.0. Required.
 * matplotlib. Tested version 3.7.1. Required.
 * networkx. Tested version 3.1. Required.
@@ -42,10 +42,17 @@ The tested Python version is 3.11.0. The dependencies are:
 * plotly. Tested version 5.14.1. Required.
 * scikit-learn. Tested version 1.2.2. Required.
 
-To install these dependencies, please use the command:
+To install the required dependencies, please use the command:
 
 ```
-pip install kaleido Levenshtein matplotlib networkx numpy pandas Pillow plotly scikit-learn
+pip install Levenshtein matplotlib networkx numpy pandas Pillow plotly scikit-learn
+```
+
+To install the optional kaleido dependency, please use one of the commands (depending on your OS):
+
+```
+pip install kaleido=0.1.0.post1 # Windows
+pip install kaleido # other than Windows
 ```
 
 For a full list of the libaries used in testing, please see `requirements.txt`.
@@ -227,7 +234,7 @@ We show three different ways of running the pipeline.
 
 The commands indicates that the DSB site is between the 67th and 68th nucleotide on the reference sequence (`--dsb 67`), and each FASTQ file has 3000 reads (`--reads 3000 3000 3000 3000`). The data written to `output/Sense_R1` should be exactly the same whether the stages are run together, separately, or with SAM files (the input SAM files have been aligned using Bowtie 2 in the same way the pipeline normally does with input FASTQ files). The raw data used for plotting the variation-distance graphs will be contained in `output/Sense_R1/window_withoutSubst.tsv` and `output/Sense_R1/variation_withSubst.tsv`. The data for the variation-position histograms will be contained in `output/Sense_R1/variation_withoutSubst.tsv` and `output/Sense_R1/variation_withSubst.tsv`.
 
-Next, the plotting commands will write the output figures to the `plots` directory. To plot a variation-distance graph using the Universal layout with axes use the command (this will only work if the kaleido package is installed, see [Installation](#installation)):
+Next, the plotting commands will write the output figures to the `plots` directory. To plot a variation-distance graph using the Universal layout with axes use the command (PNG generation for graphs will only work if the kaleido package is installed, see [Installation](#installation)):
 
 ```
 # PowerShell
@@ -241,7 +248,7 @@ Figure[0] x-range: -10.0 to 10.0
 Figure[0] y-range: -17.0 to 41.8125
 ```
 
-The Kamada-Kawaii and Radial layouts may similarily be plotted using the commands (this will only work if the kaleido package is installed, see [Installation](#installation)):
+The Kamada-Kawaii and Radial layouts may similarily be plotted using the commands (PNG generation for graphs will only work if the kaleido package is installed, see [Installation](#installation)):
 
 ```
 # PowerShell
@@ -275,8 +282,7 @@ DSBplot-histogram -i $output_dir/Sense_R1 -o plots/histogram/Sense_R1_ins.png --
 DSBplot-histogram -i $output_dir/Sense_R1 -o plots/histogram/Sense_R1_del.png --title "Sense_R1 Deletions" --color "#8080ff" --mar_t 200 --var del --xax rel
 ```
 
-The `--var` parameter determines which type of variation is plotted ("ins"
- for insertions, "del" for deletions, and "sub" for substitutions). The `--mar_t` parameter is used to set the top margin to make room for the title. The title is set with the `--title` parameter.
+The `--var` parameter determines which type of variation is plotted ("ins" for insertions, "del" for deletions, and "sub" for substitutions). The `--mar_t` parameter is used to set the top margin to make room for the title. The title is set with the `--title` parameter.
 
 The output variation histograms are shown below.
 
