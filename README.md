@@ -67,7 +67,7 @@ This package contains the following four commands:
 * `DSBplot-graph`: Takes as input a collection of the output directories of `DSBplot-process`, lays out sequences in all inputs, and plots a separate graph for each input.
 * `DSBplot-histogram`: Takes as input an output directory of `DSBplot-process` and plots a histogram showing the type and position of variations (insertions, deletion, or substitutions) in the sequences.
 
-Once DSBplot is installed, these commands should be available from the command line. More information about each command is given in the following subsections. The flowchart below show the relationship between the different commands. We use the notation `NAME` to refer to arguments (value of a command-line parameter set by the user) and the notation `--name` to refer to the parameter itself. The notation `file_name.ext` is used to refer to file names.
+Once DSBplot is installed, these commands should be available from the command line. More information about each command is given in the following subsections. The flowchart below show the relationship between the different commands. In the following sections, we use the notation `NAME` to refer to arguments (value of a command-line parameter set by the user) and the notation `--name` to refer to the parameter itself. The notation `file_name.ext` is used to refer to file names.
 
 ![image](figures/figure_1_flowchart.png)
 
