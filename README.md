@@ -20,11 +20,19 @@ Tejasvi Channagiri, Margherita Maria Ferrari, Youngkyu Jeon, Penghao Xu, Frances
 
 ## Installation
 
-To install the package, use the command:
+This package is available both through the [PyPi](https://pypi.org/project/DSBplot/) package database and as installation files on [GitHub](https://github.com/tchannagiri/DSBplot). To install the package through PyPi, use the command:
 
 ```
 pip install DSBplot
 ```
+
+To install the package using the GitHub installation files (e.g., `DSBplot-0.1.1-py3-none-any.whl` or `DSBplot-0.1.1.tar.gz`), download the appropriate file and use the command:
+
+```
+pip install DSBplot-0.1.1-py3-none-any.whl
+```
+
+`DSBplot-0.1.1-py3-none-any.whl` should be replaced with the exact path/name of the installation file of your system.
 
 The tested Python version is 3.11.0. The dependencies are:
 
