@@ -2,7 +2,7 @@
 
 ## Introduction
 
-`DSBplot` is a Python 3 program for processing and visualizing high-throughput targeted amplicon sequencing data obtained to study double-strand break (DSB) repair due to the nonhomologous end-joining (NHEJ) repair mechanism. The accompanying article can be found at LINK. This protocol was originally used in the study [Jeon *et al.* (2022)]((https://doi.org/10.1101/2022.11.01.514688)) for studying DSB repair in human cells. That article contains several examples of the graphs in the supplementary figures, as well as a discussion of insights gained from the resulting figures.
+`DSBplot` is a Python 3 program for processing and visualizing high-throughput targeted amplicon sequencing data obtained to study double-strand break (DSB) repair due to the nonhomologous end-joining (NHEJ) repair mechanism. The accompanying article describing this software is [Channagiri *et al.*](https://doi.org/10.48550/arXiv.2312.17590) This protocol was originally used in [Jeon *et al.* (2022)](https://doi.org/10.1101/2022.11.01.514688) for studying DSB repair in human cells. The Jeon *et al.* article contains several examples of the graphs in the supplementary figures, as well as a discussion of the insights gained from the resulting figures.
 
 The overall functionality of the package is the following.
 
@@ -10,17 +10,13 @@ The overall functionality of the package is the following.
   2. Quantify the variations (insertions, deletions, and substitutions) near the DSB site using sequence alignment.
   3. Visualize the resulting variations using two types of figures: *variation-distance graphs* and *variation-position histograms*.
 
-The expected inputs are DNA-seq short read libraries that have been obtained with targeted amplicon sequencing, meaning that sequencing primers are placed surround the DSB site to amplify a specific sequence around the DSB repair site. For a more detailed description of the expected input and how to the run the software, see section [Commands](#commands) and the article associated with this software (LINK).
+The expected inputs are DNA-seq short read libraries that have been obtained with targeted amplicon sequencing, meaning that sequencing primers are placed surround the DSB site to amplify a specific sequence around the DSB repair site. For a more detailed description of the expected input and how to the run the software, see section [Commands](#commands) and the accompanying article [here](https://doi.org/10.48550/arXiv.2312.17590).
 
 ## Citation
 
 If you use this software, please use the citation:
 
-XXX
-
-or in BibTex format:
-
-XXX
+Tejasvi Channagiri, Margherita Maria Ferrari, Youngkyu Jeon, Penghao Xu, Francesca Storici, and Nataša Jonoska. “DSBplot: Indels in DNA Double-Strand Break Repair Experiments.” arXiv, December 29, 2023. https://doi.org/10.48550/arXiv.2312.17590.
 
 ## Installation
 
