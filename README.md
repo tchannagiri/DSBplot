@@ -28,13 +28,13 @@ pip install DSBplot
 
 The tested Python version is 3.11.0. The dependencies are:
 
-* kaleido: Tested version 0.1.0.post1. If using Windows OS the version *must* be 0.1.0.post1, please see [here](https://github.com/plotly/Kaleido/issues/134). This dependency is *optional* and is only needed if you want to save graph to non-HTML image formats (e.g., PNG or SVG). If you do not need this functionality, you may omit this dependency.
+* kaleido: Tested version 0.1.0.post1. If using Windows OS the version *must* be 0.1.0.post1; please see [here](https://github.com/plotly/Kaleido/issues/134). This dependency is *optional* and is only needed if you want to write variation-distance graphs to non-HTML image formats (e.g., PNG or SVG). If you do not need this functionality, you may omit this dependency.
 * Levenshtein: Tested version 0.21.0. Required.
 * matplotlib. Tested version 3.7.1. Required.
 * networkx. Tested version 3.1. Required.
 * numpy. Tested version 1.24.3. Required.
 * pandas. Tested version 2.0.1. Required.
-* Pillow. Tested version 9.5.0. Required.
+* Pillow. Tested version 10.1.0. Required.
 * plotly. Tested version 5.14.1. Required.
 * scikit-learn. Tested version 1.2.2. Required.
 
