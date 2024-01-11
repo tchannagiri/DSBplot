@@ -20,7 +20,7 @@ Tejasvi Channagiri, Margherita Maria Ferrari, Youngkyu Jeon, Penghao Xu, Frances
 
 ## Installation
 
-This package is available both through the [PyPi](https://pypi.org/project/DSBplot/) package database and as installation files on [GitHub](https://github.com/tchannagiri/DSBplot). To install the package through PyPi, use the command:
+This package is available both through the [PyPi](https://pypi.org/project/DSBplot/) package database and as installation files on [GitHub](https://github.com/tchannagiri/DSBplot/releases). To install the package through PyPi, use the command:
 
 ```
 pip install DSBplot
@@ -152,7 +152,7 @@ This commands plots the 3D histograms, which summarize the distribution of the v
 * The $y$-axis indicates the total number of variations on the sequence that the variation originated from.
 * The $z$-axis indicates the total frequency of the variations with the given $x$- and $y$-coordinates. This is computed by summing the frequency of all the parent repair windows of such variations.
 
-To understand how the frequencies are calculated, consider the following example. Suppose a sequence in the data had one insertion at position 5, two deletions at positions 6 and 7, and an overall frequency of 0.1. Assume that the DSB is between positions 5 and 6, and that we are using relative labeling on the $x$-axis. In the insertion histogram, the sequence would contribute +0.1 to the z-value of the bar at the $xy$-coordinate (-1, 3). In the deletion histogram, the sequence would contribute +0.1 to the z-value of the bars at the $xy$-coordinates (1, 3) and (2, 3). If we used absolute labeling, then the respective $xy$-coordinates would be (5, 3), (6, 3), and (7, 3), since the positions are now labeled according to their absolute positions on the reference sequence.
+To understand how the frequencies are calculated, consider the following example. Suppose a sequence in the data had one insertion at position 5, two deletions at positions 6 and 7, and an overall frequency of 0.1. Assume that the DSB is between positions 5 and 6, and that we are using relative labeling on the $x$-axis. In the insertion histogram, the sequence would contribute +0.1 to the $z$-value of the bar at the $xy$-coordinate (-1, 3). In the deletion histogram, the sequence would contribute +0.1 to the $z$-value of the bars at the $xy$-coordinates (1, 3) and (2, 3). If we used absolute labeling, then the respective $xy$-coordinates would be (5, 3), (6, 3), and (7, 3), since the positions are now labeled according to their absolute positions on the reference sequence.
 
 For more details about the parameters, please use the command `DSBplot-histogram --help`.
 
